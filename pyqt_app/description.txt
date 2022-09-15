@@ -1,0 +1,1 @@
+Create base of application using pyQT library on python. Design should be similar with one in ux_ui folder
