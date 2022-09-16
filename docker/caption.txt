@@ -1,1 +1,0 @@
-Create README with description of docher image. And create docker enviroment.
