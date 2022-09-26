@@ -98,12 +98,20 @@ class Scanner(metaclass=ABCMeta):
     @abstractmethod
     def stop(self) -> None:
         """
-        Полная остановка сканера
+        Полная остановка сканера (сначала замедлится, потом остановится)
 
         :return:
         :rtype:
         """
         pass
+
+    @abstractmethod
+    def abort(self) -> None:
+        """
+        Незамедлительная остановка сканера
+
+        :return:
+        """
 
     @property
     @abstractmethod
@@ -168,6 +176,15 @@ class Scanner(metaclass=ABCMeta):
         :rtype:
         """
         pass
+
+    @property
+    @abstractmethod
+    def is_available(self) -> bool:
+        """
+        Доступность сканера для управления
+
+        :return:
+        """
 
     @abstractmethod
     def debug_info(self) -> str:

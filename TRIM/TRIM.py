@@ -1,6 +1,8 @@
 """
 Реализация управления сканером с контроллером ORBIT/FR AL-4164 и AL-4166
 """
+import threading
+
 from src import Scanner, BaseAxes, Position, Velocity, Acceleration, Deceleration, ScannerConnectionError, ScannerInternalError
 import socket
 from typing import Union, List
@@ -99,20 +101,23 @@ class TRIMScanner(Scanner):
             self,
             ip: str,
             port: Union[str, int],
-            timeout: float = 10,
             bufsize: int = 1024,
             maxbufs: int = 1028,
     ):
         self.ip = ip
         self.port = port
         self.conn = socket.socket()
-        self.conn.settimeout(timeout)
         self.bufsize = bufsize
         self.maxbufs = maxbufs
+        self.tcp_lock = threading.Lock()
         self.is_connected = False
 
     def connect(self) -> None:
+        if self.is_connected:
+            return
         try:
+            self.conn.close()
+            self.conn = socket.socket()
             self.conn.connect((self.ip, self.port))
             self.is_connected = True
         except OSError as e:
@@ -131,6 +136,7 @@ class TRIMScanner(Scanner):
         self._send_cmds(cmds)
 
     def _send_cmds(self, cmds: List[str]) -> str:
+        self.tcp_lock.acquire()
         try:
             command = ";\n".join(cmds) + ";\n"
             command_bytes = command.encode('ascii')
@@ -146,18 +152,22 @@ class TRIMScanner(Scanner):
 
             if response.endswith(b'?>'):
                 raise ScannerInternalError(
-                    f'Scanner response:\n{response.decode()}'
+                    f'Scanner response:\n{response}'
                 )
 
             if not response.startswith(command_bytes):
                 raise ScannerInternalError(
-                    f'Scanner response:\n{response.decode()}\n\nEcho in start was expected:\n{command}'
+                    f'Scanner response:\n{response}\n\nEcho in start was expected:\n{command}'
                 )
 
             answer = response.decode().removeprefix(command).removesuffix('>')
             return answer
-        except OSError or TimeoutError as e:
+        except OSError as e:
+            self.tcp_lock.release()
+            self.is_connected = False
             raise ScannerConnectionError from e
+        finally:
+            self.tcp_lock.release()
 
     def goto(self, position: Position) -> None:
         cmds = cmds_from_dict(position.to_dict(), 'PS')
@@ -165,8 +175,10 @@ class TRIMScanner(Scanner):
         self._send_cmds(cmds)
 
     def stop(self) -> None:
-        cmds = ['AST']
-        self._send_cmds(cmds)
+        self._send_cmds(['AST'])
+
+    def abort(self) -> None:
+        self._send_cmds(['AAB'])
 
     @property
     def position(self) -> Position:
@@ -207,3 +219,16 @@ class TRIMScanner(Scanner):
             z=int(res[2]),
             w=int(res[3]))
         return ans
+
+    def debug_info(self) -> str:
+        pass
+
+    @property
+    def is_available(self) -> bool:
+        return self.is_connected
+
+
+# sc = TRIMScanner(ip="192.168.5.168", port=9001, )
+# sc.connect()
+# print(sc.is_available)
+# print(sc.acceleration)
