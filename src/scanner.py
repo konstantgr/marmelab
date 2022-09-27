@@ -113,7 +113,6 @@ class Scanner(metaclass=ABCMeta):
         :return:
         """
 
-    @property
     @abstractmethod
     def position(self) -> Position:
         """
@@ -124,7 +123,6 @@ class Scanner(metaclass=ABCMeta):
         """
         return None
 
-    @property
     @abstractmethod
     def velocity(self) -> Velocity:
         """
@@ -135,7 +133,6 @@ class Scanner(metaclass=ABCMeta):
         """
         return None
 
-    @property
     @abstractmethod
     def acceleration(self) -> Acceleration:
         """
@@ -146,7 +143,6 @@ class Scanner(metaclass=ABCMeta):
         """
         return None
 
-    @property
     @abstractmethod
     def deceleration(self) -> Deceleration:
         """

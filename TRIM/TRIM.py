@@ -73,23 +73,54 @@ DEFAULT_SETTINGS = AxesSettings(
         x=800000,
         y=1000000,
         z=200000,
-        w=2000),
+        w=2000,
+    ),
     deceleration=Deceleration(
         x=800000,
         y=1000000,
         z=200000,
-        w=2000),
+        w=2000,
+    ),
     velocity=Velocity(
         x=1228800,
         y=1024000,
         z=100000,
-        w=3000),
+        w=3000,
+    ),
     motion_mode=Axes(
-        A=1),
+        A=0,
+    ),
     special_motion_mode=Axes(
-        A=0),
+        A=0,
+    ),
     motor_on=Axes(
-        A=1)
+        A=1,
+    )
+)
+
+
+PTP_MODE_SETTINGS = AxesSettings(
+    motion_mode=Axes(
+        A=0,
+    ),
+    special_motion_mode=Axes(
+        A=0,
+    ),
+    motor_on=Axes(
+        A=1,
+    )
+)
+
+JOG_MODE_SETTINGS = AxesSettings(
+    motion_mode=Axes(
+        A=1,
+    ),
+    special_motion_mode=Axes(
+        A=0,
+    ),
+    motor_on=Axes(
+        A=1,
+    )
 )
 
 
@@ -135,10 +166,14 @@ class TRIMScanner(Scanner):
         cmds = settings.to_cmds()
         self._send_cmds(cmds)
 
-    def _send_cmds(self, cmds: List[str]) -> str:
+    def _send_cmds(self, cmds: str or List[str]) -> str:
         self.tcp_lock.acquire()
         try:
-            command = ";\n".join(cmds) + ";\n"
+            if isinstance(cmds, str):
+                command = cmds
+            else:
+                command = ";\n".join(cmds)
+            command += ";"
             command_bytes = command.encode('ascii')
             self.conn.sendall(command_bytes)
 
@@ -167,22 +202,22 @@ class TRIMScanner(Scanner):
             self.is_connected = False
             raise ScannerConnectionError from e
         finally:
-            self.tcp_lock.release()
+            if self.tcp_lock.locked():
+                self.tcp_lock.release()
 
     def goto(self, position: Position) -> None:
-        cmds = cmds_from_dict(position.to_dict(), 'PS')
+        cmds = cmds_from_dict(position.to_dict(), 'AP')
         cmds += cmds_from_dict(position.to_dict(), 'BG', val=False)
         self._send_cmds(cmds)
 
     def stop(self) -> None:
-        self._send_cmds(['AST'])
+        self._send_cmds('AST')
 
     def abort(self) -> None:
-        self._send_cmds(['AAB'])
+        self._send_cmds('AAB')
 
-    @property
     def position(self) -> Position:
-        res = self._send_cmds(['APS']).split(',')
+        res = self._send_cmds('APS').split(',')
         ans = Position(
             x=int(res[0]),
             y=int(res[1]),
@@ -190,9 +225,8 @@ class TRIMScanner(Scanner):
             w=int(res[3]))
         return ans
 
-    @property
     def velocity(self) -> Velocity:
-        res = self._send_cmds(['ASP']).split(',')
+        res = self._send_cmds('ASP').split(',')
         ans = Velocity(
             x=int(res[0]),
             y=int(res[1]),
@@ -200,9 +234,8 @@ class TRIMScanner(Scanner):
             w=int(res[3]))
         return ans
 
-    @property
     def acceleration(self) -> Acceleration:
-        res = self._send_cmds(['AAC']).split(',')
+        res = self._send_cmds('AAC').split(',')
         ans = Acceleration(
             x=int(res[0]),
             y=int(res[1]),
@@ -210,9 +243,8 @@ class TRIMScanner(Scanner):
             w=int(res[3]))
         return ans
 
-    @property
     def deceleration(self) -> Deceleration:
-        res = self._send_cmds(['ADC']).split(',')
+        res = self._send_cmds('ADC').split(',')
         ans = Deceleration(
             x=int(res[0]),
             y=int(res[1]),
@@ -228,7 +260,10 @@ class TRIMScanner(Scanner):
         return self.is_connected
 
 
-# sc = TRIMScanner(ip="192.168.5.168", port=9001, )
+# from tests.TRIM_emulator import run
+# run(blocking=False)
+# sc = TRIMScanner(ip="192.168.5.168", port=9000, )
 # sc.connect()
-# print(sc.is_available)
-# print(sc.acceleration)
+#
+# print(sc.velocity())
+# print(sc.acceleration())
