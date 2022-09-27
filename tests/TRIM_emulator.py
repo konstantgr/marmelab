@@ -23,8 +23,8 @@ def emulator(ip="127.0.0.1", port=9000):
                 conn.sendall(data)
 
 
-def run(blocking=True):
-    server_thread = threading.Thread(target=emulator)
+def run(blocking=True, ip="127.0.0.1", port=9000):
+    server_thread = threading.Thread(target=emulator, args=(ip, port,))
     print('Starting server')
     server_thread.start()
     if blocking:
