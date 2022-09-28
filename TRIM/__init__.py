@@ -1,1 +1,1 @@
-from .TRIM import TRIMScanner, Axes, AxesSettings, DEFAULT_SETTINGS
+from .TRIM import TRIMScanner, Axes, DEFAULT_SETTINGS
