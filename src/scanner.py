@@ -9,7 +9,10 @@ class ScannerConnectionError(Exception):
     """
     Исключение, вызываемое при проблеме с подключением: разрыв соединения, невозможность подключиться, таймаут
     """
-    pass
+    def __init__(self):
+        super().__init__(
+            "Error in scanner connection"
+        )
 
 
 class ScannerInternalError(Exception):
@@ -17,7 +20,19 @@ class ScannerInternalError(Exception):
     Исключение, вызываемое при проблеме в самом сканере: неправильная команда, достижение предела по одной из координат
     """
     def __init__(self, message):
-        super().__init__(message)
+        super().__init__(
+            f'Scanner error:\n{message}'
+        )
+
+
+class ScannerMotionError(Exception):
+    """
+    Исключение, поднимаемое при ошибках во время движения сканера
+    """
+    def __init__(self, message):
+        super().__init__(
+            f'Scanner motion error:\n{message}'
+        )
 
 
 @dataclass
@@ -37,7 +52,7 @@ class BaseAxes:
         """
         Перевод датакласса в словарь
 
-        :return:
+        :return: словарь с названием осей в ключах
         """
         return {
             'x': self.x,
@@ -90,62 +105,57 @@ class Scanner(metaclass=ABCMeta):
 
         :param position: то, куда необходимо переместиться
         :type position: Position
-        :return:
-        :rtype:
         """
         pass
 
     @abstractmethod
     def stop(self) -> None:
         """
-        Полная остановка сканера
+        Полная остановка сканера (сначала замедлится, потом остановится)
 
-        :return:
-        :rtype:
         """
         pass
 
-    @property
+    @abstractmethod
+    def abort(self) -> None:
+        """
+        Незамедлительная остановка сканера
+
+        """
+
     @abstractmethod
     def position(self) -> Position:
         """
         Позиция сканера
 
-        :return:
-        :rtype: Position
+        :return: позиция
         """
         return None
 
-    @property
     @abstractmethod
     def velocity(self) -> Velocity:
         """
         Скорость сканера
 
-        :return:
-        :rtype: Velocity
+        :return: скорость
         """
         return None
 
-    @property
     @abstractmethod
     def acceleration(self) -> Acceleration:
         """
         Ускорения сканера
 
-        :return:
-        :rtype: Acceleration
+        :return: ускорение
         """
         return None
 
-    @property
     @abstractmethod
     def deceleration(self) -> Deceleration:
         """
         Замедления сканера
 
-        :return:
-        :rtype: Deceleration
+        :return: замедление
         """
         return None
 
@@ -154,8 +164,6 @@ class Scanner(metaclass=ABCMeta):
         """
         Подключение к сканеру
 
-        :return:
-        :rtype:
         """
         pass
 
@@ -164,17 +172,24 @@ class Scanner(metaclass=ABCMeta):
         """
         Отключение от сканера
 
-        :return:
-        :rtype:
         """
         pass
+
+    @property
+    @abstractmethod
+    def is_available(self) -> bool:
+        """
+        Доступность сканера для управления
+
+        :return: доступность
+        """
 
     @abstractmethod
     def debug_info(self) -> str:
         """
         Возвращает максимум информации о сканере
 
-        :return:
+        :return: максимальное количество информации о сканере
         """
         pass
 
