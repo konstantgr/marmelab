@@ -16,6 +16,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
+PyQt6 = "^6.3.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.3"

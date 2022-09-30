@@ -1,5 +1,4 @@
 import sys
-sys.path.append('..')
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton
 from src.matmul import random_matmul
 from time import time
@@ -8,7 +7,6 @@ from time import time
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
         self.setWindowTitle("My App")
 
         button = QPushButton("Press Me!")
