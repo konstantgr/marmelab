@@ -1,31 +1,43 @@
 import sys
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton,
+                             QGridLayout, QWidget, QHBoxLayout, QVBoxLayout)
 sys.path.append('..')
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton
 from src.matmul import random_matmul
 from time import time
 
 
-class MainWindow(QMainWindow):
+class Window(QWidget):
     def __init__(self):
         super().__init__()
+        buttons = {
+            'TOP': QPushButton("TOP"),
+            # 'CENTER': QPushButton("CENTER"),
+            'LEFT': QPushButton("LEFT"),
+            'RIGHT': QPushButton("RIGHT"),
+            'BOTTOM': QPushButton("BOTTOM"),
+        }
+        positions_mapping = {
+            'TOP': (0, 1),
+            # 'CENTER': (1, 1),
+            'LEFT': (1, 0),
+            'RIGHT': (1, 2),
+            'BOTTOM': (2, 1),
+        }
 
-        self.setWindowTitle("My App")
+        layout = QGridLayout()
+        for key, btn in buttons.items():
+            btn.clicked.connect(lambda _, key=key: self.moving(key))
+            layout.addWidget(btn, *positions_mapping[key])
 
-        button = QPushButton("Press Me!")
-        button.setCheckable(True)
-        button.clicked.connect(self.the_button_was_clicked)
+        self.setLayout(layout)
 
-        self.setCentralWidget(button)
-
-    def the_button_was_clicked(self):
-        start_time = time()
-        random_matmul()[0, 0]
-        print(time() - start_time)
+    def moving(self, key):
+        print(f"MOVING {key}")
 
 
-app = QApplication(sys.argv)
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = Window()
+    window.show()
 
-window = MainWindow()
-window.show()
-
-app.exec()
+    sys.exit(app.exec())
