@@ -1,7 +1,18 @@
 def f_connection():
-    print(11)
-def f_connection1():
-    print(12)
+    print('Connected')
 
-if __name__ == "__main__":
-    print(10)
+
+def f_up():
+    print('moving up!')
+
+
+def f_down():
+    print('moving down!')
+
+
+def f_left():
+    print('moving left!')
+
+
+def f_right():
+    print('moving right!')
