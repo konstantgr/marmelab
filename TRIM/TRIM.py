@@ -12,17 +12,18 @@ from dataclasses import dataclass, field
 
 
 @dataclass
-class Axes(BaseAxes):
+class AxesGroup:
     """
-    Класс, в который добавлены группы A и B
+    Класс групп осей A и B
     """
     A: float = None  # all axes
     B: float = None  # X and Y axes
 
     def to_dict(self) -> dict[str:float]:
-        res = super().to_dict()
-        res['A'] = self.A
-        res['B'] = self.B
+        res = {
+            'A': self.A,
+            'B': self.B
+        }
         return res
 
 
@@ -46,6 +47,7 @@ def cmds_from_dict(dct: dict[str:float], basecmd: str, val: bool = True) -> List
             else:
                 cmds.append(f'{axis.upper()}{basecmd}')
     return cmds
+
 
 EM = [
     'Motion is still active',
@@ -78,38 +80,38 @@ DEFAULT_SETTINGS = {
         z=100000,
         w=3000,
     ),
-    'motion_mode': Axes(
+    'motion_mode': AxesGroup(
         A=0,
     ),
-    'special_motion_mode': Axes(
+    'special_motion_mode': AxesGroup(
         A=0,
     ),
-    'motor_on': Axes(
+    'motor_on': AxesGroup(
         A=1,
     )
 }
 
 
 PTP_MODE_SETTINGS = {
-    'motion_mode':Axes(
+    'motion_mode': AxesGroup(
         A=0,
     ),
-    'special_motion_mode': Axes(
+    'special_motion_mode': AxesGroup(
         A=0,
     ),
-    'motor_on': Axes(
+    'motor_on': AxesGroup(
         A=1,
     )
 }
 
 JOG_MODE_SETTINGS = {
-    'motion_mode': Axes(
+    'motion_mode': AxesGroup(
         A=1,
     ),
-    'special_motion_mode': Axes(
+    'special_motion_mode': AxesGroup(
         A=0,
     ),
-    'motor_on': Axes(
+    'motor_on': AxesGroup(
         A=1,
     )
 }
@@ -165,9 +167,9 @@ class TRIMScanner(Scanner):
             velocity: Velocity = None,
             acceleration: Acceleration = None,
             deceleration: Deceleration = None,
-            motor_on: Axes = None,
-            motion_mode: Axes = None,
-            special_motion_mode: Axes = None,
+            motor_on: Union[AxesGroup, BaseAxes] = None,
+            motion_mode: Union[AxesGroup, BaseAxes] = None,
+            special_motion_mode: Union[AxesGroup, BaseAxes] = None,
 
     ) -> None:
         """
