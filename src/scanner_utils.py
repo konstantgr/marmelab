@@ -25,6 +25,12 @@ def f_up():
 
 
 def f_down():
+    """
+    This function makes downward movement
+    """
+    from src import Position
+    new_position = Position(x=0, y=-10)
+    sc.goto(new_position)
     print('moving down!')
 
 
@@ -32,6 +38,9 @@ def f_left():
     """
     This function makes movement to the left
     """
+    from src import Position
+    new_position = Position(x=-10, y=0)
+    sc.goto(new_position)
     print('moving left!')
 
 
@@ -39,6 +48,9 @@ def f_right():
     """
     This function makes movement to the right
     """
+    from src import Position
+    new_position = Position(x=10, y=0)
+    sc.goto(new_position)
     print('moving right!')
 
 
