@@ -1,13 +1,16 @@
-from TRIM import TRIMScanner
+from TRIM import TRIMScanner, DEFAULT_SETTINGS
 from tests.TRIM_emulator import run  # use it only for emulating
 sc = TRIMScanner(ip="127.0.0.1", port=9000)
 
+# TODO: Добавить подробную настройку движения сканнера:
+#  скорость, ускорение, режим работы и тд, отображение сотояние мотора
 def f_connection():
     """
     This function makes connection to the scanner
     """
     run(blocking=False, motion_time=10)  # use it only for emulating
     sc.connect()
+    #sc.set_settings(**DEFAULT_SETTINGS) пока не работает
     print('Connected')
 
 
