@@ -7,7 +7,7 @@ import time
 from src import Scanner, BaseAxes, Position, Velocity, Acceleration, Deceleration
 from src import ScannerConnectionError, ScannerInternalError, ScannerMotionError
 import socket
-from typing import Union, List
+from typing import Union, List, Iterator
 from dataclasses import dataclass, field
 
 
@@ -251,21 +251,25 @@ class TRIMScanner(Scanner):
             responses.append(self._send_cmd(cmd))
         return responses
 
+    @staticmethod
+    def _parse_A_res(res: str) -> Iterator[int]:
+        return map(int, res.split(','))
+
     def _is_stopped(self) -> bool:
         """
         Проверяет, остановился ли двигатель
 
         """
-        res = self._send_cmd('AMS').split(',')
-        return all([r == '0' for r in res])
+        res = self._send_cmd('AMS')
+        return all([r == 0 for r in self._parse_A_res(res)])
 
     def _end_of_motion_reason(self) -> List[int]:
         """
         Проверка причины остановки
 
         """
-        res = self._send_cmd('AEM').split(',')
-        return [int(r) for r in res]
+        res = self._send_cmd('AEM')
+        return list(self._parse_A_res(res))
 
     def goto(self, position: Position) -> None:
         cmds = cmds_from_dict(position.to_dict(), 'AP')
@@ -292,39 +296,23 @@ class TRIMScanner(Scanner):
         self._send_cmd('AAB')
 
     def position(self) -> Position:
-        res = self._send_cmd('APS').split(',')
-        ans = Position(
-            x=int(res[0]),
-            y=int(res[1]),
-            z=int(res[2]),
-            w=int(res[3]))
+        res = self._send_cmd('APS')
+        ans = Position(*self._parse_A_res(res))
         return ans
 
     def velocity(self) -> Velocity:
-        res = self._send_cmd('ASP').split(',')
-        ans = Velocity(
-            x=int(res[0]),
-            y=int(res[1]),
-            z=int(res[2]),
-            w=int(res[3]))
+        res = self._send_cmd('ASP')
+        ans = Velocity(*self._parse_A_res(res))
         return ans
 
     def acceleration(self) -> Acceleration:
-        res = self._send_cmd('AAC').split(',')
-        ans = Acceleration(
-            x=int(res[0]),
-            y=int(res[1]),
-            z=int(res[2]),
-            w=int(res[3]))
+        res = self._send_cmd('AAC')
+        ans = Acceleration(*self._parse_A_res(res))
         return ans
 
     def deceleration(self) -> Deceleration:
-        res = self._send_cmd('ADC').split(',')
-        ans = Deceleration(
-            x=int(res[0]),
-            y=int(res[1]),
-            z=int(res[2]),
-            w=int(res[3]))
+        res = self._send_cmd('ADC')
+        ans = Deceleration(*self._parse_A_res(res))
         return ans
 
     def debug_info(self) -> str:
