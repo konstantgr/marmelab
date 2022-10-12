@@ -7,7 +7,7 @@ from src.matmul import random_matmul
 from time import time
 from TRIM import TRIMScanner
 from tests.TRIM_emulator import run
-
+from src import Position
 """
 drafts
 from src import Position
@@ -20,9 +20,11 @@ print(sc.velocity().x)
 
 class MainWindow(QMainWindow):
 
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("My App")
+        self.position = Position()
         # main_text = QtWidgets.QLabel(self)
         # main_text.setText(self.text)
         # main_text.move(self.x_coor, self.y_coor - 30)
@@ -30,7 +32,6 @@ class MainWindow(QMainWindow):
 
     def button_maker(self, text, b_text, x_coor, y_coor, above_text, b_size_w, b_size_h, func):
         button = QPushButton(b_text, self)
-
         button.setCheckable(True)
         button.setToolTip(above_text)
         button.clicked.connect(func)

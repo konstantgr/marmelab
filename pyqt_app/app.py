@@ -11,8 +11,13 @@ from src import scanner_utils
 6 аргумент размер кнопки по х
 7 аргумент размер кнопки по у
 """
+# TODO: Реализовать управление сканнером через окошки,
+#  в которые можно вбивать координаты,
+# TODO: Реализовать поля, в которых отображаются координаты
+# TODO: Реализовать кнопку Аборт
 
 if __name__ == "__main__":
+    sc = None
     app = QApplication(sys.argv)
     window = MainWindow()
     window.setGeometry(300, 300, 900, 600)
@@ -34,9 +39,10 @@ if __name__ == "__main__":
     window.button_maker('scanner cont', 'Currrent position is..', 665, 200, 'This button shows current coordinates', 120, 25,
                         scanner_utils.f_currrent_position) # The button connect
 
+    window.button_maker('scanner cont', 'Abort', 665, 230, 'This button shows current coordinates',
+                        120, 25,
+                        scanner_utils.f_currrent_position)  # The button connect
 
-    # window.button_maker('scanner cont', 'Move scanner', 100, 100, 'This button makes connections to the scanner', 100, 75)
-    # window.the_button_was_clicked
+
     window.show()
-
     app.exec()
