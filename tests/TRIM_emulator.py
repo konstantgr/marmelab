@@ -3,6 +3,8 @@ from src import Position, Velocity, Acceleration, Deceleration, BaseAxes
 import threading
 import time
 from dataclasses import dataclass
+import dataclasses
+from typing import Union, List, Any, Iterable
 
 
 @dataclass
@@ -24,65 +26,46 @@ class ScannerStorage:
 def return_by_cmd(axis: BaseAxes, letter: bytes) -> bytes:
     if letter == b'A':
         return f'{axis.x},{axis.y},{axis.z},{axis.w}>'.encode()
-    elif letter == b'X':
-        return f'{axis.x}>'.encode()
-    elif letter == b'Y':
-        return f'{axis.y}>'.encode()
-    elif letter == b'Z':
-        return f'{axis.z}>'.encode()
-    elif letter == b'W':
-        return f'{axis.w}>'.encode()
+    elif letter.decode().lower() in axis.__dict__.keys():
+        return f'{axis.__getattribute__(letter.decode().lower())}>'.encode()
+
+
+def set_by_value(axis: BaseAxes, letter: bytes, value: Union[Iterable[Any], Any]):
+    if letter == b'A':
+        if isinstance(value, Iterable):
+            for val, attr in zip(value, axis.__dict__.keys(), strict=True):
+                axis.__setattr__(attr, val)
+        else:
+            for attr in axis.__dict__.keys():
+                axis.__setattr__(attr, value)
+    elif letter.decode().lower() in axis.__dict__.keys():
+        axis.__setattr__(letter.decode().lower(), value)
 
 
 def set_by_cmd(axis: BaseAxes, letter: bytes, cmd: bytes) -> bytes:
     try:
         if letter == b'A':
-            axis.x = int(cmd.split(b',')[0])
-            axis.y = int(cmd.split(b',')[1])
-            axis.z = int(cmd.split(b',')[2])
-            axis.w = int(cmd.split(b',')[3])
-        elif letter == b'X':
-            axis.x = int(cmd)
-        elif letter == b'Y':
-            axis.y = int(cmd)
-        elif letter == b'Z':
-            axis.z = int(cmd)
-        elif letter == b'W':
-            axis.w = int(cmd)
+            if len(cmd.split(b',')) != 1:
+                set_by_value(axis, letter, map(int, cmd.split(b',')))
+            else:
+                set_by_value(axis, letter, int(cmd.split(b',')[0]))
+        elif letter.decode().lower() in axis.__dict__.keys():
+            set_by_value(axis, letter, int(cmd))
         return b'>'
     except:
         return b'?>'
 
 
 def update_ms_em(scanner, tmp, motion_time):
-    if tmp - scanner.motion_start_time.x < motion_time:
-        scanner.motor_status.x = 1
-        scanner.error_motion.x = 0
-    else:
-        scanner.motor_status.x = 0
-        scanner.error_motion.x = 1
-        scanner.position.x = scanner.absolute_position.x
-    if tmp - scanner.motion_start_time.y < motion_time:
-        scanner.motor_status.y = 1
-        scanner.error_motion.y = 0
-    else:
-        scanner.motor_status.y = 0
-        scanner.error_motion.y = 1
-        scanner.position.y = scanner.absolute_position.y
-    if tmp - scanner.motion_start_time.z < motion_time:
-        scanner.motor_status.z = 1
-        scanner.error_motion.z = 0
-    else:
-        scanner.motor_status.z = 0
-        scanner.error_motion.z = 1
-        scanner.position.z = scanner.absolute_position.z
-    if tmp - scanner.motion_start_time.w < motion_time:
-        scanner.motor_status.w = 1
-        scanner.error_motion.w = 0
-    else:
-        scanner.motor_status.w = 0
-        scanner.error_motion.w = 1
-        scanner.position.w = scanner.absolute_position.w
+    for field in dataclasses.fields(BaseAxes):
+        attr = field.name
+        if tmp - scanner.motion_start_time.__getattribute__(attr) < motion_time:
+            scanner.motor_status.__setattr__(attr, 1)
+            scanner.error_motion.__setattr__(attr, 0)
+        else:
+            scanner.motor_status.__setattr__(attr, 0)
+            scanner.error_motion.__setattr__(attr, 1)
+            scanner.position.__setattr__(attr, scanner.absolute_position.__getattribute__(attr))
 
 
 def emulator(ip="127.0.0.1", port=9000, motion_time: int = 5):
@@ -121,18 +104,10 @@ def emulator(ip="127.0.0.1", port=9000, motion_time: int = 5):
                     axis = scanner.special_motion_mode
 
                 elif data[1:3] == b'BG':
+                    axis = scanner.motion_start_time
                     letter = data[0:1]
-                    if letter == b'A':
-                        tmp = time.time()
-                        scanner.motion_start_time = BaseAxes(tmp, tmp, tmp, tmp)
-                    elif letter == b'X':
-                        scanner.motion_start_time.x = time.time()
-                    elif letter == b'Y':
-                        scanner.motion_start_time.y = time.time()
-                    elif letter == b'Z':
-                        scanner.motion_start_time.z = time.time()
-                    elif letter == b'W':
-                        scanner.motion_start_time.z = time.time()
+                    tmp = time.time()
+                    set_by_value(axis, letter, tmp)
                     update_ms_em(scanner, time.time(), motion_time)
                     new_data += b'>'
                     done = True
