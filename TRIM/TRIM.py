@@ -164,6 +164,7 @@ class TRIMScanner(Scanner):
 
     def set_settings(
             self,
+            position: Position = None,
             velocity: Velocity = None,
             acceleration: Acceleration = None,
             deceleration: Deceleration = None,
@@ -175,6 +176,7 @@ class TRIMScanner(Scanner):
         """
         Применить настройки
 
+        :param position: положение сканера с энкодеров
         :param velocity: скорость
         :param acceleration: ускорение
         :param deceleration: замедление
@@ -184,6 +186,8 @@ class TRIMScanner(Scanner):
         :return:
         """
         cmds = []
+        if position is not None:
+            cmds += cmds_from_dict(position.to_dict(), basecmd='PS')
         if velocity is not None:
             cmds += cmds_from_dict(velocity.to_dict(), basecmd='SP')
         if acceleration is not None:
@@ -263,31 +267,40 @@ class TRIMScanner(Scanner):
         res = self._send_cmd('AMS')
         return all([r == 0 for r in self._parse_A_res(res)])
 
-    def _end_of_motion_reason(self) -> List[int]:
+    def _end_of_motion_reason(self) -> Iterator[int]:
         """
         Проверка причины остановки
 
         """
         res = self._send_cmd('AEM')
-        return list(self._parse_A_res(res))
+        return self._parse_A_res(res)
 
-    def goto(self, position: Position) -> None:
-        cmds = cmds_from_dict(position.to_dict(), 'AP')
-        cmds += cmds_from_dict(position.to_dict(), 'BG', val=False)
+    def _begin_motion_and_wait(self, cmds, action_description: str = "a motion"):
+        """
+        Отправляет команды, а затем ждет завершение движения
+
+        :param cmds: команды
+        :param action_description: описание движения, которое будет использовано при поднятии исплючения
+        """
         self._send_cmds(cmds)
 
         while not self._is_stopped():
             time.sleep(0.1)
 
-        stop_reasons = self._end_of_motion_reason()
+        stop_reasons = list(self._end_of_motion_reason())
         if any([r != 1 for r in stop_reasons]):
             raise ScannerMotionError(
-                f'During motion to {position} unexpected cause for end-of-motion was received:\n'
+                f'During {action_description} unexpected cause for end-of-motion was received:\n'
                 f'\tx: {EM[stop_reasons[0]]}\n'
                 f'\ty: {EM[stop_reasons[1]]}\n'
                 f'\tz: {EM[stop_reasons[2]]}\n'
                 f'\tw: {EM[stop_reasons[3]]}\n'
             )
+
+    def goto(self, position: Position) -> None:
+        cmds = cmds_from_dict(position.to_dict(), 'AP')
+        cmds += cmds_from_dict(position.to_dict(), 'BG', val=False)
+        self._begin_motion_and_wait(cmds, f'the motion to {position}')
 
     def stop(self) -> None:
         self._send_cmd('AST')
@@ -315,10 +328,40 @@ class TRIMScanner(Scanner):
         ans = Deceleration(*self._parse_A_res(res))
         return ans
 
+    def _motor_on(self) -> BaseAxes:
+        """
+        Включены или выключены двигатели
+
+        :return: покоординатные значения состояния двигателей
+        """
+        res = self._send_cmd('AMO')
+        ans = BaseAxes(*self._parse_A_res(res))
+        return ans
+
+    def _motion_mode(self) -> BaseAxes:
+        """
+        Режим движения двигателей
+
+        :return: покоординатные значения режима движения двигателей
+        """
+        res = self._send_cmd('AMM')
+        ans = BaseAxes(*self._parse_A_res(res))
+        return ans
+
+    def _special_motion_mode(self) -> BaseAxes:
+        """
+        Специальный режим движения двигателей
+
+        :return: покоординатные значения специального режима движения двигателей
+        """
+        res = self._send_cmd('ASM')
+        ans = BaseAxes(*self._parse_A_res(res))
+        return ans
+
     def debug_info(self) -> str:
         cmds = [
             'AAP',  # следующая точка движения в PTP режиме
-            'APS',  # актуальные координаты энкотдеров
+            'APS',  # актуальные координаты энкодеров
             # 'APE',
             # 'ADP',
             # 'ARP',
@@ -339,6 +382,14 @@ class TRIMScanner(Scanner):
     def is_available(self) -> bool:
         return self.is_connected
 
+    def home(self) -> None:
+        cmds = [
+            'XQE,#HOME_X',
+            'YQE,#HOME_Y',
+            'ZQE,#HOME_Z'
+        ]
+        self._begin_motion_and_wait(cmds, 'homing')
+        self.set_settings(position=Position(0, 0, 0, 0))
 
 # from tests.TRIM_emulator import run
 # run(blocking=False)
