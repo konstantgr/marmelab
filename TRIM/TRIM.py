@@ -155,12 +155,11 @@ class TRIMScanner(Scanner):
             raise ScannerConnectionError from e
 
     def disconnect(self) -> None:
-        try:
-            self.conn.shutdown(socket.SHUT_RDWR)
-            self.conn.close()
-            self.is_connected = False
-        except socket.error as e:
-            raise ScannerConnectionError from e
+        if not self.is_connected:
+            return
+        self.conn.shutdown(socket.SHUT_RDWR)
+        self.conn.close()
+        self.is_connected = False
 
     def set_settings(
             self,
@@ -183,7 +182,6 @@ class TRIMScanner(Scanner):
         :param motor_on: включить двигатели
         :param motion_mode: режим работы двигателей
         :param special_motion_mode: подрежим работы двигателей
-        :return:
         """
         cmds = []
         if position is not None:
