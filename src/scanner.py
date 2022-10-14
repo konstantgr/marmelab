@@ -106,7 +106,6 @@ class Scanner(metaclass=ABCMeta):
         :param position: то, куда необходимо переместиться
         :type position: Position
         """
-        pass
 
     @abstractmethod
     def stop(self) -> None:
@@ -114,7 +113,6 @@ class Scanner(metaclass=ABCMeta):
         Полная остановка сканера (сначала замедлится, потом остановится)
 
         """
-        pass
 
     @abstractmethod
     def abort(self) -> None:
@@ -130,7 +128,6 @@ class Scanner(metaclass=ABCMeta):
 
         :return: позиция
         """
-        return None
 
     @abstractmethod
     def velocity(self) -> Velocity:
@@ -139,7 +136,6 @@ class Scanner(metaclass=ABCMeta):
 
         :return: скорость
         """
-        return None
 
     @abstractmethod
     def acceleration(self) -> Acceleration:
@@ -148,7 +144,6 @@ class Scanner(metaclass=ABCMeta):
 
         :return: ускорение
         """
-        return None
 
     @abstractmethod
     def deceleration(self) -> Deceleration:
@@ -157,7 +152,6 @@ class Scanner(metaclass=ABCMeta):
 
         :return: замедление
         """
-        return None
 
     @abstractmethod
     def connect(self) -> None:
@@ -165,7 +159,6 @@ class Scanner(metaclass=ABCMeta):
         Подключение к сканеру
 
         """
-        pass
 
     @abstractmethod
     def disconnect(self) -> None:
@@ -173,7 +166,6 @@ class Scanner(metaclass=ABCMeta):
         Отключение от сканера
 
         """
-        pass
 
     @property
     @abstractmethod
@@ -191,6 +183,10 @@ class Scanner(metaclass=ABCMeta):
 
         :return: максимальное количество информации о сканере
         """
-        pass
 
+    @abstractmethod
+    def home(self) -> None:
+        """
+        Перемещение сканера в реальный ноль и обнуление его положения
 
+        """

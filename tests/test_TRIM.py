@@ -1,43 +1,113 @@
 import pytest
-from src import Velocity, Acceleration, Deceleration
-from TRIM import Axes, AxesSettings, DEFAULT_SETTINGS
-import random
+from src import Velocity, Acceleration, Deceleration, Position, BaseAxes
+from TRIM import AxesGroup, DEFAULT_SETTINGS, TRIMScanner
+from TRIM.TRIM import cmds_from_dict
+from random import randint
+import dataclasses
 
 
 def test_axes_to_dict():
-    x = random.randint(0, 100)
-    A = random.randint(0, 100)
-    B = random.randint(0, 100)
-    el = Axes(A=A, B=B, x=x)
+    A = randint(0, 100)
+    B = randint(0, 100)
+    el = AxesGroup(A=A, B=B)
     dct = el.to_dict()
-    assert dct['x'] == x
-    assert dct['y'] is None
-    assert dct['z'] is None
-    assert dct['w'] is None
     assert dct['A'] == A
     assert dct['B'] == B
 
 
-def test_axes_settings_to_cmd():
-    velocity = Velocity(x=10)
-    acceleration = Acceleration(z=320)
-    deceleration = Deceleration(y=33)
-    motor_on = Axes(B=0)
-    motion_mode = Axes(A=0)
-    special_motion_mode = Axes(A=1, B=0)
-    s = AxesSettings(
-        velocity=velocity,
-        acceleration=acceleration,
-        deceleration=deceleration,
-        motor_on=motor_on,
-        motion_mode=motion_mode,
-        special_motion_mode=special_motion_mode
-    )
-    cmds = s.to_cmds()
-    assert cmds.count('XSP=10') == 1
-    assert cmds.count('ZAC=320') == 1
-    assert cmds.count('YDC=33') == 1
-    assert cmds.count('BMO=0') == 1
-    assert cmds.count('AMM=0') == 1
-    assert cmds.count('ASM=1') == 1
-    assert cmds.count('BSM=0') == 1
+def test_cmds_from_dict():
+    x = 123
+    y = 342
+    res = cmds_from_dict({'x': x, 'y': y}, 'CMD')
+    assert res == [f'XCMD={x}', f'YCMD={y}']
+    res = cmds_from_dict({'x': x, 'y': y}, 'CMD', val=False)
+    assert res == [f'XCMD', f'YCMD']
+
+    y = None
+    res = cmds_from_dict({'x': x, 'y': y}, 'CMD')
+    assert res == [f'XCMD={x}']
+    res = cmds_from_dict({'x': x, 'y': y}, 'CMD', val=False)
+    assert res == [f'XCMD']
+
+
+def test_get(TRIM_Scanner_emulator: TRIMScanner):
+    for axis in [
+        TRIM_Scanner_emulator.position,
+        TRIM_Scanner_emulator.velocity,
+        TRIM_Scanner_emulator.acceleration,
+        TRIM_Scanner_emulator.deceleration
+    ]:
+        assert axis().x == 10
+        assert axis().y == 20
+        assert axis().z == 30
+        assert axis().w == 40
+
+
+def test_set_settings(TRIM_Scanner_emulator: TRIMScanner):
+    # тест velocity, acceleration, deceleration
+    for setting, value in {
+        TRIM_Scanner_emulator.position: {
+            'position': BaseAxes(*[randint(0, 10) for _ in range(len(dataclasses.fields(BaseAxes)))])
+        },
+        TRIM_Scanner_emulator.velocity: {
+            'velocity': BaseAxes(*[randint(0, 10) for _ in range(len(dataclasses.fields(BaseAxes)))])
+        },
+        TRIM_Scanner_emulator.acceleration: {
+            'acceleration': BaseAxes(*[randint(0, 10) for _ in range(len(dataclasses.fields(BaseAxes)))])
+        },
+        TRIM_Scanner_emulator.deceleration: {
+            'deceleration': BaseAxes(*[randint(0, 10) for _ in range(len(dataclasses.fields(BaseAxes)))])
+        }
+    }.items():
+        TRIM_Scanner_emulator.set_settings(**value)
+        d = value.popitem()[1].to_dict()
+        s = setting().to_dict()
+        assert all([s[key] == d[key] for key in d.keys() if d[key] is not None])
+
+    # тест motor_on, motion_mode, special_motion_mode
+    def send_and_check(req, res):
+        for cmd, attr in {
+            'AMO': {'motor_on': req},
+            'AMM': {'motion_mode': req},
+            'ASM': {'special_motion_mode': req}
+        }.items():
+            TRIM_Scanner_emulator.set_settings(**attr)
+            assert TRIM_Scanner_emulator._send_cmd(cmd) == res
+    # тест BaseAxes
+    req = BaseAxes(x=randint(0, 10), y=randint(0, 10), z=randint(0, 10), w=randint(0, 20))
+    res = f'{req.x},{req.y},{req.z},{req.w}'
+    send_and_check(req, res)
+
+    # тест AxesGroup
+    req = AxesGroup(A=randint(0, 1))
+    res = f'{req.A},{req.A},{req.A},{req.A}'
+    send_and_check(req, res)
+    # reqB = AxesGroup(B=randint(0, 1))
+    # res = f'{reqB.B},{reqB.B},{req.A},{req.A}'
+    # send_and_check(reqB, res)
+
+
+def test_set_default_settings(TRIM_Scanner_emulator: TRIMScanner):
+    TRIM_Scanner_emulator.set_settings(**DEFAULT_SETTINGS)
+    assert TRIM_Scanner_emulator.acceleration() == DEFAULT_SETTINGS['acceleration']
+    assert TRIM_Scanner_emulator.deceleration() == DEFAULT_SETTINGS['deceleration']
+    assert TRIM_Scanner_emulator.velocity() == DEFAULT_SETTINGS['velocity']
+
+    for s, getter in {
+        'motor_on': TRIM_Scanner_emulator._motor_on,
+        'motion_mode': TRIM_Scanner_emulator._motion_mode,
+        'special_motion_mode': TRIM_Scanner_emulator._special_motion_mode
+    }.items():
+        val = getter()
+        assert val.x == val.y == val.z == val.w == DEFAULT_SETTINGS[s].A
+
+
+def test_goto(TRIM_Scanner_emulator: TRIMScanner):
+    new_pos = Position(*[randint(0, 100) for _ in range(len(dataclasses.fields(BaseAxes)))])
+    TRIM_Scanner_emulator.goto(new_pos)
+    sc_pos = TRIM_Scanner_emulator.position()
+    for field in dataclasses.fields(new_pos):
+        attr = field.name
+        assert sc_pos.__getattribute__(attr) == new_pos.__getattribute__(attr)
+
+

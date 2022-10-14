@@ -7,22 +7,23 @@ import time
 from src import Scanner, BaseAxes, Position, Velocity, Acceleration, Deceleration
 from src import ScannerConnectionError, ScannerInternalError, ScannerMotionError
 import socket
-from typing import Union, List
+from typing import Union, List, Iterator
 from dataclasses import dataclass, field
 
 
 @dataclass
-class Axes(BaseAxes):
+class AxesGroup:
     """
-    Класс, в который добавлены группы A и B
+    Класс групп осей A и B
     """
     A: float = None  # all axes
     B: float = None  # X and Y axes
 
     def to_dict(self) -> dict[str:float]:
-        res = super().to_dict()
-        res['A'] = self.A
-        res['B'] = self.B
+        res = {
+            'A': self.A,
+            'B': self.B
+        }
         return res
 
 
@@ -46,6 +47,7 @@ def cmds_from_dict(dct: dict[str:float], basecmd: str, val: bool = True) -> List
             else:
                 cmds.append(f'{axis.upper()}{basecmd}')
     return cmds
+
 
 EM = [
     'Motion is still active',
@@ -78,38 +80,38 @@ DEFAULT_SETTINGS = {
         z=100000,
         w=3000,
     ),
-    'motion_mode': Axes(
+    'motion_mode': AxesGroup(
         A=0,
     ),
-    'special_motion_mode': Axes(
+    'special_motion_mode': AxesGroup(
         A=0,
     ),
-    'motor_on': Axes(
+    'motor_on': AxesGroup(
         A=1,
     )
 }
 
 
 PTP_MODE_SETTINGS = {
-    'motion_mode':Axes(
+    'motion_mode': AxesGroup(
         A=0,
     ),
-    'special_motion_mode': Axes(
+    'special_motion_mode': AxesGroup(
         A=0,
     ),
-    'motor_on': Axes(
+    'motor_on': AxesGroup(
         A=1,
     )
 }
 
 JOG_MODE_SETTINGS = {
-    'motion_mode': Axes(
+    'motion_mode': AxesGroup(
         A=1,
     ),
-    'special_motion_mode': Axes(
+    'special_motion_mode': AxesGroup(
         A=0,
     ),
-    'motor_on': Axes(
+    'motor_on': AxesGroup(
         A=1,
     )
 }
@@ -153,35 +155,37 @@ class TRIMScanner(Scanner):
             raise ScannerConnectionError from e
 
     def disconnect(self) -> None:
-        try:
-            self.conn.shutdown(socket.SHUT_RDWR)
-            self.conn.close()
-            self.is_connected = False
-        except socket.error as e:
-            raise ScannerConnectionError from e
+        if not self.is_connected:
+            return
+        self.conn.shutdown(socket.SHUT_RDWR)
+        self.conn.close()
+        self.is_connected = False
 
     def set_settings(
             self,
+            position: Position = None,
             velocity: Velocity = None,
             acceleration: Acceleration = None,
             deceleration: Deceleration = None,
-            motor_on: Axes = None,
-            motion_mode: Axes = None,
-            special_motion_mode: Axes = None,
+            motor_on: Union[AxesGroup, BaseAxes] = None,
+            motion_mode: Union[AxesGroup, BaseAxes] = None,
+            special_motion_mode: Union[AxesGroup, BaseAxes] = None,
 
     ) -> None:
         """
         Применить настройки
 
+        :param position: положение сканера с энкодеров
         :param velocity: скорость
         :param acceleration: ускорение
         :param deceleration: замедление
         :param motor_on: включить двигатели
         :param motion_mode: режим работы двигателей
         :param special_motion_mode: подрежим работы двигателей
-        :return:
         """
         cmds = []
+        if position is not None:
+            cmds += cmds_from_dict(position.to_dict(), basecmd='PS')
         if velocity is not None:
             cmds += cmds_from_dict(velocity.to_dict(), basecmd='SP')
         if acceleration is not None:
@@ -249,39 +253,52 @@ class TRIMScanner(Scanner):
             responses.append(self._send_cmd(cmd))
         return responses
 
+    @staticmethod
+    def _parse_A_res(res: str) -> Iterator[int]:
+        return map(int, res.split(','))
+
     def _is_stopped(self) -> bool:
         """
         Проверяет, остановился ли двигатель
 
         """
-        res = self._send_cmd('AMS').split(',')
-        return all([r == '0' for r in res])
+        res = self._send_cmd('AMS')
+        return all([r == 0 for r in self._parse_A_res(res)])
 
-    def _end_of_motion_reason(self) -> List[int]:
+    def _end_of_motion_reason(self) -> Iterator[int]:
         """
         Проверка причины остановки
 
         """
-        res = self._send_cmd('AEM').split(',')
-        return [int(r) for r in res]
+        res = self._send_cmd('AEM')
+        return self._parse_A_res(res)
 
-    def goto(self, position: Position) -> None:
-        cmds = cmds_from_dict(position.to_dict(), 'AP')
-        cmds += cmds_from_dict(position.to_dict(), 'BG', val=False)
+    def _begin_motion_and_wait(self, cmds, action_description: str = "a motion"):
+        """
+        Отправляет команды, а затем ждет завершение движения
+
+        :param cmds: команды
+        :param action_description: описание движения, которое будет использовано при поднятии исплючения
+        """
         self._send_cmds(cmds)
 
         while not self._is_stopped():
             time.sleep(0.1)
 
-        stop_reasons = self._end_of_motion_reason()
+        stop_reasons = list(self._end_of_motion_reason())
         if any([r != 1 for r in stop_reasons]):
             raise ScannerMotionError(
-                f'During motion to {position} unexpected cause for end-of-motion was received:\n'
+                f'During {action_description} unexpected cause for end-of-motion was received:\n'
                 f'\tx: {EM[stop_reasons[0]]}\n'
                 f'\ty: {EM[stop_reasons[1]]}\n'
                 f'\tz: {EM[stop_reasons[2]]}\n'
                 f'\tw: {EM[stop_reasons[3]]}\n'
             )
+
+    def goto(self, position: Position) -> None:
+        cmds = cmds_from_dict(position.to_dict(), 'AP')
+        cmds += cmds_from_dict(position.to_dict(), 'BG', val=False)
+        self._begin_motion_and_wait(cmds, f'the motion to {position}')
 
     def stop(self) -> None:
         self._send_cmd('AST')
@@ -290,45 +307,59 @@ class TRIMScanner(Scanner):
         self._send_cmd('AAB')
 
     def position(self) -> Position:
-        res = self._send_cmd('APS').split(',')
-        ans = Position(
-            x=int(res[0]),
-            y=int(res[1]),
-            z=int(res[2]),
-            w=int(res[3]))
+        res = self._send_cmd('APS')
+        ans = Position(*self._parse_A_res(res))
         return ans
 
     def velocity(self) -> Velocity:
-        res = self._send_cmd('ASP').split(',')
-        ans = Velocity(
-            x=int(res[0]),
-            y=int(res[1]),
-            z=int(res[2]),
-            w=int(res[3]))
+        res = self._send_cmd('ASP')
+        ans = Velocity(*self._parse_A_res(res))
         return ans
 
     def acceleration(self) -> Acceleration:
-        res = self._send_cmd('AAC').split(',')
-        ans = Acceleration(
-            x=int(res[0]),
-            y=int(res[1]),
-            z=int(res[2]),
-            w=int(res[3]))
+        res = self._send_cmd('AAC')
+        ans = Acceleration(*self._parse_A_res(res))
         return ans
 
     def deceleration(self) -> Deceleration:
-        res = self._send_cmd('ADC').split(',')
-        ans = Deceleration(
-            x=int(res[0]),
-            y=int(res[1]),
-            z=int(res[2]),
-            w=int(res[3]))
+        res = self._send_cmd('ADC')
+        ans = Deceleration(*self._parse_A_res(res))
+        return ans
+
+    def _motor_on(self) -> BaseAxes:
+        """
+        Включены или выключены двигатели
+
+        :return: покоординатные значения состояния двигателей
+        """
+        res = self._send_cmd('AMO')
+        ans = BaseAxes(*self._parse_A_res(res))
+        return ans
+
+    def _motion_mode(self) -> BaseAxes:
+        """
+        Режим движения двигателей
+
+        :return: покоординатные значения режима движения двигателей
+        """
+        res = self._send_cmd('AMM')
+        ans = BaseAxes(*self._parse_A_res(res))
+        return ans
+
+    def _special_motion_mode(self) -> BaseAxes:
+        """
+        Специальный режим движения двигателей
+
+        :return: покоординатные значения специального режима движения двигателей
+        """
+        res = self._send_cmd('ASM')
+        ans = BaseAxes(*self._parse_A_res(res))
         return ans
 
     def debug_info(self) -> str:
         cmds = [
             'AAP',  # следующая точка движения в PTP режиме
-            'APS',  # актуальные координаты энкотдеров
+            'APS',  # актуальные координаты энкодеров
             # 'APE',
             # 'ADP',
             # 'ARP',
@@ -349,6 +380,14 @@ class TRIMScanner(Scanner):
     def is_available(self) -> bool:
         return self.is_connected
 
+    def home(self) -> None:
+        cmds = [
+            'XQE,#HOME_X',
+            'YQE,#HOME_Y',
+            'ZQE,#HOME_Z'
+        ]
+        self._begin_motion_and_wait(cmds, 'homing')
+        self.set_settings(position=Position(0, 0, 0, 0))
 
 # from tests.TRIM_emulator import run
 # run(blocking=False)
