@@ -1,17 +1,30 @@
 from src import BaseAxes, Position, Velocity, Deceleration, Acceleration
-import random
+from random import randint
+import dataclasses
 
 
 def test_axes_to_dict():
     for cl in [BaseAxes, Position, Velocity, Deceleration, Acceleration]:
-        x = random.randint(0, 100)
-        y = random.randint(0, 100)
-        z = random.randint(0, 100)
-        w = random.randint(0, 100)
-        el = cl(x=x, y=y, z=z, w=w)
+        el = cl(*[randint(0, 10) for _ in range(len(dataclasses.fields(cl)))])
         dct = el.to_dict()
-        assert dct['x'] == x
-        assert dct['y'] == y
-        assert dct['z'] == z
-        assert dct['w'] == w
+        for field in dataclasses.fields(cl):
+            name = field.name
+            assert dct[name] == el.__getattribute__(name)
 
+
+def test_axes_add_sub():
+    for cl in [BaseAxes, Position, Velocity, Deceleration, Acceleration]:
+        el1 = cl(*[randint(0, 10) for _ in range(len(dataclasses.fields(cl)))])
+        el2 = cl(*[randint(0, 10) for _ in range(len(dataclasses.fields(cl)))])
+
+        el3 = el1 + el2
+        assert isinstance(el3, BaseAxes)
+        for field in dataclasses.fields(cl):
+            name = field.name
+            assert el3.__getattribute__(name) == el1.__getattribute__(name) + el2.__getattribute__(name)
+
+        el3 = el1 - el2
+        assert isinstance(el3, BaseAxes)
+        for field in dataclasses.fields(cl):
+            name = field.name
+            assert el3.__getattribute__(name) == el1.__getattribute__(name) - el2.__getattribute__(name)

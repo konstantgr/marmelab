@@ -255,6 +255,12 @@ class TRIMScanner(Scanner):
 
     @staticmethod
     def _parse_A_res(res: str) -> Iterator[int]:
+        """
+        Принимает строку "1,2,10" и преобразует в итератор целых чисел (1, 2, 10)
+
+        :param res: строка целых чисел, разделенных запятой
+        :return: итератор
+        """
         return map(int, res.split(','))
 
     def _is_stopped(self) -> bool:
