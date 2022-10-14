@@ -31,6 +31,10 @@ class MainWindow(QMainWindow):
 
 
     def button_maker(self, text, b_text, x_coor, y_coor, above_text, b_size_w, b_size_h, func):
+        """
+        This function makes push button
+        """
+
         button = QPushButton(b_text, self)
         button.setCheckable(True)
         button.setToolTip(above_text)
@@ -42,3 +46,18 @@ class MainWindow(QMainWindow):
         #self.show()
 
 
+    def field_text_button(self, x_coor, y_coor, b_size_w, b_size_h):
+        """
+        This function makes button with field, where the text can be added
+        """
+
+        field_button = QtWidgets.QPlainTextEdit(self)
+        field_button.setFixedWidth(b_size_w)
+        field_button.setFixedHeight(b_size_h)
+        field_button.move(x_coor, y_coor)
+
+
+    def text_on_the_window(self, text, x, y):
+        main_text = QtWidgets.QLabel(self)
+        main_text.setText(text)
+        main_text.move(x, y)

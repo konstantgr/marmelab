@@ -4,6 +4,7 @@ sc = TRIMScanner(ip="127.0.0.1", port=9000)
 
 # TODO: Добавить подробную настройку движения сканнера:
 #  скорость, ускорение, режим работы и тд, отображение сотояние мотора
+#  для этого есть функция set_settings()
 def f_connection():
     """
     This function makes connection to the scanner
@@ -14,12 +15,22 @@ def f_connection():
     print('Connected')
 
 
+def f_up_edit():
+    """
+    This function makes upward movement
+    """
+    from src import Position
+    new_position = Position()
+    sc.goto(new_position)
+    print('moving up!')
+
+
 def f_up():
     """
     This function makes upward movement
     """
     from src import Position
-    new_position = Position(x=0, y=10)
+    new_position = Position()
     sc.goto(new_position)
     print('moving up!')
 

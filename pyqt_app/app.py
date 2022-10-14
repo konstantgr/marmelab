@@ -39,9 +39,47 @@ if __name__ == "__main__":
     window.button_maker('scanner cont', 'Currrent position is..', 665, 200, 'This button shows current coordinates', 120, 25,
                         scanner_utils.f_currrent_position) # The button connect
 
-    window.button_maker('scanner cont', 'Abort', 665, 230, 'This button shows current coordinates',
+    window.button_maker('scanner cont', 'Abort', 665, 230, 'This button aborts current movements',
                         120, 25,
                         scanner_utils.f_currrent_position)  # The button connect
+
+    #
+    # window.button_maker('scanner cont', 'Axes X', 300, 230, 'This button aborts current movements',
+    #                      120, 25,
+    #                      scanner_utils.f_currrent_position)  # The button connect
+    #
+    #
+
+    window.text_on_the_window("Axes X", 708, 270)
+    window.field_text_button(710, 300, 30, 30)  # The button connect
+    window.button_maker('scanner cont', '+', 750, 300, 'This button makes movement in positive direction',
+                        30, 30,
+                        scanner_utils.f_currrent_position)  # The button connect
+    window.button_maker('scanner cont', '-', 670, 300, 'This button makes movement in negative direction',
+                        30, 30,
+                        scanner_utils.f_currrent_position)  # The button connect
+
+
+    window.text_on_the_window("Axes Y", 708, 330)
+    window.field_text_button(710, 360, 30, 30)  # The button connect
+    window.button_maker('scanner cont', '+', 750, 360, 'This button makes movement in positive direction',
+                        30, 30,
+                        scanner_utils.f_currrent_position)  # The button connect
+    window.button_maker('scanner cont', '-', 670, 360, 'This button makes movement in negative direction',
+                        30, 30,
+                        scanner_utils.f_currrent_position)  # The button connect
+
+
+
+    window.text_on_the_window("Axes Z", 708, 390)
+    window.field_text_button(710, 420, 30, 30)  # The button connect
+    window.button_maker('scanner cont', '+', 750, 420, 'This button makes movement in positive direction',
+                        30, 30,
+                        scanner_utils.f_currrent_position)  # The button connect
+    window.button_maker('scanner cont', '-', 670, 420, 'This button makes movement in negative direction',
+                        30, 30,
+                        scanner_utils.f_currrent_position)  # The button connect
+
 
 
     window.show()
