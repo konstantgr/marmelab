@@ -17,6 +17,8 @@ class ScannerStorage:
     motor_on = BaseAxes(0, 0, 0, 0)
     motion_mode = BaseAxes(0, 0, 0, 0)
     special_motion_mode = BaseAxes(0, 0, 0, 0)
+    high_limit = BaseAxes(127, 127, 127, 127)
+    low_limit = BaseAxes(-127, -127, -127, -127)
 
     motor_status = BaseAxes(0, 0, 0, 0)
     error_motion = BaseAxes(1, 1, 1, 1)
@@ -117,6 +119,10 @@ def emulator(ip="127.0.0.1", port=9000, motion_time: int = 5):
                     axis = scanner.motion_mode
                 elif data[1:3] == b'SM':
                     axis = scanner.special_motion_mode
+                elif data[1:3] == b'HL':
+                    axis = scanner.high_limit
+                elif data[1:3] == b'LL':
+                    axis = scanner.low_limit
 
                 elif data[1:3] == b'BG':
                     scanner.in_motion = True

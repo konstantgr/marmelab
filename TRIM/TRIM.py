@@ -157,9 +157,11 @@ class TRIMScanner(Scanner):
     def disconnect(self) -> None:
         if not self.is_connected:
             return
-        self.conn.shutdown(socket.SHUT_RDWR)
-        self.conn.close()
-        self.is_connected = False
+        try:
+            self.conn.shutdown(socket.SHUT_RDWR)
+            self.conn.close()
+        except socket.error:
+            self.is_connected = False
 
     def set_settings(
             self,
