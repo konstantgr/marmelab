@@ -1,16 +1,16 @@
+from TRIM import TRIMScanner, DEFAULT_SETTINGS
+from tests.TRIM_emulator import run  # use it only for emulating
+sc = TRIMScanner(ip="127.0.0.1", port=9000)
 
-
+# TODO: Добавить подробную настройку движения сканнера:
+#  скорость, ускорение, режим работы и тд, отображение сотояние мотора
 def f_connection():
     """
     This function makes connection to the scanner
     """
-
-    from tests.TRIM_emulator import run  # use it only for emulating
-    run(blocking=False)  # use it only for emulating
-    from TRIM import TRIMScanner
-    global sc
-    sc = TRIMScanner(ip="127.0.0.1", port=9000)
+    run(blocking=False, motion_time=10)  # use it only for emulating
     sc.connect()
+    #sc.set_settings(**DEFAULT_SETTINGS) пока не работает
     print('Connected')
 
 
@@ -43,7 +43,7 @@ def f_left():
     sc.goto(new_position)
     print('moving left!')
 
-
+# TODO: Добавить относительное движение
 def f_right():
     """
     This function makes movement to the right
@@ -62,3 +62,7 @@ def f_currrent_position():
     print('x: ', current_position.x)
     print('y: ', current_position.y)
     print('z: ', current_position.z)
+
+
+def abort():
+    pass
