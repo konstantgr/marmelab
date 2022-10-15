@@ -67,20 +67,32 @@ class BaseAxes:
 
     def __add__(self, other):
         if isinstance(other, BaseAxes):
-            res = BaseAxes(
-                *[self.__getattribute__(attr.name) + other.__getattribute__(attr.name) for attr in
-                  dataclasses.fields(BaseAxes)]
-            )
+            args = {}
+
+            for attr in dataclasses.fields(BaseAxes):
+                name = attr.name
+                if other.__getattribute__(name) is None:
+                    args[name] = self.__getattribute__(name)
+                    continue
+                args[name] = self.__getattribute__(name) + other.__getattribute__(name)
+
+            res = BaseAxes(**args)
             return res
         else:
             raise NotImplementedError
 
     def __sub__(self, other):
         if isinstance(other, BaseAxes):
-            res = BaseAxes(
-                *[self.__getattribute__(attr.name) - other.__getattribute__(attr.name) for attr in
-                  dataclasses.fields(BaseAxes)]
-            )
+            args = {}
+
+            for attr in dataclasses.fields(BaseAxes):
+                name = attr.name
+                if other.__getattribute__(name) is None:
+                    args[name] = self.__getattribute__(name)
+                    continue
+                args[name] = self.__getattribute__(name) - other.__getattribute__(name)
+
+            res = BaseAxes(**args)
             return res
         else:
             raise NotImplementedError

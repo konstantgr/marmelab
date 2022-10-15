@@ -1,6 +1,7 @@
 from src import BaseAxes, Position, Velocity, Deceleration, Acceleration
 from random import randint
 import dataclasses
+import pytest
 
 
 def test_axes_to_dict():
@@ -28,3 +29,10 @@ def test_axes_add_sub():
         for field in dataclasses.fields(cl):
             name = field.name
             assert el3.__getattribute__(name) == el1.__getattribute__(name) - el2.__getattribute__(name)
+
+        el1 = cl(x=1)
+        el2 = cl(x=None)
+        el3 = el1 + el2
+        assert el3.x == 1
+        with pytest.raises(TypeError):
+            el3 = el2 + el1
