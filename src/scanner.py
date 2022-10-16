@@ -4,6 +4,7 @@
 import dataclasses
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
+from numbers import Number
 
 
 class ScannerConnectionError(Exception):
@@ -41,15 +42,15 @@ class BaseAxes:
     """
     Все координаты сканера
     """
-    x: float = None
-    y: float = None
-    z: float = None
-    w: float = None
+    x: int = None
+    y: int = None
+    z: int = None
+    w: int = None
     # e: float = None
     # f: float = None
     # g: float = None
 
-    def to_dict(self) -> dict[str:float]:
+    def to_dict(self) -> dict[str:int]:
         """
         Перевод датакласса в словарь
 
@@ -66,36 +67,51 @@ class BaseAxes:
         }
 
     def __add__(self, other):
-        if isinstance(other, BaseAxes):
-            args = {}
-
-            for attr in dataclasses.fields(BaseAxes):
-                name = attr.name
-                if other.__getattribute__(name) is None:
-                    args[name] = self.__getattribute__(name)
-                    continue
-                args[name] = self.__getattribute__(name) + other.__getattribute__(name)
-
-            res = BaseAxes(**args)
-            return res
-        else:
+        if not isinstance(other, BaseAxes):
             raise NotImplementedError
+        res = BaseAxes()
+        for attr in dataclasses.fields(BaseAxes):
+            name = attr.name
+            if other.__getattribute__(name) is None:
+                res.__setattr__(name, self.__getattribute__(name))
+            else:
+                res.__setattr__(name, self.__getattribute__(name) + other.__getattribute__(name))
+        return res
 
     def __sub__(self, other):
-        if isinstance(other, BaseAxes):
-            args = {}
-
-            for attr in dataclasses.fields(BaseAxes):
-                name = attr.name
-                if other.__getattribute__(name) is None:
-                    args[name] = self.__getattribute__(name)
-                    continue
-                args[name] = self.__getattribute__(name) - other.__getattribute__(name)
-
-            res = BaseAxes(**args)
-            return res
-        else:
+        if not isinstance(other, BaseAxes):
             raise NotImplementedError
+        res = BaseAxes()
+        for attr in dataclasses.fields(BaseAxes):
+            name = attr.name
+            if other.__getattribute__(name) is None:
+                res.__setattr__(name, self.__getattribute__(name))
+            else:
+                res.__setattr__(name, self.__getattribute__(name) - other.__getattribute__(name))
+        return res
+
+    def __mul__(self, other):
+        if not isinstance(other, Number):
+            raise NotImplementedError
+        res = BaseAxes()
+        for attr in dataclasses.fields(BaseAxes):
+            name = attr.name
+            if self.__getattribute__(name) is not None:
+                res.__setattr__(name, int(self.__getattribute__(name) * other))
+        return res
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __truediv__(self, other):
+        if not isinstance(other, Number):
+            raise NotImplementedError
+        res = BaseAxes()
+        for attr in dataclasses.fields(BaseAxes):
+            name = attr.name
+            if self.__getattribute__(name) is not None:
+                res.__setattr__(name, int(self.__getattribute__(name) / other))
+        return res
 
 
 @dataclass
@@ -134,7 +150,9 @@ class Scanner(metaclass=ABCMeta):
     @abstractmethod
     def goto(self, position: Position) -> None:
         """
-        Переместиться в точку point
+        Переместиться в точку point.
+        Является thread safe!
+        Однако, команда stop будет действовать только на первый из потоков в очереди.
 
         :param position: то, куда необходимо переместиться
         :type position: Position
@@ -220,6 +238,7 @@ class Scanner(metaclass=ABCMeta):
     @abstractmethod
     def home(self) -> None:
         """
-        Перемещение сканера домой и выставление его реального положения
+        Перемещение сканера домой.
+        Является thread safe и обрабатывается аналогично goto().
 
         """
