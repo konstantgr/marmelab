@@ -1,6 +1,7 @@
 """
 Базовые классы для управления сканером
 """
+import dataclasses
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 
@@ -64,6 +65,38 @@ class BaseAxes:
             # 'g': self.g,
         }
 
+    def __add__(self, other):
+        if isinstance(other, BaseAxes):
+            args = {}
+
+            for attr in dataclasses.fields(BaseAxes):
+                name = attr.name
+                if other.__getattribute__(name) is None:
+                    args[name] = self.__getattribute__(name)
+                    continue
+                args[name] = self.__getattribute__(name) + other.__getattribute__(name)
+
+            res = BaseAxes(**args)
+            return res
+        else:
+            raise NotImplementedError
+
+    def __sub__(self, other):
+        if isinstance(other, BaseAxes):
+            args = {}
+
+            for attr in dataclasses.fields(BaseAxes):
+                name = attr.name
+                if other.__getattribute__(name) is None:
+                    args[name] = self.__getattribute__(name)
+                    continue
+                args[name] = self.__getattribute__(name) - other.__getattribute__(name)
+
+            res = BaseAxes(**args)
+            return res
+        else:
+            raise NotImplementedError
+
 
 @dataclass
 class Position(BaseAxes):
@@ -106,7 +139,6 @@ class Scanner(metaclass=ABCMeta):
         :param position: то, куда необходимо переместиться
         :type position: Position
         """
-        pass
 
     @abstractmethod
     def stop(self) -> None:
@@ -114,7 +146,6 @@ class Scanner(metaclass=ABCMeta):
         Полная остановка сканера (сначала замедлится, потом остановится)
 
         """
-        pass
 
     @abstractmethod
     def abort(self) -> None:
@@ -130,7 +161,6 @@ class Scanner(metaclass=ABCMeta):
 
         :return: позиция
         """
-        return None
 
     @abstractmethod
     def velocity(self) -> Velocity:
@@ -139,7 +169,6 @@ class Scanner(metaclass=ABCMeta):
 
         :return: скорость
         """
-        return None
 
     @abstractmethod
     def acceleration(self) -> Acceleration:
@@ -148,7 +177,6 @@ class Scanner(metaclass=ABCMeta):
 
         :return: ускорение
         """
-        return None
 
     @abstractmethod
     def deceleration(self) -> Deceleration:
@@ -157,7 +185,6 @@ class Scanner(metaclass=ABCMeta):
 
         :return: замедление
         """
-        return None
 
     @abstractmethod
     def connect(self) -> None:
@@ -165,7 +192,6 @@ class Scanner(metaclass=ABCMeta):
         Подключение к сканеру
 
         """
-        pass
 
     @abstractmethod
     def disconnect(self) -> None:
@@ -173,7 +199,6 @@ class Scanner(metaclass=ABCMeta):
         Отключение от сканера
 
         """
-        pass
 
     @property
     @abstractmethod
@@ -191,6 +216,10 @@ class Scanner(metaclass=ABCMeta):
 
         :return: максимальное количество информации о сканере
         """
-        pass
 
+    @abstractmethod
+    def home(self) -> None:
+        """
+        Перемещение сканера домой и выставление его реального положения
 
+        """
