@@ -29,9 +29,17 @@ def f_up():
     """
     This function makes upward movement
     """
+
     from src import Position
-    new_position = Position()
-    sc.goto(new_position)
+    # old_pos = sc.position()
+    # new_pos = old_pos + Position(x=10)         !!! Doesn`t work !!!
+    # sc.goto(new_pos)
+
+    old_x = sc.position().x
+    new_x = old_x + 10
+    new_pos = Position(x=new_x)
+    sc.goto(new_pos)
+
     print('moving up!')
 
 
@@ -45,14 +53,21 @@ def f_down():
     print('moving down!')
 
 
-def f_left():
+# TODO: Добавить функции управления сканнером в положительном и отрицительном направлениях
+# TODO: Добавить управление через значения, задаваемые в окошках
+
+
+
+# TODO: не работает передача значений фукции
+def f_X_positive(x_coord):
     """
     This function makes movement to the left
     """
     from src import Position
-    new_position = Position(x=-10, y=0)
-    sc.goto(new_position)
-    print('moving left!')
+    old_x = sc.position().x
+    new_x = old_x + x_coord
+    new_pos = Position(x=new_x)
+    sc.goto(new_pos)
 
 # TODO: Добавить относительное движение
 def f_right():
@@ -73,6 +88,14 @@ def f_currrent_position():
     print('x: ', current_position.x)
     print('y: ', current_position.y)
     print('z: ', current_position.z)
+
+def f_default():
+    """
+    Функция - заглушка
+    """
+
+    pass
+
 
 
 def abort():
