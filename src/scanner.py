@@ -1,6 +1,7 @@
 """
 Базовые классы для управления сканером
 """
+import dataclasses
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 
@@ -63,6 +64,38 @@ class BaseAxes:
             # 'f': self.f,
             # 'g': self.g,
         }
+
+    def __add__(self, other):
+        if isinstance(other, BaseAxes):
+            args = {}
+
+            for attr in dataclasses.fields(BaseAxes):
+                name = attr.name
+                if other.__getattribute__(name) is None:
+                    args[name] = self.__getattribute__(name)
+                    continue
+                args[name] = self.__getattribute__(name) + other.__getattribute__(name)
+
+            res = BaseAxes(**args)
+            return res
+        else:
+            raise NotImplementedError
+
+    def __sub__(self, other):
+        if isinstance(other, BaseAxes):
+            args = {}
+
+            for attr in dataclasses.fields(BaseAxes):
+                name = attr.name
+                if other.__getattribute__(name) is None:
+                    args[name] = self.__getattribute__(name)
+                    continue
+                args[name] = self.__getattribute__(name) - other.__getattribute__(name)
+
+            res = BaseAxes(**args)
+            return res
+        else:
+            raise NotImplementedError
 
 
 @dataclass
@@ -187,6 +220,6 @@ class Scanner(metaclass=ABCMeta):
     @abstractmethod
     def home(self) -> None:
         """
-        Перемещение сканера в реальный ноль и обнуление его положения
+        Перемещение сканера домой и выставление его реального положения
 
         """

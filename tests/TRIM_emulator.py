@@ -17,10 +17,14 @@ class ScannerStorage:
     motor_on = BaseAxes(0, 0, 0, 0)
     motion_mode = BaseAxes(0, 0, 0, 0)
     special_motion_mode = BaseAxes(0, 0, 0, 0)
+    high_limit = BaseAxes(127, 127, 127, 127)
+    low_limit = BaseAxes(-127, -127, -127, -127)
 
     motor_status = BaseAxes(0, 0, 0, 0)
     error_motion = BaseAxes(1, 1, 1, 1)
     motion_start_time = BaseAxes(time.time(), time.time(), time.time(), time.time())
+
+    in_motion = False
 
 
 def return_by_cmd(axis: BaseAxes, letter: bytes) -> bytes:
@@ -57,15 +61,27 @@ def set_by_cmd(axis: BaseAxes, letter: bytes, cmd: bytes) -> bytes:
 
 
 def update_ms_em(scanner, tmp, motion_time):
+    ends = []
     for field in dataclasses.fields(BaseAxes):
         attr = field.name
-        if tmp - scanner.motion_start_time.__getattribute__(attr) < motion_time:
-            scanner.motor_status.__setattr__(attr, 1)
-            scanner.error_motion.__setattr__(attr, 0)
+        dt = tmp - scanner.motion_start_time.__getattribute__(attr)
+        if scanner.in_motion:
+            if dt < motion_time:
+                scanner.motor_status.__setattr__(attr, 1)
+                scanner.error_motion.__setattr__(attr, 0)
+                new_pos = scanner.absolute_position.__getattribute__(attr)
+                prev_pos = scanner.position.__getattribute__(attr)
+                cur_pos = int((new_pos + prev_pos)/2)
+                scanner.position.__setattr__(attr, cur_pos)
+                ends.append(False)
+            else:
+                scanner.motor_status.__setattr__(attr, 0)
+                scanner.error_motion.__setattr__(attr, 1)
+                scanner.position.__setattr__(attr, scanner.absolute_position.__getattribute__(attr))
+                ends.append(True)
         else:
-            scanner.motor_status.__setattr__(attr, 0)
-            scanner.error_motion.__setattr__(attr, 1)
-            scanner.position.__setattr__(attr, scanner.absolute_position.__getattribute__(attr))
+            ends.append(True)
+    scanner.in_motion = not all(ends)
 
 
 def emulator(ip="127.0.0.1", port=9000, motion_time: int = 5):
@@ -87,6 +103,7 @@ def emulator(ip="127.0.0.1", port=9000, motion_time: int = 5):
                 axis = None
                 done = False
                 if data[1:3] == b'PS':
+                    update_ms_em(scanner, time.time(), motion_time)
                     axis = scanner.position
                 elif data[1:3] == b'AP':
                     axis = scanner.absolute_position
@@ -102,13 +119,29 @@ def emulator(ip="127.0.0.1", port=9000, motion_time: int = 5):
                     axis = scanner.motion_mode
                 elif data[1:3] == b'SM':
                     axis = scanner.special_motion_mode
+                elif data[1:3] == b'HL':
+                    axis = scanner.high_limit
+                elif data[1:3] == b'LL':
+                    axis = scanner.low_limit
 
                 elif data[1:3] == b'BG':
+                    scanner.in_motion = True
                     axis = scanner.motion_start_time
                     letter = data[0:1]
                     tmp = time.time()
                     set_by_value(axis, letter, tmp)
                     update_ms_em(scanner, time.time(), motion_time)
+                    new_data += b'>'
+                    done = True
+
+                elif data[1:3] == b'ST' or data[1:3] == b'AB':
+                    update_ms_em(scanner, time.time(), motion_time)
+                    scanner.in_motion = False
+                    letter = data[0:1]
+                    axis = scanner.motor_status
+                    set_by_value(axis, letter, 0)
+                    axis = scanner.error_motion
+                    set_by_value(axis, letter, 7)
                     new_data += b'>'
                     done = True
 
@@ -118,6 +151,18 @@ def emulator(ip="127.0.0.1", port=9000, motion_time: int = 5):
                 elif data[1:3] == b'EM':
                     update_ms_em(scanner, time.time(), motion_time)
                     axis = scanner.error_motion
+                elif data[1:3] == b'QE':
+                    if data[1:10] == b'QE,#HOME_' and data[0:1] == data[10:11]:
+                        scanner.in_motion = True
+                        axis = scanner.motion_start_time
+                        letter = data[0:1]
+                        tmp = time.time()
+                        set_by_value(axis, letter, tmp)
+                        update_ms_em(scanner, time.time(), motion_time)
+                        new_data += b'>'
+                    else:
+                        new_data += b'?>'
+                    done = True
 
                 if axis is None and not done:
                     new_data += b'?>'

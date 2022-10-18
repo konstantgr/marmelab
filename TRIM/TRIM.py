@@ -157,9 +157,11 @@ class TRIMScanner(Scanner):
     def disconnect(self) -> None:
         if not self.is_connected:
             return
-        self.conn.shutdown(socket.SHUT_RDWR)
-        self.conn.close()
-        self.is_connected = False
+        try:
+            self.conn.shutdown(socket.SHUT_RDWR)
+            self.conn.close()
+        except socket.error:
+            self.is_connected = False
 
     def set_settings(
             self,
@@ -255,6 +257,12 @@ class TRIMScanner(Scanner):
 
     @staticmethod
     def _parse_A_res(res: str) -> Iterator[int]:
+        """
+        Принимает строку "1,2,10" и преобразует в итератор целых чисел (1, 2, 10)
+
+        :param res: строка целых чисел, разделенных запятой
+        :return: итератор
+        """
         return map(int, res.split(','))
 
     def _is_stopped(self) -> bool:

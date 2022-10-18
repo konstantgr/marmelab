@@ -111,3 +111,9 @@ def test_goto(TRIM_Scanner_emulator: TRIMScanner):
         assert sc_pos.__getattribute__(attr) == new_pos.__getattribute__(attr)
 
 
+def test_debug(TRIM_Scanner_emulator: TRIMScanner):
+    TRIM_Scanner_emulator.debug_info()
+
+
+def test_home(TRIM_Scanner_emulator: TRIMScanner):
+    TRIM_Scanner_emulator.home()
