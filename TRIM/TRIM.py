@@ -9,8 +9,7 @@ from src import Scanner, BaseAxes, Position, Velocity, Acceleration, Deceleratio
 from src import ScannerConnectionError, ScannerInternalError, ScannerMotionError
 import socket
 from typing import Union, List, Iterator
-from dataclasses import dataclass, field
-
+from dataclasses import dataclass, field, fields
 
 @dataclass
 class AxesGroup:
@@ -181,7 +180,7 @@ class FIFOLock(object):
 
 
 # убейте меня это какой-то прикол
-def motion_decorator(func):
+def _motion_decorator(func):
     """
     Декоратор, который контролирует флаг остановки, потому что это не реализовано в контроллере.
     По документации MS=7 должен об этом сигнализировать, но это не работает.
@@ -240,8 +239,9 @@ class TRIMScanner(Scanner):
         self._motion_lock = FIFOLock()
         self._inner_motion_lock = FIFOLock()
         self._stop_flag = False
-        self._stop_released = False
+        self._stop_released = True
         self.is_connected = False
+        self._velocity = Velocity()
 
     def connect(self) -> None:
         if self.is_connected:
@@ -260,6 +260,7 @@ class TRIMScanner(Scanner):
         try:
             self.conn.shutdown(socket.SHUT_RDWR)
             self.conn.close()
+            self.is_connected = False
         except socket.error:
             self.is_connected = False
 
@@ -301,6 +302,13 @@ class TRIMScanner(Scanner):
         if motor_on is not None:
             cmds += cmds_from_dict(motor_on.to_dict(), basecmd='MO')
         self._send_cmds(cmds)
+        # Если все прошло успешно, то нужно поменять внутреннюю скорость сканера
+        # Это необходимо, так как в самом сканере некорректно реализована команда ASP -- она возвращает нули
+        if velocity is not None:
+            for axis in fields(velocity):
+                axis_velocity = velocity.__getattribute__(axis.name)
+                if axis_velocity is not None:
+                    self._velocity.__setattr__(axis.name, axis_velocity)
 
     def _send_cmd(self, cmd: str) -> str:
         """
@@ -374,6 +382,7 @@ class TRIMScanner(Scanner):
         Проверка причины остановки
 
         """
+        time.sleep(0.02)
         res = self._send_cmd('AEM')
         return self._parse_A_res(res)
 
@@ -389,7 +398,7 @@ class TRIMScanner(Scanner):
         while not self._is_stopped():
             time.sleep(0.1)
 
-    @motion_decorator
+    @_motion_decorator
     def goto(self, position: Position) -> None:
         cmds = cmds_from_dict(position.to_dict(), 'AP')
         cmds += cmds_from_dict(position.to_dict(), 'BG', val=False)
@@ -397,7 +406,13 @@ class TRIMScanner(Scanner):
         self._begin_motion_and_wait(cmds, action_description)
 
         stop_reasons = list(self._end_of_motion_reason())
-        if any([r != 1 for r in stop_reasons]):
+        if position.x is not None and stop_reasons[0] != 1:
+            raise scanner_motion_error(action_description, stop_reasons)
+        if position.y is not None and stop_reasons[1] != 1:
+            raise scanner_motion_error(action_description, stop_reasons)
+        if position.z is not None and stop_reasons[2] != 1:
+            raise scanner_motion_error(action_description, stop_reasons)
+        if position.w is not None and stop_reasons[3] != 1:
             raise scanner_motion_error(action_description, stop_reasons)
 
     def stop(self) -> None:
@@ -414,9 +429,7 @@ class TRIMScanner(Scanner):
         return ans
 
     def velocity(self) -> Velocity:
-        res = self._send_cmd('ASP')
-        ans = Velocity(*self._parse_A_res(res))
-        return ans
+        return self._velocity
 
     def acceleration(self) -> Acceleration:
         res = self._send_cmd('AAC')
@@ -482,7 +495,7 @@ class TRIMScanner(Scanner):
     def is_available(self) -> bool:
         return self.is_connected
 
-    @motion_decorator
+    @_motion_decorator
     def home(self) -> None:
         # уменьшение скорости в два раза
         old_velocity = self.velocity()
