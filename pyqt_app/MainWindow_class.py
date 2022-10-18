@@ -30,13 +30,12 @@ class MainWindow(QMainWindow):
         # main_text.move(self.x_coor, self.y_coor - 30)
 
 
-    def button_maker(self, text, b_text, x_coor, y_coor, above_text, b_size_w, b_size_h, func):
+    def button_maker(self, b_text, x_coor, y_coor, above_text, b_size_w, b_size_h, func):
         """
         This function makes push button
         """
-
         button = QPushButton(b_text, self)
-        button.setCheckable(True)
+        #button.setCheckable(True)
         button.setToolTip(above_text)
         button.clicked.connect(func)
         button.setFixedWidth(b_size_w)
@@ -55,9 +54,17 @@ class MainWindow(QMainWindow):
         field_button.setFixedWidth(b_size_w)
         field_button.setFixedHeight(b_size_h)
         field_button.move(x_coor, y_coor)
+        return field_button
 
 
     def text_on_the_window(self, text, x, y):
+        """
+
+        :param text:
+        :param x:
+        :param y:
+        :return:
+        """
         main_text = QtWidgets.QLabel(self)
         main_text.setText(text)
         main_text.move(x, y)
