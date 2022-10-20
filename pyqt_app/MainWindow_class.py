@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
@@ -19,15 +19,37 @@ print(sc.velocity().x)
 
 
 class MainWindow(QMainWindow):
-
-
     def __init__(self):
         super().__init__()
         self.setWindowTitle("My App")
         self.position = Position()
-        # main_text = QtWidgets.QLabel(self)
-        # main_text.setText(self.text)
-        # main_text.move(self.x_coor, self.y_coor - 30)
+        self.main_widget = QWidget()
+        self.main_layout = QGridLayout()
+        self.main_widget.setLayout(self.main_layout)
+        self.setCentralWidget(self.main_widget)
+
+        self.left_panel = QWidget()
+        self.main_layout.addWidget(self.left_panel, 0, 0)
+        self.left_panel.setLayout(QVBoxLayout())
+        button1 = QPushButton()
+        self.left_panel.layout().addWidget(button1)
+
+
+        self.right_panel = QWidget()
+        self.main_layout.addWidget(self.right_panel, 0, 2)
+        self.right_panel.setLayout(QVBoxLayout())
+        button2 = QPushButton()
+        self.right_panel.layout().addWidget(button2)
+        # button = QWidget()
+        # layout = QGridLayout()
+        # button.setLayout(layout)
+        # button = QPushButton()
+        # layout.addWidget(button, 0, 1)
+        # button = QPushButton()
+        # layout.addWidget(button, 1, 0)
+        # #layout.addWidget(Color('blue'), 1, 1)
+       #layout.addWidget(Color('purple'), 2, 1)
+
 
 
     def button_maker(self, b_text, x_coor, y_coor, above_text, b_size_w, b_size_h, func):
@@ -44,7 +66,6 @@ class MainWindow(QMainWindow):
         #self.setCentralWidget(button)
         #self.show()
 
-
     def field_text_button(self, x_coor, y_coor, b_size_w, b_size_h):
         """
         This function makes button with field, where the text can be added
@@ -56,15 +77,10 @@ class MainWindow(QMainWindow):
         field_button.move(x_coor, y_coor)
         return field_button
 
-
     def text_on_the_window(self, text, x, y):
         """
-
-        :param text:
-        :param x:
-        :param y:
-        :return:
         """
         main_text = QtWidgets.QLabel(self)
         main_text.setText(text)
         main_text.move(x, y)
+
