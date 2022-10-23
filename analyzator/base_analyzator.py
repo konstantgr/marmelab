@@ -1,7 +1,12 @@
 import abc
 from dataclasses import dataclass
 from typing import List
-from analyzator_parameters import SParameters, FrequencyParameters
+from analyzator.analyzator_parameters import SParameters, FrequencyParameters, AnalyzatorType, ResultsFormatType
+
+
+class AnalyzatorConnectionError(Exception):
+    def __init__(self):
+        super().__init__("Error in analyzator connection")
 
 
 class BaseAnalyzator(abc.ABC):
@@ -21,10 +26,10 @@ class BaseAnalyzator(abc.ABC):
     @abc.abstractmethod
     def get_scattering_parameters(
             self,
-            parameter: List[SParameters.type],
+            parameters: List[SParameters],
             frequency_parameters: FrequencyParameters,
             results_formats: List[ResultsFormatType]
-    ) -> List[float]:
+    ) -> dict[str: List[float]]:
         raise NotImplementedError('get_scattering_parameters method not implemented yet')
 
     @abc.abstractmethod

@@ -26,6 +26,9 @@ class ResultsFormatType(Enum):
     REAL = "REAL"
     IMAG = "IMAG"
 
+    def __str__(self) -> str:
+        return self.value.lower()
+
 
 class SParameters:
     def __init__(self, ports: List = [1, 2]):
