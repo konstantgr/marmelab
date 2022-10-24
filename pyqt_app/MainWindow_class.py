@@ -1,9 +1,8 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout, QFrame, QLineEdit, QHBoxLayout, QSplitter, QApplication
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import *
-from PyQt6.QtGui import *
-from src.matmul import random_matmul
+from PyQt6.QtCore import Qt
+from PyQt6 import QtGui
 from time import time
 from TRIM import TRIMScanner
 from tests.TRIM_emulator import run
@@ -16,11 +15,44 @@ sc = TRIMScanner(ip="127.0.0.1", port=9000)
 sc.connect()
 print(sc.velocity().x)
 """
-
+# TODO: Реализовать классы для каждого виджета. сделать скелет
 
 class MainWindow(QMainWindow):
     def __init__(self):
+        """
+        деление экрана на три части
+        """
         super().__init__()
+        self.top = 200
+        self.left = 500
+        self.width = 400
+        self.height = 300
+        hbox = QHBoxLayout()
+        left = QFrame()
+        left.setFrameShape(QFrame.StyledPanel)
+        bottom = QFrame()
+        bottom.setFrameShape(QFrame.StyledPanel)
+        splitter1 = QSplitter(Qt.Horizontal)
+        splitter1.setStyleSheet('background-color:red')
+        lineedit = QLineEdit()
+        lineedit.setStyleSheet('background-color:green')
+        splitter1.addWidget(left)
+        splitter1.addWidget(lineedit)
+        splitter1.setSizes([200, 200])
+        spliiter2 = QSplitter(Qt.Vertical)
+        spliiter2.addWidget(splitter1)
+        spliiter2.addWidget(bottom)
+        spliiter2.setStyleSheet('background-color:yellow')
+        hbox.addWidget(spliiter2)
+        self.setLayout(hbox)
+        self.setWindowIcon(QtGui.QIcon("icon.png"))
+        self.setWindowTitle(self.title)
+        self.setGeometry(self.left, self.top, self.width, self.height)
+        self.show()
+
+        """
+        деление на три виджета кнопкой
+        
         self.setWindowTitle("My App")
         self.position = Position()
         self.main_widget = QWidget()
@@ -33,13 +65,17 @@ class MainWindow(QMainWindow):
         self.left_panel.setLayout(QVBoxLayout())
         button1 = QPushButton()
         self.left_panel.layout().addWidget(button1)
-
+        
 
         self.right_panel = QWidget()
         self.main_layout.addWidget(self.right_panel, 0, 2)
         self.right_panel.setLayout(QVBoxLayout())
         button2 = QPushButton()
         self.right_panel.layout().addWidget(button2)
+        """
+
+
+
         # button = QWidget()
         # layout = QGridLayout()
         # button.setLayout(layout)
