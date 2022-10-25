@@ -2,7 +2,14 @@ import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout, QFrame, QLineEdit, QHBoxLayout, QSplitter, QApplication
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt
-from PyQt6 import QtGui
+from PyQt5 import QtGui
+
+from PyQt5 import QtGui
+from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter
+import sys
+from PyQt6.QtCore import Qt
+
+
 from time import time
 from TRIM import TRIMScanner
 from tests.TRIM_emulator import run
@@ -15,76 +22,86 @@ sc = TRIMScanner(ip="127.0.0.1", port=9000)
 sc.connect()
 print(sc.velocity().x)
 """
-# TODO: Реализовать классы для каждого виджета. сделать скелет
+# TODO: Зафиксировать левый виджет
+# TODO: описать сплиттеры, функции, классы
+# TODO: ветвление
 
-class MainWindow(QMainWindow):
+
+
+class BasePanel(QFrame):
+    """
+
+    description
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.panel_init()
+
+    def panel_init(self):
+        """
+
+        :return:
+        """
+        pass
+
+
+class LeftPanel(BasePanel):
+    """
+    ds
+    """
+    def panel_init(self):
+        pass
+
+
+class RightPanel(BasePanel):
+    """
+    fdas
+    """
+
+class CentralPanel(BasePanel):
+    """
+    fdas
+    """
+
+class LogPanel(BasePanel):
+    """
+    decr
+    """
+
+class MainWindow(QWidget):
     def __init__(self):
-        """
-        деление экрана на три части
-        """
         super().__init__()
-        self.top = 200
-        self.left = 500
-        self.width = 400
-        self.height = 300
-        hbox = QHBoxLayout()
-        left = QFrame()
-        left.setFrameShape(QFrame.StyledPanel)
-        bottom = QFrame()
-        bottom.setFrameShape(QFrame.StyledPanel)
-        splitter1 = QSplitter(Qt.Horizontal)
-        splitter1.setStyleSheet('background-color:red')
-        lineedit = QLineEdit()
-        lineedit.setStyleSheet('background-color:green')
-        splitter1.addWidget(left)
-        splitter1.addWidget(lineedit)
-        splitter1.setSizes([200, 200])
-        spliiter2 = QSplitter(Qt.Vertical)
-        spliiter2.addWidget(splitter1)
-        spliiter2.addWidget(bottom)
-        spliiter2.setStyleSheet('background-color:yellow')
-        hbox.addWidget(spliiter2)
+        hbox = QHBoxLayout(self)  # layout of Main window
+
+        self.left_panel = LeftPanel(self)  # settings selector
+        self.center_panel = CentralPanel(self)  # settings menu
+        self.right_panel = RightPanel(self)  # graphics
+        self.log_panel = LogPanel(self)  # log window
+
+        splitter2 = QSplitter(orientation=Qt.Orientation.Horizontal)
+        splitter2.addWidget(self.left_panel)
+        splitter2.setSizes([35])#  фиксированая ширина левого окна
+        splitter2.addWidget(self.center_panel)
+        splitter2.setGeometry(10, 10, 10, 200)
+        splitter2.setStretchFactor(0, 0)  # попытка завфиксировать левое окно
+
+        splitter1 = QSplitter(orientation=Qt.Orientation.Vertical)
+        splitter1.insertWidget(0, splitter2)
+        splitter1.insertWidget(1, self.log_panel)
+
+
+        splitter0 = QSplitter(orientation=Qt.Orientation.Horizontal)
+        splitter0.insertWidget(0, splitter1)
+        splitter0.insertWidget(1, self.right_panel)
+        splitter0.setSizes([50, 50])  # фиксированая ширина левого окна
+
+        hbox.addWidget(splitter0)
+
         self.setLayout(hbox)
-        self.setWindowIcon(QtGui.QIcon("icon.png"))
-        self.setWindowTitle(self.title)
-        self.setGeometry(self.left, self.top, self.width, self.height)
-        self.show()
 
-        """
-        деление на три виджета кнопкой
-        
-        self.setWindowTitle("My App")
-        self.position = Position()
-        self.main_widget = QWidget()
-        self.main_layout = QGridLayout()
-        self.main_widget.setLayout(self.main_layout)
-        self.setCentralWidget(self.main_widget)
-
-        self.left_panel = QWidget()
-        self.main_layout.addWidget(self.left_panel, 0, 0)
-        self.left_panel.setLayout(QVBoxLayout())
-        button1 = QPushButton()
-        self.left_panel.layout().addWidget(button1)
-        
-
-        self.right_panel = QWidget()
-        self.main_layout.addWidget(self.right_panel, 0, 2)
-        self.right_panel.setLayout(QVBoxLayout())
-        button2 = QPushButton()
-        self.right_panel.layout().addWidget(button2)
-        """
-
-
-
-        # button = QWidget()
-        # layout = QGridLayout()
-        # button.setLayout(layout)
-        # button = QPushButton()
-        # layout.addWidget(button, 0, 1)
-        # button = QPushButton()
-        # layout.addWidget(button, 1, 0)
-        # #layout.addWidget(Color('blue'), 1, 1)
-       #layout.addWidget(Color('purple'), 2, 1)
+        self.setGeometry(300, 300, 450, 400)
+        self.setWindowTitle('Scanner control')
 
 
 
@@ -115,6 +132,7 @@ class MainWindow(QMainWindow):
 
     def text_on_the_window(self, text, x, y):
         """
+        This function makes a text on the window
         """
         main_text = QtWidgets.QLabel(self)
         main_text.setText(text)
