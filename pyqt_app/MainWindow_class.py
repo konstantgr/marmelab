@@ -1,27 +1,10 @@
 import CentralWidgets
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout, QFrame, QLineEdit, QHBoxLayout, QSplitter, QApplication
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt
-from PyQt5 import QtGui
-
-from PyQt5 import QtGui
 from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter
 import sys
 from PyQt6.QtCore import Qt
 
-
-from time import time
-from TRIM import TRIMScanner
-from tests.TRIM_emulator import run
-from src import Position
-"""
-drafts
-from src import Position
-run(blocking=False)
-sc = TRIMScanner(ip="127.0.0.1", port=9000)
-sc.connect()
-print(sc.velocity().x)
-"""
 # TODO: Зафиксировать левый виджет
 # TODO: описать сплиттеры, функции, классы
 # TODO: ветвление
@@ -32,8 +15,7 @@ print(sc.velocity().x)
 
 class BasePanel(QFrame):
     """
-
-    description
+    This class makes base construction for all panel
     """
     def __init__(self, parent):
         super().__init__(parent)
@@ -51,7 +33,7 @@ class BasePanel(QFrame):
 
 class LeftPanel(BasePanel):
     """
-    ds
+    This class makes widgets on the left panel
     """
     def panel_init(self):
         self.vbox = QVBoxLayout()
@@ -68,14 +50,14 @@ class LeftPanel(BasePanel):
 
 class RightPanel(BasePanel):
     """
-    fdas
+    This class makes widgets on the right panel
     """
 
 
 
 class CentralPanel(BasePanel):
     """
-    fdas
+    This class makes widgets on the central panel
     """
     def panel_init(self):
         layout = QHBoxLayout()
@@ -95,10 +77,13 @@ class CentralPanel(BasePanel):
     def set_test(self):
         self.a.setVisible(False)
         self.b.setVisible(True)
-class LogPanel(BasePanel):
+
+
+ class LogPanel(BasePanel):
     """
-    decr
+    This class makes widgets on the log panel
     """
+
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -133,8 +118,6 @@ class MainWindow(QWidget):
         self.setGeometry(300, 300, 450, 400)
         self.setWindowTitle('Scanner control')
 
-
-
     def button_maker(self, b_text, x_coor, y_coor, above_text, b_size_w, b_size_h, func):
         """
         This function makes push button
@@ -146,14 +129,11 @@ class MainWindow(QWidget):
         button.setFixedWidth(b_size_w)
         button.setFixedHeight(b_size_h)
         button.move(x_coor, y_coor)
-        #self.setCentralWidget(button)
-        #self.show()
 
     def field_text_button(self, x_coor, y_coor, b_size_w, b_size_h):
         """
         This function makes button with field, where the text can be added
         """
-
         field_button = QtWidgets.QPlainTextEdit(self)
         field_button.setFixedWidth(b_size_w)
         field_button.setFixedHeight(b_size_h)
