@@ -1,9 +1,10 @@
 import CentralWidgets
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout, QFrame, QLineEdit, QHBoxLayout, QSplitter, QApplication
 from PyQt6 import QtWidgets
-from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter
+from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter, QStackedWidget
 import sys
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QObject, pyqtSignal, pyqtSlot
+from enum import IntEnum, auto
 
 # TODO: Зафиксировать левый виджет
 # TODO: описать сплиттеры, функции, классы
@@ -12,41 +13,58 @@ from PyQt6.QtCore import Qt
 # TODO: создать класс кнопок с ветвлением
 
 
+class CentralPanelsTypes(IntEnum):
+    """
+    Все возможные типы центральной панели
+    """
+    INIT = auto()
+    SCANNER = auto()
+
+
+class PanelCommunicator(QObject):
+    """
+    Класс, который позволяет пересылать сигналы между разными панелями
+    """
+    set_central_panel = pyqtSignal(int)
+
 
 class BasePanel(QFrame):
     """
     This class makes base construction for all panel
     """
-    def __init__(self, parent):
+    def __init__(self, parent: QWidget, communicator: PanelCommunicator):
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.parent_ = parent  # type: MainWindow
-        self.panel_init()
-
-    def panel_init(self):
-        """
-
-        :return:
-        """
-        pass
+        self.communicator = communicator
 
 
 class LeftPanel(BasePanel):
     """
     This class makes widgets on the left panel
     """
-    def panel_init(self):
+    def __init__(self, *args, **kwargs):
+        super(LeftPanel, self).__init__(*args, **kwargs)
+
         self.vbox = QVBoxLayout()
         self.vbox.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(self.vbox)
 
         main_init_button = QPushButton("INIT")
         self.vbox.addWidget(main_init_button)
-        main_init_button.clicked.connect(lambda x: self.parent_.center_panel.set_test())
+        main_init_button.clicked.connect(self.button_click_0)
 
         scanner_settings_button = QPushButton("Scanner")
         self.vbox.addWidget(scanner_settings_button)
-        scanner_settings_button.clicked.connect(lambda x: self.parent_.center_panel.set_empty())
+        scanner_settings_button.clicked.connect(self.button_click_1)
+
+    @pyqtSlot()
+    def button_click_0(self):
+        self.communicator.set_central_panel.emit(CentralPanelsTypes.INIT)
+
+    @pyqtSlot()
+    def button_click_1(self):
+        self.communicator.set_central_panel.emit(CentralPanelsTypes.SCANNER)
+
 
 class RightPanel(BasePanel):
     """
@@ -54,32 +72,39 @@ class RightPanel(BasePanel):
     """
 
 
-
-class CentralPanel(BasePanel):
+class CentralPanel(QStackedWidget, BasePanel):
     """
     This class makes widgets on the central panel
     """
-    def panel_init(self):
-        layout = QHBoxLayout()
-        self.setLayout(layout)
-        self.a = CentralWidgets.Init()
-        self.b = CentralWidgets.Scanner()
-        layout.addWidget(self.a)
-        layout.addWidget(self.b)
+    def __init__(self, *args, **kwargs):
+        super(CentralPanel, self).__init__(*args, **kwargs)
+        # super(BasePanel, self).__init__()
+        # super(QStackedWidget, self).__init__(*args, **kwargs)
 
-    def set_empty(self):
-        self.a.setVisible(True)
-        self.b.setVisible(False)
-        # layout.addWidget(QPushButton("test2"))
-        # self.update()
+        self.all_panels = {
+            CentralPanelsTypes.INIT: CentralWidgets.Init(),
+            CentralPanelsTypes.SCANNER: CentralWidgets.Scanner()
+        }
+
+        for _, panel_widget in self.all_panels.items():
+            self.addWidget(panel_widget)
+        self.communicator.set_central_panel.connect(self.choose_panel)
+
+    def choose_panel(self, i):
+        self.setCurrentWidget(self.all_panels[i])
+
+    # def set_empty(self):
+    #     self.a.setVisible(True)
+    #     self.b.setVisible(False)
+    #     # layout.addWidget(QPushButton("test2"))
+    #     # self.update()
+    #
+    # def set_test(self):
+    #     self.a.setVisible(False)
+    #     self.b.setVisible(True)
 
 
-    def set_test(self):
-        self.a.setVisible(False)
-        self.b.setVisible(True)
-
-
- class LogPanel(BasePanel):
+class LogPanel(BasePanel):
     """
     This class makes widgets on the log panel
     """
@@ -91,10 +116,12 @@ class MainWindow(QWidget):
         hbox = QHBoxLayout(self)  # layout of Main window
         self.setLayout(hbox)
 
-        self.left_panel = LeftPanel(self)  # settings selector
-        self.center_panel = CentralPanel(self)  # settings menu
-        self.right_panel = RightPanel(self)  # graphics
-        self.log_panel = LogPanel(self)  # log window
+        self.panel_communicator = PanelCommunicator()
+
+        self.left_panel = LeftPanel(self, self.panel_communicator)  # settings selector
+        self.center_panel = CentralPanel(self, self.panel_communicator)  # settings menu
+        self.right_panel = RightPanel(self, self.panel_communicator)  # graphics
+        self.log_panel = LogPanel(self, self.panel_communicator)  # log window
 
         splitter2 = QSplitter(orientation=Qt.Orientation.Horizontal)
         splitter2.addWidget(self.left_panel)
