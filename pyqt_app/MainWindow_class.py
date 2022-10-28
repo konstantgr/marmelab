@@ -1,7 +1,7 @@
 import CentralWidgets
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout, QFrame, QLineEdit, QHBoxLayout, QSplitter, QApplication
+from PyQt6.QtWidgets import QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout, QSplitter, QApplication
 from PyQt6 import QtWidgets
-from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter
+from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter, QStackedWidget, QListWidget, QFormLayout, QRadioButton, QLabel, QCheckBox
 import sys
 from PyQt6.QtCore import Qt
 
@@ -23,6 +23,8 @@ class BasePanel(QFrame):
         self.parent_ = parent  # type: MainWindow
         self.panel_init()
 
+
+
     def panel_init(self):
         """
 
@@ -36,18 +38,28 @@ class LeftPanel(BasePanel):
     This class makes widgets on the left panel
     """
     def panel_init(self):
-        self.vbox = QVBoxLayout()
-        self.vbox.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.setLayout(self.vbox)
+        """
+        Формирование стеков виджетов на левой панели
+        """
+        self.Stack = QStackedWidget(self)
+        self.stack1 = QWidget()
+        self.stack2 = QWidget()
+        self.stack3 = QWidget()
 
-        main_init_button = QPushButton("INIT")
-        self.vbox.addWidget(main_init_button)
-        main_init_button.clicked.connect(lambda x: self.parent_.center_panel.set_test())
+        self.Stack.addWidget(self.stack1)  # сделать в отдельный класс?
+        self.Stack.addWidget(self.stack2)  # сделать в отдельный класс?
+        self.Stack.addWidget(self.stack3)  # сделать в отдельный класс?
 
-        scanner_settings_button = QPushButton("Scanner")
-        self.vbox.addWidget(scanner_settings_button)
-        scanner_settings_button.clicked.connect(lambda x: self.parent_.center_panel.set_empty())
+        self.leftlist = QListWidget()
+        self.leftlist.insertItem(0, 'Initial')
+        self.leftlist.insertItem(1, 'Scanner')
+        self.leftlist.insertItem(2, 'Educational')
+        self.leftlist.currentRowChanged.connect(lambda x: self.parent_.center_panel.display)  # обращение к виджетам из центр. указывает на номер отображаемого виджета
 
+        hbox = QHBoxLayout(self)
+        hbox.addWidget(self.leftlist)
+        hbox.addWidget(self.Stack)
+        self.setLayout(hbox)
 class RightPanel(BasePanel):
     """
     This class makes widgets on the right panel
@@ -62,24 +74,37 @@ class CentralPanel(BasePanel):
     def panel_init(self):
         layout = QHBoxLayout()
         self.setLayout(layout)
-        self.a = CentralWidgets.Init()
-        self.b = CentralWidgets.Scanner()
-        layout.addWidget(self.a)
-        layout.addWidget(self.b)
-
-    def set_empty(self):
-        self.a.setVisible(True)
-        self.b.setVisible(False)
-        # layout.addWidget(QPushButton("test2"))
-        # self.update()
 
 
-    def set_test(self):
-        self.a.setVisible(False)
-        self.b.setVisible(True)
+    def stack1UI(self):
+        layout = QFormLayout()
+        layout.addRow("Name", QLineEdit())
+        layout.addRow("Address", QLineEdit())
+        # self.setTabText(0,"Contact Details")
+        self.stack1.setLayout(layout)
+
+    def stack2UI(self):
+        layout = QFormLayout()
+        sex = QHBoxLayout()
+        sex.addWidget(QRadioButton("Male"))
+        sex.addWidget(QRadioButton("Female"))
+        layout.addRow(QLabel("Sex"), sex)
+        layout.addRow("Date of Birth", QLineEdit())
+
+        self.stack2.setLayout(layout)
+
+    def stack3UI(self):
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("subjects"))
+        layout.addWidget(QCheckBox("Physics"))
+        layout.addWidget(QCheckBox("Maths"))
+        self.stack3.setLayout(layout)
+
+    def display(self, i):
+        self.Stack.setCurrentIndex(i)
 
 
- class LogPanel(BasePanel):
+class LogPanel(BasePanel):
     """
     This class makes widgets on the log panel
     """
