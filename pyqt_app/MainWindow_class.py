@@ -8,7 +8,7 @@ from PyQt6.QtCore import Qt
 # TODO: Зафиксировать левый виджет?
 # TODO: оптимизация процесса создания кнопок
 # TODO: изъян: легко запутаться в соответствии кнопок справа и слева. Важен порядок, и надо зависимость от порядка убрать
-# TODO:
+# TODO: разобраться как с помощью таблицы управлять сканером
 # TODO:
 
 
@@ -45,7 +45,7 @@ class LeftPanel(BasePanel):
         self.leftlist = QListWidget()
         self.leftlist.insertItem(0, 'Initial')
         self.leftlist.insertItem(1, 'Scanner')
-        self.leftlist.insertItem(2, 'Educational')
+        self.leftlist.insertItem(2, '....')
         # обращение к виджетам из центр. указывает на номер отображаемого виджета
 
         hbox = QHBoxLayout(self)
