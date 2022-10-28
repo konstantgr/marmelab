@@ -41,24 +41,15 @@ class LeftPanel(BasePanel):
         """
         Формирование стеков виджетов на левой панели
         """
-        self.Stack = QStackedWidget(self)
-        self.stack1 = QWidget()
-        self.stack2 = QWidget()
-        self.stack3 = QWidget()
-
-        self.Stack.addWidget(self.stack1)  # сделать в отдельный класс?
-        self.Stack.addWidget(self.stack2)  # сделать в отдельный класс?
-        self.Stack.addWidget(self.stack3)  # сделать в отдельный класс?
 
         self.leftlist = QListWidget()
         self.leftlist.insertItem(0, 'Initial')
         self.leftlist.insertItem(1, 'Scanner')
         self.leftlist.insertItem(2, 'Educational')
-        self.leftlist.currentRowChanged.connect(lambda x: self.parent_.center_panel.display)  # обращение к виджетам из центр. указывает на номер отображаемого виджета
+        # обращение к виджетам из центр. указывает на номер отображаемого виджета
 
         hbox = QHBoxLayout(self)
         hbox.addWidget(self.leftlist)
-        hbox.addWidget(self.Stack)
         self.setLayout(hbox)
 class RightPanel(BasePanel):
     """
@@ -71,34 +62,17 @@ class CentralPanel(BasePanel):
     """
     This class makes widgets on the central panel
     """
-    def panel_init(self):
-        layout = QHBoxLayout()
-        self.setLayout(layout)
+    def __init__(self, *args, **kwargs):
+        """
+        создание виджетов в центр. панели. В слои они добовляются в классе централ виджет
+        """
+        super().__init__(*args, **kwargs)  # инициализация экзмепляров родительского класса. ТО есть есть все свой-ва бэйз панел
+        self.Stack = QStackedWidget(self)
+        self.stack1 = CentralWidgets.Init()
+        self.stack2 = CentralWidgets.Scanner()
 
-
-    def stack1UI(self):
-        layout = QFormLayout()
-        layout.addRow("Name", QLineEdit())
-        layout.addRow("Address", QLineEdit())
-        # self.setTabText(0,"Contact Details")
-        self.stack1.setLayout(layout)
-
-    def stack2UI(self):
-        layout = QFormLayout()
-        sex = QHBoxLayout()
-        sex.addWidget(QRadioButton("Male"))
-        sex.addWidget(QRadioButton("Female"))
-        layout.addRow(QLabel("Sex"), sex)
-        layout.addRow("Date of Birth", QLineEdit())
-
-        self.stack2.setLayout(layout)
-
-    def stack3UI(self):
-        layout = QHBoxLayout()
-        layout.addWidget(QLabel("subjects"))
-        layout.addWidget(QCheckBox("Physics"))
-        layout.addWidget(QCheckBox("Maths"))
-        self.stack3.setLayout(layout)
+        self.Stack.addWidget(self.stack1)  # сделать в отдельный класс? надо придумать жесткую связь между левой и правой панелями
+        self.Stack.addWidget(self.stack2)  # сделать в отдельный класс?
 
     def display(self, i):
         self.Stack.setCurrentIndex(i)
@@ -120,6 +94,7 @@ class MainWindow(QWidget):
         self.center_panel = CentralPanel(self)  # settings menu
         self.right_panel = RightPanel(self)  # graphics
         self.log_panel = LogPanel(self)  # log window
+        self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
 
         splitter2 = QSplitter(orientation=Qt.Orientation.Horizontal)
         splitter2.addWidget(self.left_panel)

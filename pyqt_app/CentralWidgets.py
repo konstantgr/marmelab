@@ -5,7 +5,7 @@ from PyQt6.QtCore import Qt
 from PyQt5 import QtGui
 
 from PyQt5 import QtGui
-from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter
+from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter, QRadioButton
 import sys
 from PyQt6.QtCore import Qt
 
@@ -19,7 +19,10 @@ class Init(QWidget):
         layout = QHBoxLayout()
         self.setLayout(layout)
         layout.addWidget(QPushButton("test2"))
-        self.setVisible(False)
+        layout.addWidget(QPushButton("tes123t2"))
+        layout.addWidget(QPushButton("te2112t2"))
+        # если я хочу иметь и виджет и строку и черта лысого я должне для каждого создать свой слой?
+
 
 class Scanner(QWidget):
     """
@@ -31,4 +34,5 @@ class Scanner(QWidget):
         layout = QHBoxLayout()
         self.setLayout(layout)
         layout.addWidget(QPushButton("test1"))
-        self.setVisible(False)
+        layout.addWidget(QRadioButton("Male"))
+        layout.addWidget(QRadioButton("Female"))
