@@ -19,14 +19,11 @@ class Init(QWidget):
         """
         This function makes connection to the scanner
         """
-
-        sc.connect()
-        # sc.set_settings(**DEFAULT_SETTINGS) пока не работает
-        print('Connected')
         layout = QHBoxLayout()
         self.setLayout(layout)
-        layout.addWidget(QPushButton("Connect"))
-
+        button = QPushButton("Connect")
+        layout.addWidget(button)
+        button.clicked.connect(f_connection)
         # если я хочу иметь и виджет и строку и черта лысого я должне для каждого создать свой слой?
 
 
@@ -39,6 +36,12 @@ class Scanner(QWidget):
         super().__init__()
         layout = QHBoxLayout()
         self.setLayout(layout)
-        layout.addWidget(QPushButton("test1"))
-        layout.addWidget(QRadioButton("Male"))
-        layout.addWidget(QRadioButton("Female"))
+        button1 = QPushButton("Connect")
+        button2 = QPushButton("Current position is..")
+        button3 = QPushButton("Home")
+        layout.addWidget(button1)
+        layout.addWidget(button2)
+        layout.addWidget(button3)
+        button1.clicked.connect(f_connection)
+        button2.clicked.connect(f_connection)
+        button3.clicked.connect(f_connection)
