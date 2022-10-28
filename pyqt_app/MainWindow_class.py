@@ -5,11 +5,11 @@ from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayou
 import sys
 from PyQt6.QtCore import Qt
 
-# TODO: Зафиксировать левый виджет
-# TODO: описать сплиттеры, функции, классы
-# TODO: ветвление
+# TODO: Зафиксировать левый виджет?
 # TODO: оптимизация процесса создания кнопок
-# TODO: создать класс кнопок с ветвлением
+# TODO: изъян: легко запутаться в соответствии кнопок справа и слева. Важен порядок, и надо зависимость от порядка убрать
+# TODO:
+# TODO:
 
 
 
@@ -72,7 +72,7 @@ class CentralPanel(BasePanel):
         self.stack2 = CentralWidgets.Scanner()
 
         self.Stack.addWidget(self.stack1)  # сделать в отдельный класс? надо придумать жесткую связь между левой и правой панелями
-        self.Stack.addWidget(self.stack2)  # сделать в отдельный класс?
+        self.Stack.addWidget(self.stack2)  # на данный момент если поменять строки местами. то связь нарушится
 
     def display(self, i):
         self.Stack.setCurrentIndex(i)
