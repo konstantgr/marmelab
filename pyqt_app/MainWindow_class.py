@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout,
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter, QStackedWidget
 import sys
-from PyQt6.QtCore import Qt, QObject, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, pyqtBoundSignal
 from enum import IntEnum, auto
 
 # TODO: Зафиксировать левый виджет
@@ -21,27 +21,22 @@ class CentralPanelsTypes(IntEnum):
     SCANNER = auto()
 
 
-class PanelCommunicator(QObject):
-    """
-    Класс, который позволяет пересылать сигналы между разными панелями
-    """
-    set_central_panel = pyqtSignal(int)
-
-
 class BasePanel(QFrame):
     """
     This class makes base construction for all panel
     """
-    def __init__(self, parent: QWidget, communicator: PanelCommunicator):
+    def __init__(self, parent: QWidget):
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.communicator = communicator
 
 
 class LeftPanel(BasePanel):
     """
     This class makes widgets on the left panel
     """
+
+    panelSelected: pyqtBoundSignal = pyqtSignal(int)  # kludge
+
     def __init__(self, *args, **kwargs):
         super(LeftPanel, self).__init__(*args, **kwargs)
 
@@ -59,11 +54,11 @@ class LeftPanel(BasePanel):
 
     @pyqtSlot()
     def button_click_0(self):
-        self.communicator.set_central_panel.emit(CentralPanelsTypes.INIT)
+        self.panelSelected.emit(CentralPanelsTypes.INIT)
 
     @pyqtSlot()
     def button_click_1(self):
-        self.communicator.set_central_panel.emit(CentralPanelsTypes.SCANNER)
+        self.panelSelected.emit(CentralPanelsTypes.SCANNER)
 
 
 class RightPanel(BasePanel):
@@ -88,20 +83,9 @@ class CentralPanel(QStackedWidget, BasePanel):
 
         for _, panel_widget in self.all_panels.items():
             self.addWidget(panel_widget)
-        self.communicator.set_central_panel.connect(self.choose_panel)
 
     def choose_panel(self, i):
         self.setCurrentWidget(self.all_panels[i])
-
-    # def set_empty(self):
-    #     self.a.setVisible(True)
-    #     self.b.setVisible(False)
-    #     # layout.addWidget(QPushButton("test2"))
-    #     # self.update()
-    #
-    # def set_test(self):
-    #     self.a.setVisible(False)
-    #     self.b.setVisible(True)
 
 
 class LogPanel(BasePanel):
@@ -116,29 +100,29 @@ class MainWindow(QWidget):
         hbox = QHBoxLayout(self)  # layout of Main window
         self.setLayout(hbox)
 
-        self.panel_communicator = PanelCommunicator()
+        self.left_panel = LeftPanel(self)  # settings selector
+        self.center_panel = CentralPanel(self)  # settings menu
+        self.right_panel = RightPanel(self)  # graphics
+        self.log_panel = LogPanel(self)  # log window
 
-        self.left_panel = LeftPanel(self, self.panel_communicator)  # settings selector
-        self.center_panel = CentralPanel(self, self.panel_communicator)  # settings menu
-        self.right_panel = RightPanel(self, self.panel_communicator)  # graphics
-        self.log_panel = LogPanel(self, self.panel_communicator)  # log window
+        self.left_panel.panelSelected.connect(self.center_panel.choose_panel)
 
         splitter2 = QSplitter(orientation=Qt.Orientation.Horizontal)
         splitter2.addWidget(self.left_panel)
-        splitter2.setSizes([35])#  фиксированая ширина левого окна
         splitter2.addWidget(self.center_panel)
-        splitter2.setGeometry(10, 10, 10, 200)
-        splitter2.setStretchFactor(0, 0)  # попытка завфиксировать левое окно
+        splitter2.setSizes([100, 200])  # фиксированая ширина левого окна
+        splitter2.setChildrenCollapsible(False)
 
         splitter1 = QSplitter(orientation=Qt.Orientation.Vertical)
         splitter1.insertWidget(0, splitter2)
         splitter1.insertWidget(1, self.log_panel)
-
+        splitter1.setChildrenCollapsible(False)
 
         splitter0 = QSplitter(orientation=Qt.Orientation.Horizontal)
         splitter0.insertWidget(0, splitter1)
         splitter0.insertWidget(1, self.right_panel)
-        splitter0.setSizes([50, 50])  # фиксированая ширина левого окна
+        splitter0.setSizes([100, 100])  # фиксированая ширина левого окна
+        splitter0.setChildrenCollapsible(False)
 
         hbox.addWidget(splitter0)
 
