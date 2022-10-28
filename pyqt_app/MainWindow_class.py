@@ -1,4 +1,4 @@
-import CentralWidgets
+import CentralWidgets, RightWidgets
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout, QFrame, QLineEdit, QHBoxLayout, QSplitter, QApplication
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter, QStackedWidget
@@ -65,6 +65,13 @@ class RightPanel(BasePanel):
     """
     This class makes widgets on the right panel
     """
+    def __init__(self, *args, **kwargs):
+        super(RightPanel, self).__init__(*args, **kwargs)
+        self.scanner_widget = RightWidgets.ScannerVisualizer()
+        self.vbox = QVBoxLayout()
+        self.setLayout(self.vbox)
+
+        self.vbox.addWidget(self.scanner_widget)
 
 
 class CentralPanel(QStackedWidget, BasePanel):
