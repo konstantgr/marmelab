@@ -100,7 +100,7 @@ def f_X_positive(x_coord=10):
     new_pos = Position(x=new_x)
     sc.goto(new_pos)
     print(f'moving along x-axes on {x_coord}')
-
+    return new_pos
 
 def f_Z_positive():
     """

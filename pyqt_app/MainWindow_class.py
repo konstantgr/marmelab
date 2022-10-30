@@ -71,6 +71,7 @@ class CentralPanel(BasePanel):
         self.stack1 = CentralWidgets.Init()
         self.stack2 = CentralWidgets.Scanner()
 
+
         self.Stack.addWidget(self.stack1)  # сделать в отдельный класс? надо придумать жесткую связь между левой и правой панелями
         self.Stack.addWidget(self.stack2)  # на данный момент если поменять строки местами. то связь нарушится
 
