@@ -1,7 +1,7 @@
 from TRIM import TRIMScanner, DEFAULT_SETTINGS
 from tests.TRIM_emulator import run  # use it only for emulating
 sc = TRIMScanner(ip="127.0.0.1", port=9000)
-
+n = 123
 # TODO: Добавить подробную настройку движения сканнера:
 #  скорость, ускорение, режим работы и тд, отображение сотояние мотора
 #  для этого есть функция set_settings()

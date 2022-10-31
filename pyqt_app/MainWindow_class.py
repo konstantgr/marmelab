@@ -4,61 +4,57 @@ from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter, QStackedWidget, QListWidget, QFormLayout, QRadioButton, QLabel, QCheckBox
 import sys
 from PyQt6.QtCore import Qt
-
+from enum import IntEnum, auto
 # TODO: Зафиксировать левый виджет?
 # TODO: оптимизация процесса создания кнопок
 # TODO: изъян: легко запутаться в соответствии кнопок справа и слева. Важен порядок, и надо зависимость от порядка убрать
 # TODO: разобраться как с помощью таблицы управлять сканером
 # TODO:
 
-
+class CentralPanelTypes(IntEnum):
+    """
+    замена цифр на названия
+    """
+    Initial: int = auto()
+    Scanner: int = auto()
+    Next: int = auto()
 
 class BasePanel(QFrame):
     """
     This class makes base construction for all panel
     """
-    def __init__(self, parent):
-        super().__init__(parent)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.parent_ = parent  # type: MainWindow
-        self.panel_init()
-
-
-
-    def panel_init(self):
-        """
-
-        :return:
-        """
-        pass
 
 
 class LeftPanel(BasePanel):
     """
     This class makes widgets on the left panel
     """
-    def panel_init(self):
+    def __init__(self, *args, **kwargs):
         """
         Формирование стеков виджетов на левой панели
         """
-
+        super().__init__(*args, **kwargs)
         self.leftlist = QListWidget()
-        self.leftlist.insertItem(0, 'Initial')
-        self.leftlist.insertItem(1, 'Scanner')
-        self.leftlist.insertItem(2, '....')
+        self.leftlist.insertItem(CentralPanelTypes.Initial, 'Initial')
+        self.leftlist.insertItem(CentralPanelTypes.Scanner, 'Scanner')
+        self.leftlist.insertItem(CentralPanelTypes.Next, 'Next')
         # обращение к виджетам из центр. указывает на номер отображаемого виджета
 
         hbox = QHBoxLayout(self)
         hbox.addWidget(self.leftlist)
         self.setLayout(hbox)
+
+
 class RightPanel(BasePanel):
     """
     This class makes widgets on the right panel
     """
 
 
-
-class CentralPanel(BasePanel):
+class CentralPanel(QStackedWidget, BasePanel):
     """
     This class makes widgets on the central panel
     """
@@ -66,17 +62,21 @@ class CentralPanel(BasePanel):
         """
         создание виджетов в центр. панели. В слои они добовляются в классе централ виджет
         """
-        super().__init__(*args, **kwargs)  # инициализация экзмепляров родительского класса. ТО есть есть все свой-ва бэйз панел
-        self.Stack = QStackedWidget(self)
-        self.stack1 = CentralWidgets.Init()
-        self.stack2 = CentralWidgets.Scanner()
+        super(CentralPanel, self).__init__(*args, **kwargs)  # инициализация экзмепляров родительского класса. ТО есть есть все свой-ва бэйз панел
 
+        pages = {
+            CentralPanelTypes.Initial: CentralWidgets.Init(),
+            CentralPanelTypes.Scanner: CentralWidgets.Scanner(),
+            CentralPanelTypes.Next: CentralWidgets.Scanner(),
 
-        self.Stack.addWidget(self.stack1)  # сделать в отдельный класс? надо придумать жесткую связь между левой и правой панелями
-        self.Stack.addWidget(self.stack2)  # на данный момент если поменять строки местами. то связь нарушится
+        }
+
+        for key in pages.keys():
+            self.insertWidget(key, pages[key]) #  добавленеи виджетов в центральную панель
+
 
     def display(self, i):
-        self.Stack.setCurrentIndex(i)
+        self.setCurrentIndex(i)
 
 
 class LogPanel(BasePanel):
@@ -85,17 +85,18 @@ class LogPanel(BasePanel):
     """
 
 
-class MainWindow(QWidget):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        hbox = QHBoxLayout(self)  # layout of Main window
-        self.setLayout(hbox)
+        self.main_widget = QWidget()
+        hbox = QHBoxLayout(self.main_widget)  # layout of Main window
+        self.main_widget.setLayout(hbox)
 
-        self.left_panel = LeftPanel(self)  # settings selector
-        self.center_panel = CentralPanel(self)  # settings menu
-        self.right_panel = RightPanel(self)  # graphics
-        self.log_panel = LogPanel(self)  # log window
-        self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
+        self.left_panel = LeftPanel(self.main_widget)  # settings selector
+        self.center_panel = CentralPanel(self.main_widget)  # settings menu
+        self.right_panel = RightPanel(self.main_widget)  # graphics
+        self.log_panel = LogPanel(self.main_widget)  # log window
+        self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display) # связь левой панели и центр виджета
 
         splitter2 = QSplitter(orientation=Qt.Orientation.Horizontal)
         splitter2.addWidget(self.left_panel)
@@ -118,6 +119,7 @@ class MainWindow(QWidget):
 
         self.setGeometry(300, 300, 450, 400)
         self.setWindowTitle('Scanner control')
+        self.setCentralWidget(self.main_widget)
 
     def button_maker(self, b_text, x_coor, y_coor, above_text, b_size_w, b_size_h, func):
         """

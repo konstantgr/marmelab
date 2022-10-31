@@ -1,12 +1,8 @@
+from TableWidgets import *
 from src.scanner_utils import *
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout, QFrame, QLineEdit, QHBoxLayout, QSplitter, QApplication, QSpinBox
-from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout, QFrame, QLineEdit, QHBoxLayout, QSplitter, QApplication, QSpinBox, QPlainTextEdit, QTableWidget
 from PyQt5 import QtGui
-
-from PyQt5 import QtGui
-from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter, QRadioButton, QPlainTextEdit
 from PyQt6.QtCore import Qt
 
 
@@ -41,21 +37,36 @@ class Scanner(QWidget):
         button3 = QPushButton("Home")
         button4 = QPushButton("x")
 
-        text_window1 = QPlainTextEdit(self)
-        text_window1.setFixedWidth(30)
-        text_window1.setFixedHeight(30)
         arrow_window1 = QSpinBox(self)  #ввод координаты
+        #print(a)
+        # формирование таблицы
+        tableWidget = QTableWidget(3, 3)
+        tableWidget.setColumnWidth(0, 50)
+        tableWidget.setColumnWidth(1, 50)
+        tableWidget.setColumnWidth(2, 50)
+        tableWidget.setColumnWidth(3, 50)
+        tableWidget.setHorizontalHeaderLabels(("Coordinate", "Speed", "Step"))
+        tableWidget.setVerticalHeaderLabels(("X", "Y", "Z"))
+
+        layout1 = QHBoxLayout()
+        widget1 = QWidget()
+        widget1.setLayout(layout1)
+        #layout1.addWidget(text_window1)
+        layout1.addWidget(arrow_window1)
+        layout1.addWidget(button4)
+
+
 
         layout.addWidget(button3)
         layout.addWidget(button1)
         layout.addWidget(button2)
-        layout.addWidget(text_window1)
-        layout.addWidget(arrow_window1)
-        layout.addWidget(button4)
+        layout.addWidget(widget1)
 
+
+        layout.addWidget(tableWidget)
 
         button1.clicked.connect(f_abort)
         button2.clicked.connect(f_currrent_position)
         button3.clicked.connect(f_home)
         #button4.clicked.connect(f_X_positive(arrow_window1.value())) # надо в функцию передать значения, которое введется в QSpinBox
-        button4.clicked.connect(f_X_positive(12)) # надо в функцию передать значения, которое введется в QSpinBox НЕ работает
+        button4.clicked.connect(lambda x: f_X_positive(arrow_window1.value())) # надо в функцию передать значения, которое введется в QSpinBox НЕ работает
