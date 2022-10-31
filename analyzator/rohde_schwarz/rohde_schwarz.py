@@ -2,7 +2,9 @@ import socket
 import threading
 
 from typing import List, Union
-from analyzator.analyzator_parameters import AnalyzatorType, ResultsFormatType, FrequencyParameters, SParameters
+from analyzator.analyzator_parameters import (
+    AnalyzatorType, ResultsFormatType, FrequencyParameters, SParameters,
+)
 from analyzator.base_analyzator import BaseAnalyzator, AnalyzatorConnectionError
 
 
@@ -23,11 +25,8 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
         :param bufsize: размер чанка сообщения в байтах
         :param maxbufs: максимальное число чанков
         """
-        self.ip = ip
-        self.port = port
-        self.conn = socket.socket()
-        self.bufsize = bufsize
-        self.maxbufs = maxbufs
+        self.ip, self.port, self.conn = ip, port, socket.socket()
+        self.bufsize, self.maxbufs = bufsize, maxbufs
         self.tcp_lock = threading.Lock()
         self.is_connected = False
 
@@ -57,7 +56,24 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
             frequency_parameters: FrequencyParameters,
             results_formats: List[ResultsFormatType]
     ) -> dict[str: List[float]]:
-        return {'a': [0.0]}
+        # znb = RsInstrument(resource, True, True, "SelectVisa='rs'")
+
+        # points = 401  # Number of sweep points
+        # znb.write_str('SENSe1:FREQuency:STARt 0.01GHZ')  # Start frequency to 10 MHz
+        # znb.write_str('SENSe1:FREQuency:STOP 1.0GHZ')  # Stop frequency to 1 GHz
+        #
+        # znb.write('SENSe1:SWEep:POINts ' + str(points))  # Set number of sweep points to the defined number
+        # znb.write_str('CALCulate1:PARameter:MEASure "Trc1", "S21"')  # Measurement now is S21
+        # sleep(0.5)  # It will take some time to perform a complete sweep - wait for it
+
+        # points_count = znb.query_int('SENSe1:SWEep:POINts?')  # Request number of frequency points
+        # trace_data = znb.query_str('CALC1:DATA? FDAT')  # Get measurement values for complete trace
+        # trace_tup = tuple(map(str, trace_data.split(',')))  # Convert the received string into a tuple
+        # freq_list = znb.query_str('CALC:DATA:STIM?')  # Get frequency list for complete trace
+        # freq_tup = tuple(map(str, freq_list.split(',')))  # Convert the received string into a tuple
+        # return {'freq': freq_tup, 'magn': trace_tup}
+
+        return None
 
     def __enter__(self):
         pass
