@@ -1,6 +1,7 @@
 """
 Реализация управления сканером с контроллером ORBIT/FR AL-4164 и AL-4166
 """
+import collections
 import threading
 import time
 
@@ -8,8 +9,7 @@ from src import Scanner, BaseAxes, Position, Velocity, Acceleration, Deceleratio
 from src import ScannerConnectionError, ScannerInternalError, ScannerMotionError
 import socket
 from typing import Union, List, Iterator
-from dataclasses import dataclass, field
-
+from dataclasses import dataclass, field, fields
 
 @dataclass
 class AxesGroup:
@@ -28,6 +28,7 @@ class AxesGroup:
 
 
 # TODO: поменять cmd_from_dict на cmd_from_axes
+# TODO: выкинуть вообще функцию do_dict из AxesGroup. Кажется, что она не нужна
 def cmds_from_dict(dct: dict[str:float], basecmd: str, val: bool = True) -> List[str]:
     """
     Переводит словарь {X: V} в 'X<basecmd>=V', но только если V не None.
@@ -60,6 +61,24 @@ EM = [
     'User command (stop or abort)',
     'Motor off by user'
 ]
+
+
+def scanner_motion_error(action_description: str, stop_reasons: List[int]):
+    """
+    Возвращает исключение по описанию и причинам остановки
+
+    :param action_description: описание движения во время которого возникла ошибка
+    :param stop_reasons: причины ошибки (код EM)
+    :return:
+    """
+    return ScannerMotionError(
+        f'During {action_description} unexpected cause for end-of-motion was received:\n'
+        f'\tx: {EM[stop_reasons[0]]}\n'
+        f'\ty: {EM[stop_reasons[1]]}\n'
+        f'\tz: {EM[stop_reasons[2]]}\n'
+        f'\tw: {EM[stop_reasons[3]]}\n'
+    )
+
 
 DEFAULT_SETTINGS = {
     'acceleration': Acceleration(
@@ -117,6 +136,82 @@ JOG_MODE_SETTINGS = {
 }
 
 
+class FIFOLock(object):
+    """
+    FIFO Lock, который гарантирует поочередное выполнение запросов
+    https://gist.github.com/vitaliyp/6d54dd76ca2c3cdfc1149d33007dc34a
+
+    """
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._inner_lock = threading.Lock()
+        self._pending_threads = collections.deque()
+
+    def acquire(self, blocking=True):
+        with self._inner_lock:
+            lock_acquired = self._lock.acquire(False)
+            if lock_acquired:
+                return True
+            elif not blocking:
+                return False
+
+            release_event = threading.Event()
+            self._pending_threads.append(release_event)
+
+        release_event.wait()
+        return self._lock.acquire()
+
+    def release(self):
+        with self._inner_lock:
+            if self._pending_threads:
+                release_event = self._pending_threads.popleft()
+                release_event.set()
+
+            self._lock.release()
+
+    def locked(self) -> bool:
+        with self._inner_lock:
+            return self._lock.locked()
+
+    __enter__ = acquire
+
+    def __exit__(self, t, v, tb):
+        self.release()
+
+
+# убейте меня это какой-то прикол
+def _motion_decorator(func):
+    """
+    Декоратор, который контролирует флаг остановки, потому что это не реализовано в контроллере.
+    По документации MS=7 должен об этом сигнализировать, но это не работает.
+    Декоратор реализует тред сейф сканера.
+
+    Если в очереди стоят, например goto или home, из разных потоков, то при поднятии _stop_flag, все стоящие в очереди
+    команды завершатся.
+    После остановки тред с новым движением поменяет _stop_released и _stop_flag.
+
+    :param func:
+    """
+    def wrapper(self, *args, **kwargs):
+        scanner = self  # type: TRIMScanner
+        scanner._inner_motion_lock.acquire()
+        if scanner._stop_flag and not scanner._stop_released:
+            scanner._stop_released = True
+            scanner._inner_motion_lock.release()
+            with scanner._motion_lock:
+                scanner._stop_flag = False
+                func(self, *args, **kwargs)
+        else:
+            scanner._inner_motion_lock.release()
+            with scanner._motion_lock:
+                if scanner._stop_flag:
+                    raise ScannerMotionError(f'During the motion STOP or ABORT was executed')
+                func(self, *args, **kwargs)
+        if scanner._stop_flag:
+            raise ScannerMotionError(f'During the motion STOP or ABORT was executed')
+    return wrapper
+
+
 class TRIMScanner(Scanner):
     """
     Класс сканера
@@ -140,8 +235,13 @@ class TRIMScanner(Scanner):
         self.conn = socket.socket()
         self.bufsize = bufsize
         self.maxbufs = maxbufs
-        self.tcp_lock = threading.Lock()
+        self._tcp_lock = FIFOLock()
+        self._motion_lock = FIFOLock()
+        self._inner_motion_lock = FIFOLock()
+        self._stop_flag = False
+        self._stop_released = True
         self.is_connected = False
+        self._velocity = Velocity()
 
     def connect(self) -> None:
         if self.is_connected:
@@ -160,6 +260,7 @@ class TRIMScanner(Scanner):
         try:
             self.conn.shutdown(socket.SHUT_RDWR)
             self.conn.close()
+            self.is_connected = False
         except socket.error:
             self.is_connected = False
 
@@ -201,6 +302,13 @@ class TRIMScanner(Scanner):
         if motor_on is not None:
             cmds += cmds_from_dict(motor_on.to_dict(), basecmd='MO')
         self._send_cmds(cmds)
+        # Если все прошло успешно, то нужно поменять внутреннюю скорость сканера
+        # Это необходимо, так как в самом сканере некорректно реализована команда ASP -- она возвращает нули
+        if velocity is not None:
+            for axis in fields(velocity):
+                axis_velocity = velocity.__getattribute__(axis.name)
+                if axis_velocity is not None:
+                    self._velocity.__setattr__(axis.name, axis_velocity)
 
     def _send_cmd(self, cmd: str) -> str:
         """
@@ -209,39 +317,35 @@ class TRIMScanner(Scanner):
         :param cmd: команда
         :return: ответ сканера
         """
-        self.tcp_lock.acquire()
-        try:
-            command = f"{cmd};"
-            command_bytes = command.encode('ascii')
-            self.conn.sendall(command_bytes)
+        with self._tcp_lock:
+            try:
+                command = f"{cmd};"
+                command_bytes = command.encode('ascii')
+                self.conn.sendall(command_bytes)
 
-            response = self.conn.recv(self.bufsize)
-            i = 1
-            while not response.endswith(b'>'):
-                response += self.conn.recv(self.bufsize)
-                i += 1
-                if i >= self.maxbufs:
-                    raise ScannerInternalError(f'maxbufs={self.maxbufs} limit is reached')
+                response = self.conn.recv(self.bufsize)
+                i = 1
+                while not response.endswith(b'>'):
+                    response += self.conn.recv(self.bufsize)
+                    i += 1
+                    if i >= self.maxbufs:
+                        raise ScannerInternalError(f'maxbufs={self.maxbufs} limit is reached')
 
-            if response.endswith(b'?>'):
-                raise ScannerInternalError(
-                    f'Scanner response:\n{response}'
-                )
+                if response.endswith(b'?>'):
+                    raise ScannerInternalError(
+                        f'Scanner response:\n{response}'
+                    )
 
-            if not response.startswith(command_bytes):
-                raise ScannerInternalError(
-                    f'Scanner response:\n{response}\n\nEcho in start was expected:\n{command}'
-                )
+                if not response.startswith(command_bytes):
+                    raise ScannerInternalError(
+                        f'Scanner response:\n{response}\n\nEcho in start was expected:\n{command}'
+                    )
 
-            answer = response.decode().removeprefix(command).removesuffix('>')
-            return answer
-        except socket.error as e:
-            self.tcp_lock.release()
-            self.is_connected = False
-            raise ScannerConnectionError from e
-        finally:
-            if self.tcp_lock.locked():
-                self.tcp_lock.release()
+                answer = response.decode().removeprefix(command).removesuffix('>')
+                return answer
+            except socket.error as e:
+                self.is_connected = False
+                raise ScannerConnectionError from e
 
     def _send_cmds(self, cmds: List[str]) -> List[str]:
         """
@@ -278,6 +382,7 @@ class TRIMScanner(Scanner):
         Проверка причины остановки
 
         """
+        time.sleep(0.02)
         res = self._send_cmd('AEM')
         return self._parse_A_res(res)
 
@@ -293,26 +398,30 @@ class TRIMScanner(Scanner):
         while not self._is_stopped():
             time.sleep(0.1)
 
-        stop_reasons = list(self._end_of_motion_reason())
-        if any([r != 1 for r in stop_reasons]):
-            raise ScannerMotionError(
-                f'During {action_description} unexpected cause for end-of-motion was received:\n'
-                f'\tx: {EM[stop_reasons[0]]}\n'
-                f'\ty: {EM[stop_reasons[1]]}\n'
-                f'\tz: {EM[stop_reasons[2]]}\n'
-                f'\tw: {EM[stop_reasons[3]]}\n'
-            )
-
+    @_motion_decorator
     def goto(self, position: Position) -> None:
         cmds = cmds_from_dict(position.to_dict(), 'AP')
         cmds += cmds_from_dict(position.to_dict(), 'BG', val=False)
-        self._begin_motion_and_wait(cmds, f'the motion to {position}')
+        action_description = f'the motion to {position}'
+        self._begin_motion_and_wait(cmds, action_description)
+
+        stop_reasons = list(self._end_of_motion_reason())
+        if position.x is not None and stop_reasons[0] != 1:
+            raise scanner_motion_error(action_description, stop_reasons)
+        if position.y is not None and stop_reasons[1] != 1:
+            raise scanner_motion_error(action_description, stop_reasons)
+        if position.z is not None and stop_reasons[2] != 1:
+            raise scanner_motion_error(action_description, stop_reasons)
+        if position.w is not None and stop_reasons[3] != 1:
+            raise scanner_motion_error(action_description, stop_reasons)
 
     def stop(self) -> None:
+        self._stop_flag = True
+        self._stop_released = False
         self._send_cmd('AST')
 
     def abort(self) -> None:
-        self._send_cmd('AAB')
+        self.stop()
 
     def position(self) -> Position:
         res = self._send_cmd('APS')
@@ -320,9 +429,7 @@ class TRIMScanner(Scanner):
         return ans
 
     def velocity(self) -> Velocity:
-        res = self._send_cmd('ASP')
-        ans = Velocity(*self._parse_A_res(res))
-        return ans
+        return self._velocity
 
     def acceleration(self) -> Acceleration:
         res = self._send_cmd('AAC')
@@ -388,20 +495,24 @@ class TRIMScanner(Scanner):
     def is_available(self) -> bool:
         return self.is_connected
 
+    @_motion_decorator
     def home(self) -> None:
-        cmds = [
-            'XQE,#HOME_X',
-            'YQE,#HOME_Y',
-            'ZQE,#HOME_Z'
-        ]
-        self._begin_motion_and_wait(cmds, 'homing')
-        self.set_settings(position=Position(0, 0, 0, 0))
+        # уменьшение скорости в два раза
+        old_velocity = self.velocity()
+        new_velocity = old_velocity / 2
+        self.set_settings(velocity=new_velocity)
+        # выставляем режим бесконечного движения с постоянной скоростью
+        self.set_settings(**JOG_MODE_SETTINGS)
 
-# from tests.TRIM_emulator import run
-# run(blocking=False)
-# sc = TRIMScanner(ip="192.168.5.168", port=9000, )
-# sc.connect()
-#
-# print(sc.velocity())
-# print(sc.acceleration())
-# print(sc.debug_info())
+        action_description = f'homing'
+        cmds = ['XBG', 'YBG', 'ZBG']
+        self._begin_motion_and_wait(cmds, action_description)
+
+        # возвращаем старую скорость
+        self.set_settings(velocity=old_velocity)
+        # возвращаем point-to-point режим работы
+        self.set_settings(**PTP_MODE_SETTINGS)
+
+        stop_reasons = list(self._end_of_motion_reason())
+        if not (stop_reasons[0] == stop_reasons[1] == stop_reasons[2] == 2):
+            raise scanner_motion_error(action_description, stop_reasons)
