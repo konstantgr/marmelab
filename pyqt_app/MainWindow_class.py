@@ -1,8 +1,10 @@
 import CentralWidgets
-from PyQt6.QtWidgets import QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout, QSplitter, QApplication
 from PyQt6 import QtWidgets
-from PyQt6.QtWidgets import QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter, QStackedWidget, QListWidget, QFormLayout, QRadioButton, QLabel, QCheckBox
+from PyQt6.QtWidgets import (QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter, QMainWindow, QPushButton,
+                             QGridLayout, QWidget, QVBoxLayout, QSplitter, QApplication,
+                             QStackedWidget, QListWidget, QFormLayout, QRadioButton, QLabel, QCheckBox)
 import sys
+from tkinter import messagebox
 from PyQt6.QtCore import Qt
 from enum import IntEnum, auto
 # TODO: Зафиксировать левый виджет?
@@ -16,6 +18,7 @@ class CentralPanelTypes(IntEnum):
     замена цифр на названия
     """
     Initial: int = auto()
+    ScannerSettings: int = auto()
     Scanner: int = auto()
     Next: int = auto()
 
@@ -39,6 +42,7 @@ class LeftPanel(BasePanel):
         super().__init__(*args, **kwargs)
         self.leftlist = QListWidget()
         self.leftlist.insertItem(CentralPanelTypes.Initial, 'Initial')
+        self.leftlist.insertItem(CentralPanelTypes.ScannerSettings, 'Scanner settings')
         self.leftlist.insertItem(CentralPanelTypes.Scanner, 'Scanner')
         self.leftlist.insertItem(CentralPanelTypes.Next, 'Next')
         # обращение к виджетам из центр. указывает на номер отображаемого виджета
@@ -66,6 +70,7 @@ class CentralPanel(QStackedWidget, BasePanel):
 
         pages = {
             CentralPanelTypes.Initial: CentralWidgets.Init(),
+            CentralPanelTypes.ScannerSettings: CentralWidgets.ScannerSettings(),
             CentralPanelTypes.Scanner: CentralWidgets.Scanner(),
             CentralPanelTypes.Next: CentralWidgets.Scanner(),
 
@@ -102,8 +107,8 @@ class MainWindow(QMainWindow):
         splitter2.addWidget(self.left_panel)
         splitter2.setSizes([35])#  фиксированая ширина левого окна
         splitter2.addWidget(self.center_panel)
-        splitter2.setGeometry(10, 10, 10, 200)
-        splitter2.setStretchFactor(0, 0)  # попытка завфиксировать левое окно
+        splitter2.setGeometry(100, 100, 100, 100)
+        splitter2.setStretchFactor(0, 0)  # попытка зафиксировать левое окно
 
         splitter1 = QSplitter(orientation=Qt.Orientation.Vertical)
         splitter1.insertWidget(0, splitter2)
@@ -113,7 +118,7 @@ class MainWindow(QMainWindow):
         splitter0 = QSplitter(orientation=Qt.Orientation.Horizontal)
         splitter0.insertWidget(0, splitter1)
         splitter0.insertWidget(1, self.right_panel)
-        splitter0.setSizes([50, 50])  # фиксированая ширина левого окна
+        splitter0.setSizes([50, 450])  # фиксированая ширина левого окна
 
         hbox.addWidget(splitter0)
 
