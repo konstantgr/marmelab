@@ -36,3 +36,26 @@ def test_axes_add_sub():
         assert el3.x == 1
         with pytest.raises(TypeError):
             el3 = el2 + el1
+
+
+def test_axes_mul_div():
+    for cl in [BaseAxes, Position, Velocity, Deceleration, Acceleration]:
+        el1 = cl(*[randint(0, 10) for _ in range(len(dataclasses.fields(cl)))])
+        a = 2
+        el2 = el1*a
+        assert isinstance(el2, BaseAxes)
+        for field in dataclasses.fields(cl):
+            name = field.name
+            assert el2.__getattribute__(name) == el1.__getattribute__(name) * a
+        assert el1*a == a*el1
+
+        el2 = el1/a
+        assert isinstance(el2, BaseAxes)
+        for field in dataclasses.fields(cl):
+            name = field.name
+            assert el2.__getattribute__(name) == int(el1.__getattribute__(name)/a)
+
+        el1 = cl(x=1)
+        el2 = el1 / 10
+        assert el2.y is None
+        assert el2.x == 0

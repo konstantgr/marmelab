@@ -33,7 +33,7 @@ def test_cmds_from_dict():
 def test_get(TRIM_Scanner_emulator: TRIMScanner):
     for axis in [
         TRIM_Scanner_emulator.position,
-        TRIM_Scanner_emulator.velocity,
+        # TRIM_Scanner_emulator.velocity,
         TRIM_Scanner_emulator.acceleration,
         TRIM_Scanner_emulator.deceleration
     ]:
