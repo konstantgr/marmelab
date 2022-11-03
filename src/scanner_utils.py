@@ -82,6 +82,10 @@ def f_abort():
     pass
 
 
+def f_button_default():
+    pass
+
+
 def f_home():
     """
     This function sets "home" current cords.

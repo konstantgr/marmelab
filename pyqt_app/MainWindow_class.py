@@ -1,17 +1,17 @@
 import CentralWidgets
+import logging
+
+import sys
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import (QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter, QMainWindow, QPushButton,
-                             QGridLayout, QWidget, QVBoxLayout, QSplitter, QApplication,
-                             QStackedWidget, QListWidget, QFormLayout, QRadioButton, QLabel, QCheckBox)
+                             QGridLayout, QVBoxLayout, QSplitter, QStackedWidget, QListWidget,
+                             QFormLayout, QRadioButton, QLabel, QCheckBox, QDialog, QPlainTextEdit, QMenuBar, QTextEdit)
 import sys
-from tkinter import messagebox
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal as Signal, QObject
 from enum import IntEnum, auto
+
 # TODO: Зафиксировать левый виджет?
 # TODO: оптимизация процесса создания кнопок
-# TODO: изъян: легко запутаться в соответствии кнопок справа и слева. Важен порядок, и надо зависимость от порядка убрать
-# TODO: разобраться как с помощью таблицы управлять сканером
-# TODO:
 
 class CentralPanelTypes(IntEnum):
     """
@@ -77,7 +77,7 @@ class CentralPanel(QStackedWidget, BasePanel):
         }
 
         for key in pages.keys():
-            self.insertWidget(key, pages[key]) #  добавленеи виджетов в центральную панель
+            self.insertWidget(key, pages[key]) #  добавление виджетов в центральную панель
 
 
     def display(self, i):
@@ -88,6 +88,37 @@ class LogPanel(BasePanel):
     """
     This class makes widgets on the log panel
     """
+    def __init__(self, *args, **kwargs):
+        super(LogPanel, self).__init__(*args, **kwargs)
+        hbox = QHBoxLayout(self)
+        menu_bar = QMenuBar()
+        hbox.addWidget(menu_bar)
+        self.setLayout(hbox)
+        self.text_edit = QTextEdit()
+        L
+        self.OUTPUT_LOGGER_STDOUT = LogWidget.OutputLogger(sys.stdout, OutputLogger.Severity.DEBUG)
+        self.OUTPUT_LOGGER_STDERR = LogWidget.OutputLogger(sys.stderr, OutputLogger.Severity.ERROR)
+
+        sys.stdout = OUTPUT_LOGGER_STDOUT
+        sys.stderr = OUTPUT_LOGGER_STDERR
+
+        self.OUTPUT_LOGGER_STDOUT.emit_write.connect(self.append_log)
+        self.OUTPUT_LOGGER_STDERR.emit_write.connect(self.append_log)
+
+        menu_bar = QMenuBar()
+        menu = menu_bar.addMenu('Say')
+        self.setMenuBar(menu_bar)
+
+        self.setCentralWidget(self.text_edit)
+
+    def append_log(self, text, severity):
+        text = repr(text)
+
+        if severity == LogWidget.OutputLogger.Severity.ERROR:
+            text = '<b>{}</b>'.format(text)
+
+        self.text_edit.append(text)
+
 
 
 class MainWindow(QMainWindow):
@@ -105,7 +136,7 @@ class MainWindow(QMainWindow):
 
         splitter2 = QSplitter(orientation=Qt.Orientation.Horizontal)
         splitter2.addWidget(self.left_panel)
-        splitter2.setSizes([35])#  фиксированая ширина левого окна
+        splitter2.setSizes([55])#  фиксированая ширина левого окна
         splitter2.addWidget(self.center_panel)
         splitter2.setGeometry(100, 100, 100, 100)
         splitter2.setStretchFactor(0, 0)  # попытка зафиксировать левое окно
@@ -118,7 +149,7 @@ class MainWindow(QMainWindow):
         splitter0 = QSplitter(orientation=Qt.Orientation.Horizontal)
         splitter0.insertWidget(0, splitter1)
         splitter0.insertWidget(1, self.right_panel)
-        splitter0.setSizes([50, 450])  # фиксированая ширина левого окна
+        splitter0.setSizes([50, 250])  # фиксированая ширина левого окна
 
         hbox.addWidget(splitter0)
 
