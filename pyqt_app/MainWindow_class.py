@@ -22,6 +22,7 @@ class CentralPanelTypes(IntEnum):
     Scanner: int = auto()
     Next: int = auto()
 
+
 class BasePanel(QFrame):
     """
     This class makes base construction for all panel
@@ -66,19 +67,18 @@ class CentralPanel(QStackedWidget, BasePanel):
         """
         создание виджетов в центр. панели. В слои они добовляются в классе централ виджет
         """
-        super(CentralPanel, self).__init__(*args, **kwargs)  # инициализация экзмепляров родительского класса. ТО есть есть все свой-ва бэйз панел
+        super(CentralPanel, self).__init__(*args, **kwargs)
 
         pages = {
             CentralPanelTypes.Initial: CentralWidgets.Init(),
             CentralPanelTypes.ScannerSettings: CentralWidgets.ScannerSettings(),
-            CentralPanelTypes.Scanner: CentralWidgets.Scanner(),
-            CentralPanelTypes.Next: CentralWidgets.Scanner(),
+            CentralPanelTypes.Scanner: CentralWidgets.ScannerControl(),
+            CentralPanelTypes.Next: CentralWidgets.ScannerControl(),
 
         }
 
         for key in pages.keys():
-            self.insertWidget(key, pages[key]) #  добавление виджетов в центральную панель
-
+            self.insertWidget(key, pages[key])  # добавление виджетов в центральную панель
 
     def display(self, i):
         self.setCurrentIndex(i)
@@ -104,7 +104,7 @@ class LogPanel(BasePanel):
         self.OUTPUT_LOGGER_STDOUT.emit_write.connect(self.append_log)
         self.OUTPUT_LOGGER_STDERR.emit_write.connect(self.append_log)
 
-        menu = self.menu_bar.addMenu('Say')  #  Как настроить вывод....
+        menu = self.menu_bar.addMenu('Say')  # Как настроить вывод....
         menu.addAction('hello', lambda: print('Hello!'))
         menu.addAction('fail', lambda: print('Fail!', file=sys.stderr))
         hbox.addWidget(self.menu_bar)
@@ -119,7 +119,6 @@ class LogPanel(BasePanel):
         self.text_edit.append(text)
 
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -131,58 +130,22 @@ class MainWindow(QMainWindow):
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
         self.right_panel = RightPanel(self.main_widget)  # graphics
         self.log_panel = LogPanel(self.main_widget)  # log window
-        self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display) # связь левой панели и центр виджета
+        self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
 
         splitter2 = QSplitter(orientation=Qt.Orientation.Horizontal)
         splitter2.addWidget(self.left_panel)
-        splitter2.setSizes([55])#  фиксированая ширина левого окна
         splitter2.addWidget(self.center_panel)
-        splitter2.setGeometry(100, 100, 100, 100)
-        splitter2.setStretchFactor(0, 0)  # попытка зафиксировать левое окно
 
         splitter1 = QSplitter(orientation=Qt.Orientation.Vertical)
         splitter1.insertWidget(0, splitter2)
         splitter1.insertWidget(1, self.log_panel)
 
-
         splitter0 = QSplitter(orientation=Qt.Orientation.Horizontal)
         splitter0.insertWidget(0, splitter1)
         splitter0.insertWidget(1, self.right_panel)
-        splitter0.setSizes([50, 250])  # фиксированая ширина левого окна
 
         hbox.addWidget(splitter0)
 
         self.setGeometry(300, 300, 450, 400)
         self.setWindowTitle('Scanner control')
         self.setCentralWidget(self.main_widget)
-
-    def button_maker(self, b_text, x_coor, y_coor, above_text, b_size_w, b_size_h, func):
-        """
-        This function makes push button
-        """
-        button = QPushButton(b_text, self)
-        #button.setCheckable(True)
-        button.setToolTip(above_text)
-        button.clicked.connect(func)
-        button.setFixedWidth(b_size_w)
-        button.setFixedHeight(b_size_h)
-        button.move(x_coor, y_coor)
-
-    def field_text_button(self, x_coor, y_coor, b_size_w, b_size_h):
-        """
-        This function makes button with field, where the text can be added
-        """
-        field_button = QtWidgets.QPlainTextEdit(self)
-        field_button.setFixedWidth(b_size_w)
-        field_button.setFixedHeight(b_size_h)
-        field_button.move(x_coor, y_coor)
-        return field_button
-
-    def text_on_the_window(self, text, x, y):
-        """
-        This function makes a text on the window
-        """
-        main_text = QtWidgets.QLabel(self)
-        main_text.setText(text)
-        main_text.move(x, y)
-

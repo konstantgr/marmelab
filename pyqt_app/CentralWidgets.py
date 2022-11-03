@@ -9,16 +9,6 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QGridLayout
 from PyQt6.QtCore import Qt
 
 
-class SettingsTable(QTableWidget):
-    """
-    таблица настроек сканера.
-
-    """
-    def __init__(self):
-        pass
-
-
-
 class Init(QWidget):
     """
 
@@ -115,15 +105,11 @@ class ScannerSettings(QWidget):
             self.table_widget.setItem(j, 2, QTableWidgetItem(str(z)))
             self.table_widget.setItem(j, 3, QTableWidgetItem(str(w)))
 
-
-
-        #sc.set_settings(**DEFAULT_SETTINGS)
-
     def apply_settings(self):
         sc.set_settings(**self.settings_to_dict())
 
 
-class Scanner(QWidget):
+class ScannerControl(QWidget):
     """
 
     """
@@ -167,8 +153,6 @@ class Scanner(QWidget):
         layout2.addWidget(tableWidget)
         layout2.addWidget(button_go)
         layout2.addWidget(button_abort)
-
-
 
         # добавление всех виджетов в основной слой
         layout.addWidget(button_home)
