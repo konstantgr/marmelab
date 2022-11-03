@@ -1,7 +1,6 @@
 from TRIM import TRIMScanner, DEFAULT_SETTINGS
 from tests.TRIM_emulator import run  # use it only for emulating
 sc = TRIMScanner(ip="127.0.0.1", port=9000)
-from tkinter import messagebox
 # TODO: Добавить подробную настройку движения сканнера:
 #  скорость, ускорение, режим работы и тд, отображение сотояние мотора
 #  для этого есть функция set_settings()
@@ -27,14 +26,10 @@ def f_currrent_position():
     This function shows current position
     """
     current_position = sc.position()
-    messagebox.showinfo("Scanner", f"x: {current_position.x}\ny: {current_position.y}\nz: {current_position.z}")
-
-
-
-
     print('x: ', current_position.x)
     print('y: ', current_position.y)
     print('z: ', current_position.z)
+
 
 def f_default():
     """

@@ -6,6 +6,5 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
     window.setGeometry(300, 300, 900, 600)
-
     window.show()
     app.exec()

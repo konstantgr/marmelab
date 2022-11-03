@@ -1,6 +1,6 @@
 import CentralWidgets
+import LogWidget
 import logging
-
 import sys
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import (QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter, QMainWindow, QPushButton,
@@ -91,25 +91,24 @@ class LogPanel(BasePanel):
     def __init__(self, *args, **kwargs):
         super(LogPanel, self).__init__(*args, **kwargs)
         hbox = QHBoxLayout(self)
-        menu_bar = QMenuBar()
-        hbox.addWidget(menu_bar)
-        self.setLayout(hbox)
-        self.text_edit = QTextEdit()
-        L
-        self.OUTPUT_LOGGER_STDOUT = LogWidget.OutputLogger(sys.stdout, OutputLogger.Severity.DEBUG)
-        self.OUTPUT_LOGGER_STDERR = LogWidget.OutputLogger(sys.stderr, OutputLogger.Severity.ERROR)
+        self.menu_bar = QMenuBar()
 
-        sys.stdout = OUTPUT_LOGGER_STDOUT
-        sys.stderr = OUTPUT_LOGGER_STDERR
+        self.text_edit = QTextEdit()
+
+        self.OUTPUT_LOGGER_STDOUT = LogWidget.OutputLogger(sys.stdout, LogWidget.OutputLogger.Severity.DEBUG)
+        self.OUTPUT_LOGGER_STDERR = LogWidget.OutputLogger(sys.stderr, LogWidget.OutputLogger.Severity.ERROR)
+
+        sys.stdout = self.OUTPUT_LOGGER_STDOUT
+        sys.stderr = self.OUTPUT_LOGGER_STDERR
 
         self.OUTPUT_LOGGER_STDOUT.emit_write.connect(self.append_log)
         self.OUTPUT_LOGGER_STDERR.emit_write.connect(self.append_log)
 
-        menu_bar = QMenuBar()
-        menu = menu_bar.addMenu('Say')
-        self.setMenuBar(menu_bar)
-
-        self.setCentralWidget(self.text_edit)
+        menu = self.menu_bar.addMenu('Say')  #  Как настроить вывод....
+        menu.addAction('hello', lambda: print('Hello!'))
+        menu.addAction('fail', lambda: print('Fail!', file=sys.stderr))
+        hbox.addWidget(self.menu_bar)
+        self.setLayout(hbox)
 
     def append_log(self, text, severity):
         text = repr(text)

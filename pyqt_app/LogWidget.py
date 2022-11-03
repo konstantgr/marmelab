@@ -4,10 +4,6 @@ from PyQt6.QtWidgets import QMainWindow, QTextEdit, QMenuBar, QApplication
 from PyQt6.QtCore import QObject
 from PyQt6.QtCore import pyqtSignal as Signal
 
-
-
-
-
 class OutputLogger(QObject):
     emit_write = Signal(str, int)
 
