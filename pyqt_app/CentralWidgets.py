@@ -10,7 +10,6 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QGridLayout
 from PyQt6.QtCore import Qt
 
 logger = logging.getLogger()
-logger.info("123")
 
 class Init(QWidget):
     """
@@ -99,7 +98,7 @@ class ScannerSettings(QWidget):
         for j, key in enumerate(self.settings_keys):
             setting = DEFAULT_SETTINGS.get(key)
             logger.info(f"{j} {key}")
-            print(j, key)
+
             if isinstance(setting, BaseAxes):
                 x, y, z, w = setting.x, setting.y, setting.z, setting.w
             else:
