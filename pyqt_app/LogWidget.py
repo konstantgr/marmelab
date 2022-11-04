@@ -1,32 +1,19 @@
 import sys
-
-from PyQt6.QtWidgets import QMainWindow, QTextEdit, QMenuBar, QApplication
+import logging
+from PyQt6.QtWidgets import QMainWindow, QTextEdit, QMenuBar, QApplication, QPlainTextEdit
 from PyQt6.QtCore import QObject
-from PyQt6.QtCore import pyqtSignal as Signal
+from PyQt6.QtCore import pyqtSignal, pyqtBoundSignal
 
-class OutputLogger(QObject):
-    emit_write = Signal(str, int)
+class QTextEditLogger(logging.Handler, QObject):
+    appendPlainText: pyqtBoundSignal = pyqtSignal(str) # инициализация сигнала вместо дефолтного
 
-    class Severity:
-        DEBUG = 0
-        ERROR = 1
-
-    def __init__(self, io_stream, severity):
+    def __init__(self, parent):
         super().__init__()
+        QObject.__init__(self)
+        self.widget = QPlainTextEdit(parent)  # создание виджета пустого окна
+        self.widget.setReadOnly(True)
+        self.appendPlainText.connect(self.widget.appendPlainText)  #  вызов функции, которая добавляет текст в пустой виджет.
 
-        self.io_stream = io_stream
-        self.severity = severity
-
-    def write(self, text):
-        self.io_stream.write(text)
-        self.emit_write.emit(text, self.severity)
-
-    def flush(self):
-        self.io_stream.flush()
-
-
-OUTPUT_LOGGER_STDOUT = OutputLogger(sys.stdout, OutputLogger.Severity.DEBUG)
-OUTPUT_LOGGER_STDERR = OutputLogger(sys.stderr, OutputLogger.Severity.ERROR)
-
-sys.stdout = OUTPUT_LOGGER_STDOUT
-sys.stderr = OUTPUT_LOGGER_STDERR
+    def emit(self, record):
+        msg = self.format(record)
+        self.appendPlainText.emit(msg)  # добавление в сигнал строки, которая передается в исполняемую функцию
