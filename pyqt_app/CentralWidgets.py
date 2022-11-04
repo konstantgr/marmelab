@@ -1,4 +1,3 @@
-from TableWidgets import *
 from src.scanner import BaseAxes
 from TRIM import TRIMScanner, DEFAULT_SETTINGS
 from src.scanner_utils import *
