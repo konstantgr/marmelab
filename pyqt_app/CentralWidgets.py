@@ -1,3 +1,5 @@
+import logging
+
 from src.scanner import BaseAxes
 from TRIM import TRIMScanner, DEFAULT_SETTINGS
 from src.scanner_utils import *
@@ -7,6 +9,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QGridLayout
 
 from PyQt6.QtCore import Qt
 
+logger = logging.getLogger()
 
 class Init(QWidget):
     """
@@ -94,7 +97,8 @@ class ScannerSettings(QWidget):
     def set_default_settings(self):
         for j, key in enumerate(self.settings_keys):
             setting = DEFAULT_SETTINGS.get(key)
-            print(j, key)
+            logger.info(f"{j} {key}")
+
             if isinstance(setting, BaseAxes):
                 x, y, z, w = setting.x, setting.y, setting.z, setting.w
             else:

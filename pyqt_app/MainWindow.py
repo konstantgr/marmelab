@@ -11,8 +11,15 @@ import sys
 from PyQt6.QtCore import Qt, pyqtSignal as Signal, QObject
 from enum import IntEnum, auto
 
-# TODO: Зафиксировать левый виджет?
-# TODO: оптимизация процесса создания кнопок
+# TODO: сделать нормальное позиционирование всех панелей
+# TODO: добавить вкладку с настройками комнаты (таблица/поля, размер комнаты в метрах (x, y ,z),
+#  область сканирования (x, y, z) и ее пространственная ориенатция (x, y, z), кнопка apply(pass) )
+# TODO: убрать лямбда функции
+# TODO: вкладка Next --> Test. реализация кнопки Go, которая измеряет и выдает данные
+# TODO: принты (current position) в отдельные окна
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO) # установление уровня выдаваемой информации
 
 class CentralPanelTypes(IntEnum):
     """
@@ -100,32 +107,14 @@ class LogPanel(BasePanel):
     def __init__(self, *args, **kwargs):
         super(LogPanel, self).__init__(*args, **kwargs)
         hbox = QHBoxLayout(self)
-        self.menu_bar = QMenuBar()
+        logging_handler = LogWidget.QTextEditLogger(self)
+        logging_handler.setFormatter(
+            logging.Formatter(
+                '%(asctime)s %(levelname)s %(module)s %(funcName)s %(message)s')) # меняет формат сообщения
 
-        self.text_edit = QTextEdit()
-
-        self.OUTPUT_LOGGER_STDOUT = LogWidget.OutputLogger(sys.stdout, LogWidget.OutputLogger.Severity.DEBUG)
-        self.OUTPUT_LOGGER_STDERR = LogWidget.OutputLogger(sys.stderr, LogWidget.OutputLogger.Severity.ERROR)
-
-        sys.stdout = self.OUTPUT_LOGGER_STDOUT
-        sys.stderr = self.OUTPUT_LOGGER_STDERR
-
-        self.OUTPUT_LOGGER_STDOUT.emit_write.connect(self.append_log)
-        self.OUTPUT_LOGGER_STDERR.emit_write.connect(self.append_log)
-
-        menu = self.menu_bar.addMenu('Say')  # Как настроить вывод....
-        menu.addAction('hello', lambda: print('Hello!'))
-        menu.addAction('fail', lambda: print('Fail!', file=sys.stderr))
-        hbox.addWidget(self.menu_bar)
+        hbox.addWidget(logging_handler.widget)
         self.setLayout(hbox)
-
-    def append_log(self, text, severity):
-        text = repr(text)
-
-        if severity == LogWidget.OutputLogger.Severity.ERROR:
-            text = '<b>{}</b>'.format(text)
-
-        self.text_edit.append(text)
+        logger.addHandler(logging_handler)  # добавление в логгер всего то, что получит обработчик
 
 
 class MainWindow(QMainWindow):
