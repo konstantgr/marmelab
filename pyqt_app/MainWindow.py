@@ -1,5 +1,6 @@
 import CentralWidgets
 import LogWidget
+import RightWidgets
 import logging
 import sys
 from PyQt6 import QtWidgets
@@ -57,6 +58,14 @@ class RightPanel(BasePanel):
     """
     This class makes widgets on the right panel
     """
+    def __init__(self, *args, **kwargs):
+        super(RightPanel, self).__init__(*args, **kwargs)
+
+        self.vbox = QVBoxLayout()
+        self.setLayout(self.vbox)
+
+        self.scanner_widget = RightWidgets.ScannerVisualizer()
+        self.vbox.addWidget(self.scanner_widget)
 
 
 class CentralPanel(QStackedWidget, BasePanel):

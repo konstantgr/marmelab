@@ -1,4 +1,4 @@
-from MainWindow_class import *
+from MainWindow import *
 from src import scanner_utils
 
 if __name__ == "__main__":
