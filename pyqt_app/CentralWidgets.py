@@ -1,5 +1,4 @@
 import logging
-
 from src.scanner import BaseAxes
 from TRIM import TRIMScanner, DEFAULT_SETTINGS
 from src.scanner_utils import *
@@ -7,9 +6,9 @@ import sys
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout,
                              QFrame, QLineEdit, QHBoxLayout, QSplitter, QApplication, QSpinBox, QPlainTextEdit, QTableWidget, QHeaderView, QTableWidgetItem)
 
-from PyQt6.QtCore import Qt
-
+from PyQt6.QtCore import Qt, pyqtSignal, pyqtBoundSignal, QObject
 logger = logging.getLogger()
+logger_print = logging.getLogger()
 
 class Init(QWidget):
     """
@@ -25,6 +24,12 @@ class Init(QWidget):
         button = QPushButton("Connect")
         layout.addWidget(button)
         button.clicked.connect(f_connection)
+
+class RoomSettings(QWidget):
+    def __init__(self):
+        super(RoomSettings, self).__init__()
+        layout = QVBoxLayout()
+        self.setLayout(layout)
 
 
 class ScannerSettings(QWidget):
@@ -62,6 +67,7 @@ class ScannerSettings(QWidget):
         self.table_widget.setHorizontalHeaderLabels(("X", "Y", "Z", "W"))
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table_widget.setFixedHeight(300)
+        # нереализованные чекбоксы
         # self.table_widget.setSpan(3, 0, 1, 4)  # слияние столбцов
         # self.table_widget.setSpan(4, 0, 1, 4)
         # self.table_widget.setSpan(5, 0, 1, 4)
@@ -97,7 +103,6 @@ class ScannerSettings(QWidget):
     def set_default_settings(self):
         for j, key in enumerate(self.settings_keys):
             setting = DEFAULT_SETTINGS.get(key)
-            logger.info(f"{j} {key}")
 
             if isinstance(setting, BaseAxes):
                 x, y, z, w = setting.x, setting.y, setting.z, setting.w
@@ -127,6 +132,15 @@ class ScannerControl(QWidget):
         button_x = QPushButton("x")
         button_go = QPushButton("Go")
 
+
+
+        #appendPlainText.connect(self.widget.appendPlainText)
+
+        def emit(self, record):
+            msg = self.format(record)
+            self.appendPlainText.emit(msg)  # добавление в сигнал строки, которая передается в исполняемую функцию
+
+
         arrow_window1 = QSpinBox(self)  #ввод координаты
 
         #  создание горизонтального слоя внутри вертикального для окна с выбором значения координаты и кнопки перемещения по оси х по заданной координате
@@ -135,6 +149,7 @@ class ScannerControl(QWidget):
         widget1.setLayout(layout1)
         layout1.addWidget(arrow_window1)
         layout1.addWidget(button_x)
+
 
         #  создание горизонтального слоя внутри вертикального для помещения туда таблицы и кнопок пуск и аборт
         layout2 = QHBoxLayout()
@@ -162,11 +177,23 @@ class ScannerControl(QWidget):
         layout.addWidget(button_current_pos)
         layout.addWidget(widget1)  # добавление горизонтального виджета в вертикальный слой
         layout.addWidget(widget2)  # добавление горизонтального виджета в вертикальный слой
+        layout.addWidget(log_window)  #
+
 
         # определение функционала кнопок
         button_abort.clicked.connect(f_abort)  #заглушка
         button_current_pos.clicked.connect(f_currrent_position)
         button_home.clicked.connect(f_home)
         button_x.clicked.connect(lambda x: f_X_positive(arrow_window1.value()))
-
         button_go.clicked.connect(lambda x: f_go_table(int(tableWidget.item(1, 1).text()), 10, 10))
+
+class Test(QWidget):
+    def __init__(self):
+        super(Test, self).__init__()
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.setLayout(layout)
+        button_go = QPushButton("Go")
+        button_download = QPushButton("Download")
+        layout.addWidget(button_go)
+        layout.addWidget(button_download)

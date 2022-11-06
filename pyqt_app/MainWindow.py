@@ -26,9 +26,10 @@ class CentralPanelTypes(IntEnum):
     замена цифр на названия
     """
     Initial: int = auto()
+    RoomSettings = auto()
     ScannerSettings: int = auto()
     Scanner: int = auto()
-    Next: int = auto()
+    Test: int = auto()
 
 
 class BasePanel(QFrame):
@@ -51,9 +52,10 @@ class LeftPanel(BasePanel):
         super().__init__(*args, **kwargs)
         self.leftlist = QListWidget()
         self.leftlist.insertItem(CentralPanelTypes.Initial, 'Initial')
+        self.leftlist.insertItem(CentralPanelTypes.RoomSettings, 'RoomSettings')
         self.leftlist.insertItem(CentralPanelTypes.ScannerSettings, 'Scanner settings')
-        self.leftlist.insertItem(CentralPanelTypes.Scanner, 'Scanner')
-        self.leftlist.insertItem(CentralPanelTypes.Next, 'Next')
+        self.leftlist.insertItem(CentralPanelTypes.Scanner, 'Scanner control')
+        self.leftlist.insertItem(CentralPanelTypes.Test, 'Test')
         # обращение к виджетам из центр. указывает на номер отображаемого виджета
 
         hbox = QHBoxLayout(self)
@@ -81,15 +83,16 @@ class CentralPanel(QStackedWidget, BasePanel):
     """
     def __init__(self, *args, **kwargs):
         """
-        создание виджетов в центр. панели. В слои они добовляются в классе централ виджет
+        создание виджетов в центр. панели. В слои они добавляются в классе централ виджет
         """
         super(CentralPanel, self).__init__(*args, **kwargs)
 
         pages = {
             CentralPanelTypes.Initial: CentralWidgets.Init(),
+            CentralPanelTypes.RoomSettings: CentralWidgets.RoomSettings(),
             CentralPanelTypes.ScannerSettings: CentralWidgets.ScannerSettings(),
             CentralPanelTypes.Scanner: CentralWidgets.ScannerControl(),
-            CentralPanelTypes.Next: CentralWidgets.ScannerControl(),
+            CentralPanelTypes.Test: CentralWidgets.Test(),
 
         }
 
