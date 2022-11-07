@@ -11,24 +11,9 @@ import socket
 from typing import Union, List, Iterator
 from dataclasses import dataclass, field, fields
 
-@dataclass
-class AxesGroup:
-    """
-    Класс групп осей A и B
-    """
-    A: float = None  # all axes
-    B: float = None  # X and Y axes
-
-    def to_dict(self) -> dict[str:float]:
-        res = {
-            'A': self.A,
-            'B': self.B
-        }
-        return res
-
 
 # TODO: поменять cmd_from_dict на cmd_from_axes
-# TODO: выкинуть вообще функцию do_dict из AxesGroup. Кажется, что она не нужна
+
 def cmds_from_dict(dct: dict[str:float], basecmd: str, val: bool = True) -> List[str]:
     """
     Переводит словарь {X: V} в 'X<basecmd>=V', но только если V не None.
@@ -99,39 +84,66 @@ DEFAULT_SETTINGS = {
         z=100000,
         w=3000,
     ),
-    'motion_mode': AxesGroup(
-        A=0,
+    'motion_mode': BaseAxes(
+        x=0,
+        y=0,
+        z=0,
+        w=0
     ),
-    'special_motion_mode': AxesGroup(
-        A=0,
+    'special_motion_mode': BaseAxes(
+        x=0,
+        y=0,
+        z=0,
+        w=0
     ),
-    'motor_on': AxesGroup(
-        A=1,
+    'motor_on': BaseAxes(
+        x=1,
+        y=1,
+        z=1,
+        w=1
     )
 }
 
 
 PTP_MODE_SETTINGS = {
-    'motion_mode': AxesGroup(
-        A=0,
+    'motion_mode': BaseAxes(
+        x=0,
+        y=0,
+        z=0,
+        w=0
     ),
-    'special_motion_mode': AxesGroup(
-        A=0,
+    'special_motion_mode': BaseAxes(
+        x=0,
+        y=0,
+        z=0,
+        w=0
     ),
-    'motor_on': AxesGroup(
-        A=1,
+    'motor_on': BaseAxes(
+        x=1,
+        y=1,
+        z=1,
+        w=1
     )
 }
 
 JOG_MODE_SETTINGS = {
-    'motion_mode': AxesGroup(
-        A=1,
+    'motion_mode': BaseAxes(
+        x=1,
+        y=1,
+        z=1,
+        w=1
     ),
-    'special_motion_mode': AxesGroup(
-        A=0,
+    'special_motion_mode': BaseAxes(
+        x=0,
+        y=0,
+        z=0,
+        w=0
     ),
-    'motor_on': AxesGroup(
-        A=1,
+    'motor_on': BaseAxes(
+        x=1,
+        y=1,
+        z=1,
+        w=1
     )
 }
 
@@ -270,9 +282,9 @@ class TRIMScanner(Scanner):
             velocity: Velocity = None,
             acceleration: Acceleration = None,
             deceleration: Deceleration = None,
-            motor_on: Union[AxesGroup, BaseAxes] = None,
-            motion_mode: Union[AxesGroup, BaseAxes] = None,
-            special_motion_mode: Union[AxesGroup, BaseAxes] = None,
+            motor_on: BaseAxes = None,
+            motion_mode: BaseAxes = None,
+            special_motion_mode: BaseAxes = None,
 
     ) -> None:
         """

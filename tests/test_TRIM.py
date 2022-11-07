@@ -1,18 +1,9 @@
 import pytest
 from src import Velocity, Acceleration, Deceleration, Position, BaseAxes
-from TRIM import AxesGroup, DEFAULT_SETTINGS, TRIMScanner
+from TRIM import DEFAULT_SETTINGS, TRIMScanner
 from TRIM.TRIM import cmds_from_dict
 from random import randint
 import dataclasses
-
-
-def test_axes_to_dict():
-    A = randint(0, 100)
-    B = randint(0, 100)
-    el = AxesGroup(A=A, B=B)
-    dct = el.to_dict()
-    assert dct['A'] == A
-    assert dct['B'] == B
 
 
 def test_cmds_from_dict():
@@ -78,10 +69,6 @@ def test_set_settings(TRIM_Scanner_emulator: TRIMScanner):
     res = f'{req.x},{req.y},{req.z},{req.w}'
     send_and_check(req, res)
 
-    # тест AxesGroup
-    req = AxesGroup(A=randint(0, 1))
-    res = f'{req.A},{req.A},{req.A},{req.A}'
-    send_and_check(req, res)
     # reqB = AxesGroup(B=randint(0, 1))
     # res = f'{reqB.B},{reqB.B},{req.A},{req.A}'
     # send_and_check(reqB, res)
@@ -99,7 +86,7 @@ def test_set_default_settings(TRIM_Scanner_emulator: TRIMScanner):
         'special_motion_mode': TRIM_Scanner_emulator._special_motion_mode
     }.items():
         val = getter()
-        assert val.x == val.y == val.z == val.w == DEFAULT_SETTINGS[s].A
+        assert val == DEFAULT_SETTINGS[s]
 
 
 def test_goto(TRIM_Scanner_emulator: TRIMScanner):
