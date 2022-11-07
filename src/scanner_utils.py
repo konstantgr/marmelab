@@ -21,14 +21,7 @@ def f_connection():
 # TODO: Добавить управление через значения, задаваемые в окошках
 
 
-def f_currrent_position():
-    """
-    This function shows current position
-    """
-    current_position = sc.position()
-    print('x: ', current_position.x)
-    print('y: ', current_position.y)
-    print('z: ', current_position.z)
+
 
 
 def f_default():
@@ -50,7 +43,7 @@ def f_X_positive(x_coord=10):
     print(f'Moving along x-axes on {x_coord}')
 
 
-def f_go_table(x_coord=0, y_coord=0, z_coord=0):
+def f_go_table(x_coord=0, y_coord=0, z_coord=0, w_coord=0):
     """
     This function makes movement by coords from table
     """
@@ -58,14 +51,16 @@ def f_go_table(x_coord=0, y_coord=0, z_coord=0):
     old_x = sc.position().x
     old_y = sc.position().y
     old_z = sc.position().z
+    old_w = sc.position().w
 
     new_x = old_x + x_coord  # не работает...
     new_y = old_y + y_coord
     new_z = old_z + z_coord
-    new_pos = Position(x=new_x, y=new_y, z=new_z)
+    new_w = old_z + w_coord
+    new_pos = Position(x=new_x, y=new_y, z=new_z, w=new_w)
     sc.goto(new_pos)
 
-    print("Scanner position is:")
+    print("Scanner position is:")# перенести в логгер.дебаг
     print('x: ', new_pos.x)
     print('y: ', new_pos.y)
     print('z: ', new_pos.z)
