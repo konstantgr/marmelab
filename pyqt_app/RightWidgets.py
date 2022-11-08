@@ -2,6 +2,7 @@ import pyqtgraph.opengl as gl
 import pyqtgraph as pg
 import numpy as np
 from stl import mesh
+from src.scanner import BaseAxes
 
 
 def coords_to_GL_coords(func):
@@ -10,21 +11,26 @@ def coords_to_GL_coords(func):
     return wrapper
 
 
+def BaseAxes_to_GL_coords(func):
+    def wrapper(_, axes: BaseAxes):
+        return func(_, x=axes.z, y=axes.x, z=axes.y)
+    return wrapper
+
+
 class ScannerVisualizer(gl.GLViewWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #  here and after X -- GL coord, x -- 'real' coord
-        self.room_sizeX = 5  # m
-        self.room_sizeY = 3  # m
-        self.room_sizeZ = 3  # m
+        self.room_sizeX = 5000  # mm
+        self.room_sizeY = 3000  # mm
+        self.room_sizeZ = 3000  # mm
 
-        self.scanner_zone_sizeX = 0.5314
-        self.scanner_zone_sizeY = 2.26292
-        self.scanner_zone_sizeZ = 2.13709
+        self.scanner_zone_sizeX = 531.4
+        self.scanner_zone_sizeY = 2262.92
+        self.scanner_zone_sizeZ = 2137.09
 
-        self.scanner_offsetX = 0.2
+        self.scanner_offsetX = 200
         self.scanner_offsetY = (self.room_sizeY - self.scanner_zone_sizeY) / 2
-        self.scanner_offsetZ = 0.3
+        self.scanner_offsetZ = 300
 
         points, faces = self._loadSTL('cylinder.stl')
         meshdata = gl.MeshData(vertexes=points, faces=faces)
@@ -38,18 +44,20 @@ class ScannerVisualizer(gl.GLViewWidget):
 
         self.setBackgroundColor(pg.mkColor('white'))
 
-        self.opts['distance'] = 2*max([self.room_sizeX, self.room_sizeY, self.room_sizeZ])
+        self.opts['distance'] = 100*max([self.room_sizeX, self.room_sizeY, self.room_sizeZ])
+        self.opts['fov'] = 1
+        self.setGeometry(400, 400, 400, 400)
         self.pan(self.room_sizeX / 2, self.room_sizeY / 2, 0)
 
         self.scanner_pos = {
-            'X': 0.5,
-            'Y': 0.5,
-            'Z': 1,
+            'X': 500,
+            'Y': 500,
+            'Z': 100,
         }
         self.object_pos = {
-            'X': 1,
-            'Y': 1,
-            'Z': 1,
+            'X': 1000,
+            'Y': 1000,
+            'Z': 1000,
         }
 
         self.grid_items = self.draw_grid()
@@ -122,12 +130,12 @@ class ScannerVisualizer(gl.GLViewWidget):
         """
         return self.scanner_offsetX, self.scanner_offsetY, self.scanner_offsetZ
 
-    @coords_to_GL_coords
+    @BaseAxes_to_GL_coords
     def set_scanner_pos(self, x: float, y: float, z: float):
         self.scanner_pos = {'X': x, 'Y': y, 'Z': z}
         self.redraw_scanner()
 
-    @coords_to_GL_coords
+    @BaseAxes_to_GL_coords
     def set_object_pos(self, x: float, y: float, z: float):
         self.object_pos = {'X': x, 'Y': y, 'Z': z}
         self.redraw_object()
@@ -141,7 +149,7 @@ class ScannerVisualizer(gl.GLViewWidget):
         gx = gl.GLGridItem()
         gx.setColor('gray')
         gx.setSize(self.room_sizeZ, self.room_sizeY)
-        gx.setSpacing(1, 1)
+        gx.setSpacing(1000, 1000)
         gx.rotate(90, 0, -1, 0)
         gx.translate(0, self.room_sizeY / 2, self.room_sizeZ / 2)
         self.addItem(gx)
@@ -149,7 +157,7 @@ class ScannerVisualizer(gl.GLViewWidget):
         gy = gl.GLGridItem()
         gy.setColor('gray')
         gy.setSize(self.room_sizeX, self.room_sizeZ)
-        gy.setSpacing(1, 1)
+        gy.setSpacing(1000, 1000)
         gy.rotate(90, 1, 0, 0)
         gy.translate(self.room_sizeX / 2, 0, self.room_sizeZ / 2)
         self.addItem(gy)
@@ -157,7 +165,7 @@ class ScannerVisualizer(gl.GLViewWidget):
         gz = gl.GLGridItem()
         gz.setColor('gray')
         gz.setSize(self.room_sizeX, self.room_sizeY)
-        gz.setSpacing(1, 1)
+        gz.setSpacing(1000, 1000)
         gz.translate(self.room_sizeX / 2, self.room_sizeY / 2, 0)
         self.addItem(gz)
 
@@ -240,8 +248,8 @@ class ScannerVisualizer(gl.GLViewWidget):
         tt = np.eye(4)
         tt[3, 3] = 1
         tt[2, 2] = 10 * self.object_pos['Z']
-        tt[0, 0] = 0.2
-        tt[1, 1] = 0.2
+        tt[0, 0] = 300
+        tt[1, 1] = 300
         tr = pg.Transform3D(tt)
         self.object_pillar.applyTransform(tr, False)
         self.object_pillar.translate(self.object_pos['X'], self.object_pos['Y'], 0)

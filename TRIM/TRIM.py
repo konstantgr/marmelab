@@ -240,7 +240,17 @@ def _motion_decorator(func):
     return wrapper
 
 
-class TRIMScanner(Scanner, QObject):
+class ScannerSignals(QObject):
+    """
+    Класс сигналов для сканера
+    """
+    position_signal: pyqtBoundSignal = pyqtSignal([BaseAxes], [Position])
+    velocity_signal: pyqtBoundSignal = pyqtSignal([BaseAxes], [Velocity])
+    acceleration_signal: pyqtBoundSignal = pyqtSignal([BaseAxes], [Acceleration])
+    deceleration_signal: pyqtBoundSignal = pyqtSignal([BaseAxes], [Deceleration])
+
+
+class TRIMScanner(Scanner):
     """
     Класс сканера
     """
@@ -258,7 +268,6 @@ class TRIMScanner(Scanner, QObject):
         :param bufsize: размер чанка сообщения в байтах
         :param maxbufs: максимальное число чанков
         """
-        super(Scanner, self).__init__()
         self.ip = ip
         self.port = port
         self.conn = socket.socket()
@@ -272,10 +281,7 @@ class TRIMScanner(Scanner, QObject):
         self.is_connected = False
         self._velocity = Velocity()
 
-        self._position_signal = pyqtSignal(Position)  # type: pyqtBoundSignal
-        self._velocity_signal = pyqtSignal(Velocity)  # type: pyqtBoundSignal
-        self._acceleration_signal = pyqtSignal(Acceleration)  # type: pyqtBoundSignal
-        self._deceleration_signal = pyqtSignal(Deceleration)  # type: pyqtBoundSignal
+        self._signals = ScannerSignals()
 
     def connect(self) -> None:
         if self.is_connected:
@@ -337,19 +343,19 @@ class TRIMScanner(Scanner, QObject):
             cmds += cmds_from_dict(motor_on.to_dict(), basecmd='MO', scale=False)
         self._send_cmds(cmds)
         if position is not None:
-            self._position_signal.emit(position)
+            self.position_signal[type(position)].emit(position)
         # Если все прошло успешно, то нужно поменять внутреннюю скорость сканера
         # Это необходимо, так как в самом сканере некорректно реализована команда ASP -- она возвращает нули
         if velocity is not None:
-            self._velocity_signal.emit(velocity)
+            self.velocity_signal[BaseAxes].emit(velocity)
             for axis in fields(velocity):
                 axis_velocity = velocity.__getattribute__(axis.name)
                 if axis_velocity is not None:
                     self._velocity.__setattr__(axis.name, axis_velocity)
         if acceleration is not None:
-            self._acceleration_signal.emit(acceleration)
+            self.acceleration_signal[type(acceleration)].emit(acceleration)
         if deceleration is not None:
-            self._deceleration_signal.emit(deceleration)
+            self.deceleration_signal[type(deceleration)].emit(deceleration)
 
     def _send_cmd(self, cmd: str) -> str:
         """
@@ -460,6 +466,8 @@ class TRIMScanner(Scanner, QObject):
         if position.w is not None and stop_reasons[3] != 1:
             raise scanner_motion_error(action_description, stop_reasons)
 
+        self.position()
+
     def stop(self) -> None:
         self._stop_flag = True
         self._stop_released = False
@@ -471,7 +479,7 @@ class TRIMScanner(Scanner, QObject):
     def position(self) -> Position:
         res = self._send_cmd('APS')
         ans = Position(*self._parse_A_res(res))
-        self._position_signal.emit(ans)
+        self.position_signal.emit(ans)
         return ans
 
     def _encoder_position(self) -> Position:
@@ -485,19 +493,19 @@ class TRIMScanner(Scanner, QObject):
         return ans
 
     def velocity(self) -> Velocity:
-        self._velocity_signal.emit(self._velocity)
+        self.velocity_signal.emit(self._velocity)
         return self._velocity  # на данном сканере нельзя получить скорость
 
     def acceleration(self) -> Acceleration:
         res = self._send_cmd('AAC')
         ans = Acceleration(*self._parse_A_res(res))
-        self._acceleration_signal.emit(ans)
+        self.acceleration_signal.emit(ans)
         return ans
 
     def deceleration(self) -> Deceleration:
         res = self._send_cmd('ADC')
         ans = Deceleration(*self._parse_A_res(res))
-        self._deceleration_signal.emit(ans)
+        self.deceleration_signal.emit(ans)
         return ans
 
     def _motor_on(self) -> BaseAxes:
@@ -578,16 +586,16 @@ class TRIMScanner(Scanner, QObject):
 
     @property
     def position_signal(self) -> pyqtBoundSignal:
-        return self._position_signal
+        return self._signals.position_signal
 
     @property
     def velocity_signal(self) -> pyqtBoundSignal:
-        return self._velocity_signal
+        return self._signals.velocity_signal
 
     @property
     def acceleration_signal(self) -> pyqtBoundSignal:
-        return self._acceleration_signal
+        return self._signals.acceleration_signal
 
     @property
     def deceleration_signal(self) -> pyqtBoundSignal:
-        return self._deceleration_signal
+        return self._signals.deceleration_signal

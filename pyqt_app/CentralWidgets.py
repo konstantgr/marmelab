@@ -3,7 +3,7 @@ from TRIM import DEFAULT_SETTINGS
 from pyqt_app import scanner
 from src.scanner_utils import f_home, f_X_positive, f_go_table, f_abort, f_connection
 from PyQt6.QtWidgets import QPushButton, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt6.QtWidgets import QLabel, QSpinBox, QTableWidget, QHeaderView, QTableWidgetItem
+from PyQt6.QtWidgets import QLabel, QSpinBox, QTableWidget, QHeaderView, QTableWidgetItem, QSizePolicy
 from PyQt6.QtCore import Qt
 
 import logging
@@ -25,6 +25,8 @@ class Init(QWidget):
         button = QPushButton("Connect")
         layout.addWidget(button)
         button.clicked.connect(f_connection)
+        button.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum))
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred))
 
 
 class QSettingsTableWidget(QTableWidget):
@@ -49,7 +51,9 @@ class ScannerSettings(QWidget):
         self.setLayout(layout)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.button_apply = QPushButton("Apply")
+        self.button_apply.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum))
         self.button_default_set = QPushButton("Default settings")  # должны подтягивать настройки с трим сканнера
+        self.button_default_set.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum))
 
         self.button_apply.clicked.connect(self.apply_settings)
         self.button_default_set.clicked.connect(self.set_default_settings)

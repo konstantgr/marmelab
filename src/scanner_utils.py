@@ -8,7 +8,7 @@ def f_connection():
     """
     This function makes connection to the scanner
     """
-    run(blocking=False, motion_time=10)  # use it only for emulating
+    run(blocking=False, motion_time=2)  # use it only for emulating
     scanner.connect()
     logger.info('Scanner is connected')
 
@@ -71,6 +71,7 @@ def f_home():
     This function sets "home" current cords.
     """
     from src import Position
+    scanner.home()
     scanner.set_settings(position=Position(0, 0, 0, 0))
     logger.debug("Scanner at home. Scanner position is:")
     current_position = scanner.position()

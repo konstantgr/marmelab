@@ -1,10 +1,11 @@
 import CentralWidgets
 import LogWidget
 import RightWidgets
-from PyQt6.QtWidgets import QWidget, QFrame, QHBoxLayout, QMainWindow, QVBoxLayout, QSplitter, QStackedWidget, QListWidget
+from PyQt6.QtWidgets import QWidget, QFrame, QHBoxLayout, QMainWindow, QVBoxLayout, QSplitter, QStackedWidget, QListWidget, QScrollArea, QSizePolicy
 from PyQt6.QtCore import Qt
 from enum import IntEnum, auto
 import logging
+from pyqt_app import scanner
 
 # TODO: сделать нормальное позиционирование всех панелей
 # TODO: добавить вкладку с настройками комнаты (таблица/поля, размер комнаты в метрах (x, y ,z),
@@ -45,7 +46,7 @@ class LeftPanel(BasePanel):
         Формирование стеков виджетов на левой панели
         """
         super().__init__(*args, **kwargs)
-        self.leftlist = QListWidget()
+        self.leftlist = QListWidget(self)
         self.leftlist.insertItem(CentralPanelTypes.Initial, 'Initial')
         self.leftlist.insertItem(CentralPanelTypes.RoomSettings, 'RoomSettings')
         self.leftlist.insertItem(CentralPanelTypes.ScannerSettings, 'Scanner settings')
@@ -56,6 +57,7 @@ class LeftPanel(BasePanel):
         hbox = QHBoxLayout(self)
         hbox.addWidget(self.leftlist)
         self.setLayout(hbox)
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
 
 class RightPanel(BasePanel):
@@ -65,14 +67,18 @@ class RightPanel(BasePanel):
     def __init__(self, *args, **kwargs):
         super(RightPanel, self).__init__(*args, **kwargs)
 
-        self.vbox = QVBoxLayout()
+        self.vbox = QVBoxLayout(self)
         self.setLayout(self.vbox)
 
-        self.scanner_widget = RightWidgets.ScannerVisualizer()
+        self.scanner_widget = RightWidgets.ScannerVisualizer(self)
         self.vbox.addWidget(self.scanner_widget)
 
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
 
-class CentralPanel(QStackedWidget, BasePanel):
+        scanner.position_signal.connect(self.scanner_widget.set_scanner_pos)
+
+
+class CentralPanel(QScrollArea, BasePanel):
     """
     This class makes widgets on the central panel
     """
@@ -81,21 +87,22 @@ class CentralPanel(QStackedWidget, BasePanel):
         создание виджетов в центр. панели. В слои они добавляются в классе централ виджет
         """
         super(CentralPanel, self).__init__(*args, **kwargs)
-
         pages = {
             CentralPanelTypes.Initial: CentralWidgets.Init(),
             CentralPanelTypes.RoomSettings: CentralWidgets.RoomSettings(),
             CentralPanelTypes.ScannerSettings: CentralWidgets.ScannerSettings(),
             CentralPanelTypes.Scanner: CentralWidgets.ScannerControl(),
             CentralPanelTypes.Test: CentralWidgets.Test(),
-
         }
-
+        self.stacked_widget = QStackedWidget(self)
         for key in pages.keys():
-            self.insertWidget(key, pages[key])  # добавление виджетов в центральную панель
+            self.stacked_widget.insertWidget(key, pages[key])  # добавление виджетов в центральную панель
+
+        self.setWidget(self.stacked_widget)
+        self.setWidgetResizable(True)
 
     def display(self, i):
-        self.setCurrentIndex(i)
+        self.stacked_widget.setCurrentIndex(i)
 
 
 class LogPanel(BasePanel):
@@ -108,7 +115,8 @@ class LogPanel(BasePanel):
         logging_handler = LogWidget.QTextEditLogger(self)
         logging_handler.setFormatter(
             logging.Formatter(
-                '%(asctime)s %(levelname)s %(module)s %(funcName)s %(message)s')) # меняет формат сообщения
+                '%(asctime)s %(levelname)s: %(message)s')
+        )
 
         hbox.addWidget(logging_handler.widget)
         self.setLayout(hbox)
@@ -129,16 +137,28 @@ class MainWindow(QMainWindow):
         self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
 
         splitter2 = QSplitter(orientation=Qt.Orientation.Horizontal)
-        splitter2.addWidget(self.left_panel)
-        splitter2.addWidget(self.center_panel)
+        splitter2.insertWidget(0, self.left_panel)
+        splitter2.insertWidget(1, self.center_panel)
+        splitter2.setStretchFactor(0, 0)
+        splitter2.setStretchFactor(1, 1)
+        splitter2.setCollapsible(0, False)
+        splitter2.setCollapsible(1, False)
 
         splitter1 = QSplitter(orientation=Qt.Orientation.Vertical)
         splitter1.insertWidget(0, splitter2)
         splitter1.insertWidget(1, self.log_panel)
+        splitter1.setStretchFactor(0, 4)
+        splitter1.setStretchFactor(1, 1)
+        splitter1.setCollapsible(0, False)
+        splitter1.setCollapsible(1, False)
 
         splitter0 = QSplitter(orientation=Qt.Orientation.Horizontal)
         splitter0.insertWidget(0, splitter1)
         splitter0.insertWidget(1, self.right_panel)
+        splitter0.setStretchFactor(0, 1)
+        splitter0.setStretchFactor(1, 10)
+        splitter0.setCollapsible(0, False)
+        splitter0.setCollapsible(1, False)
 
         hbox.addWidget(splitter0)
 
