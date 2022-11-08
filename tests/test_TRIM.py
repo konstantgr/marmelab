@@ -2,6 +2,7 @@ import pytest
 from src import Velocity, Acceleration, Deceleration, Position, BaseAxes
 from TRIM import DEFAULT_SETTINGS, TRIMScanner
 from TRIM.TRIM import cmds_from_dict
+from TRIM.TRIM import AXES_SCALE
 from random import randint
 import dataclasses
 
@@ -10,13 +11,13 @@ def test_cmds_from_dict():
     x = 123
     y = 342
     res = cmds_from_dict({'x': x, 'y': y}, 'CMD')
-    assert res == [f'XCMD={x}', f'YCMD={y}']
+    assert res == [f'XCMD={int(x * AXES_SCALE.x)}', f'YCMD={int(y * AXES_SCALE.y)}']
     res = cmds_from_dict({'x': x, 'y': y}, 'CMD', val=False)
     assert res == [f'XCMD', f'YCMD']
 
     y = None
     res = cmds_from_dict({'x': x, 'y': y}, 'CMD')
-    assert res == [f'XCMD={x}']
+    assert res == [f'XCMD={int(x * AXES_SCALE.x)}']
     res = cmds_from_dict({'x': x, 'y': y}, 'CMD', val=False)
     assert res == [f'XCMD']
 
@@ -28,10 +29,10 @@ def test_get(TRIM_Scanner_emulator: TRIMScanner):
         TRIM_Scanner_emulator.acceleration,
         TRIM_Scanner_emulator.deceleration
     ]:
-        assert axis().x == 10
-        assert axis().y == 20
-        assert axis().z == 30
-        assert axis().w == 40
+        assert axis().x == 10 / AXES_SCALE.x
+        assert axis().y == 20 / AXES_SCALE.y
+        assert axis().z == 30 / AXES_SCALE.z
+        assert axis().w == 40 / AXES_SCALE.w
 
 
 def test_set_settings(TRIM_Scanner_emulator: TRIMScanner):

@@ -8,13 +8,27 @@ import time
 from src import Scanner, BaseAxes, Position, Velocity, Acceleration, Deceleration
 from src import ScannerConnectionError, ScannerInternalError, ScannerMotionError
 import socket
-from typing import Union, List, Iterator
-from dataclasses import dataclass, field, fields
+from typing import Union, List, Iterator, Iterable
+from dataclasses import fields
+from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal
 
 
 # TODO: поменять cmd_from_dict на cmd_from_axes
 
-def cmds_from_dict(dct: dict[str:float], basecmd: str, val: bool = True) -> List[str]:
+STEPS_PER_MM_X = 8192
+STEPS_PER_MM_Y = 5120
+STEPS_PER_MM_Z = 5120
+STEPS_PER_DEG_W = 1
+
+AXES_SCALE = BaseAxes(
+    x=STEPS_PER_MM_X,
+    y=STEPS_PER_MM_Y,
+    z=STEPS_PER_MM_Z,
+    w=STEPS_PER_DEG_W
+)
+
+
+def cmds_from_dict(dct: dict[str:float], basecmd: str, val: bool = True, scale: bool = True) -> List[str]:
     """
     Переводит словарь {X: V} в 'X<basecmd>=V', но только если V не None.
     Пример: {'x': 100, 'y': None} при basecmd='PS' получаем ['XPS=100'].
@@ -23,13 +37,15 @@ def cmds_from_dict(dct: dict[str:float], basecmd: str, val: bool = True) -> List
     :param dct: словарь
     :param basecmd: суффикс команды
     :param val: требуется ли указывать значение в команде
+    :param scale: требуется ли преобразовать мм в шаги
     :return:
     """
     cmds = []
     for axis, value in dct.items():
         if value is not None:
             if val:
-                cmds.append(f'{axis.upper()}{basecmd}={int(value)}')
+                cmd_value = int(value * AXES_SCALE.to_dict()[axis]) if scale else int(value)
+                cmds.append(f'{axis.upper()}{basecmd}={cmd_value}')
             else:
                 cmds.append(f'{axis.upper()}{basecmd}')
     return cmds
@@ -67,22 +83,22 @@ def scanner_motion_error(action_description: str, stop_reasons: List[int]):
 
 DEFAULT_SETTINGS = {
     'acceleration': Acceleration(
-        x=800000,
-        y=1000000,
-        z=200000,
-        w=2000,
+        x=800000 / STEPS_PER_MM_X,
+        y=1000000 / STEPS_PER_MM_Y,
+        z=200000 / STEPS_PER_MM_Z,
+        w=2000 / STEPS_PER_DEG_W,
     ),
     'deceleration': Deceleration(
-        x=800000,
-        y=1000000,
-        z=200000,
-        w=2000,
+        x=800000 / STEPS_PER_MM_X,
+        y=1000000 / STEPS_PER_MM_Y,
+        z=200000 / STEPS_PER_MM_Z,
+        w=2000 / STEPS_PER_DEG_W,
     ),
     'velocity': Velocity(
-        x=1228800,
-        y=1024000,
-        z=100000,
-        w=3000,
+        x=1228800 / STEPS_PER_MM_X,
+        y=1024000 / STEPS_PER_MM_Y,
+        z=100000 / STEPS_PER_MM_Z,
+        w=3000 / STEPS_PER_DEG_W,
     ),
     'motion_mode': BaseAxes(
         x=0,
@@ -255,6 +271,11 @@ class TRIMScanner(Scanner):
         self.is_connected = False
         self._velocity = Velocity()
 
+        self._position_signal = pyqtSignal(Position)  # type: pyqtBoundSignal
+        self._velocity_signal = pyqtSignal(Velocity)  # type: pyqtBoundSignal
+        self._acceleration_signal = pyqtSignal(Acceleration)  # type: pyqtBoundSignal
+        self._deceleration_signal = pyqtSignal(Deceleration)  # type: pyqtBoundSignal
+
     def connect(self) -> None:
         if self.is_connected:
             return
@@ -308,19 +329,26 @@ class TRIMScanner(Scanner):
         if deceleration is not None:
             cmds += cmds_from_dict(deceleration.to_dict(), basecmd='DC')
         if motion_mode is not None:
-            cmds += cmds_from_dict(motion_mode.to_dict(), basecmd='MM')
+            cmds += cmds_from_dict(motion_mode.to_dict(), basecmd='MM', scale=False)
         if special_motion_mode is not None:
-            cmds += cmds_from_dict(special_motion_mode.to_dict(), basecmd='SM')
+            cmds += cmds_from_dict(special_motion_mode.to_dict(), basecmd='SM', scale=False)
         if motor_on is not None:
-            cmds += cmds_from_dict(motor_on.to_dict(), basecmd='MO')
+            cmds += cmds_from_dict(motor_on.to_dict(), basecmd='MO', scale=False)
         self._send_cmds(cmds)
+        if position is not None:
+            self._position_signal.emit(position)
         # Если все прошло успешно, то нужно поменять внутреннюю скорость сканера
         # Это необходимо, так как в самом сканере некорректно реализована команда ASP -- она возвращает нули
         if velocity is not None:
+            self._velocity_signal.emit(velocity)
             for axis in fields(velocity):
                 axis_velocity = velocity.__getattribute__(axis.name)
                 if axis_velocity is not None:
                     self._velocity.__setattr__(axis.name, axis_velocity)
+        if acceleration is not None:
+            self._acceleration_signal.emit(acceleration)
+        if deceleration is not None:
+            self._deceleration_signal.emit(deceleration)
 
     def _send_cmd(self, cmd: str) -> str:
         """
@@ -372,14 +400,18 @@ class TRIMScanner(Scanner):
         return responses
 
     @staticmethod
-    def _parse_A_res(res: str) -> Iterator[int]:
+    def _parse_A_res(res: str, scale=True) -> Union[Iterable[int], Iterable[float]]:
         """
-        Принимает строку "1,2,10" и преобразует в итератор целых чисел (1, 2, 10)
+        Принимает строку "1,2,10" и преобразует в кортеж целых чисел (1, 2, 10).
+        Если scale=True, переводит шаги в мм
 
         :param res: строка целых чисел, разделенных запятой
-        :return: итератор
+        :param scale: переводить ли число в мм
+        :return: кортеж
         """
-        return map(int, res.split(','))
+        if not scale:
+            return (int(v) for v in res.split(','))
+        return (int(v) / axis_scale for v, axis_scale in zip(res.split(','), AXES_SCALE.to_dict().values()))
 
     def _is_stopped(self) -> bool:
         """
@@ -389,14 +421,14 @@ class TRIMScanner(Scanner):
         res = self._send_cmd('AMS')
         return all([r == 0 for r in self._parse_A_res(res)])
 
-    def _end_of_motion_reason(self) -> Iterator[int]:
+    def _end_of_motion_reason(self) -> Iterable[int]:
         """
         Проверка причины остановки
 
         """
         time.sleep(0.02)
         res = self._send_cmd('AEM')
-        return self._parse_A_res(res)
+        return self._parse_A_res(res, scale=False)
 
     def _begin_motion_and_wait(self, cmds, action_description: str = "a motion"):
         """
@@ -413,7 +445,7 @@ class TRIMScanner(Scanner):
     @_motion_decorator
     def goto(self, position: Position) -> None:
         cmds = cmds_from_dict(position.to_dict(), 'AP')
-        cmds += cmds_from_dict(position.to_dict(), 'BG', val=False)
+        cmds += cmds_from_dict(position.to_dict(), 'BG', val=False, scale=False)
         action_description = f'the motion to {position}'
         self._begin_motion_and_wait(cmds, action_description)
 
@@ -438,19 +470,33 @@ class TRIMScanner(Scanner):
     def position(self) -> Position:
         res = self._send_cmd('APS')
         ans = Position(*self._parse_A_res(res))
+        self._position_signal.emit(ans)
+        return ans
+
+    def _encoder_position(self) -> Position:
+        """
+        Реальная позиция сканера по положению энкодера
+
+        :return: реальная позиция
+        """
+        res = self._send_cmd('PS')
+        ans = Position(*self._parse_A_res(res))
         return ans
 
     def velocity(self) -> Velocity:
-        return self._velocity
+        self._velocity_signal.emit(self._velocity)
+        return self._velocity  # на данном сканере нельзя получить скорость
 
     def acceleration(self) -> Acceleration:
         res = self._send_cmd('AAC')
         ans = Acceleration(*self._parse_A_res(res))
+        self._acceleration_signal.emit(ans)
         return ans
 
     def deceleration(self) -> Deceleration:
         res = self._send_cmd('ADC')
         ans = Deceleration(*self._parse_A_res(res))
+        self._deceleration_signal.emit(ans)
         return ans
 
     def _motor_on(self) -> BaseAxes:
@@ -460,7 +506,7 @@ class TRIMScanner(Scanner):
         :return: покоординатные значения состояния двигателей
         """
         res = self._send_cmd('AMO')
-        ans = BaseAxes(*self._parse_A_res(res))
+        ans = BaseAxes(*self._parse_A_res(res, scale=False))
         return ans
 
     def _motion_mode(self) -> BaseAxes:
@@ -470,7 +516,7 @@ class TRIMScanner(Scanner):
         :return: покоординатные значения режима движения двигателей
         """
         res = self._send_cmd('AMM')
-        ans = BaseAxes(*self._parse_A_res(res))
+        ans = BaseAxes(*self._parse_A_res(res, scale=False))
         return ans
 
     def _special_motion_mode(self) -> BaseAxes:
@@ -480,7 +526,7 @@ class TRIMScanner(Scanner):
         :return: покоординатные значения специального режима движения двигателей
         """
         res = self._send_cmd('ASM')
-        ans = BaseAxes(*self._parse_A_res(res))
+        ans = BaseAxes(*self._parse_A_res(res, scale=False))
         return ans
 
     def debug_info(self) -> str:
@@ -528,3 +574,19 @@ class TRIMScanner(Scanner):
         stop_reasons = list(self._end_of_motion_reason())
         if not (stop_reasons[0] == stop_reasons[1] == stop_reasons[2] == 2):
             raise scanner_motion_error(action_description, stop_reasons)
+
+    @property
+    def position_signal(self) -> pyqtBoundSignal:
+        return self._position_signal
+
+    @property
+    def velocity_signal(self) -> pyqtBoundSignal:
+        return self._velocity_signal
+
+    @property
+    def acceleration_signal(self) -> pyqtBoundSignal:
+        return self._acceleration_signal
+
+    @property
+    def deceleration_signal(self) -> pyqtBoundSignal:
+        return self._deceleration_signal

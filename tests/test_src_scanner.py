@@ -53,9 +53,4 @@ def test_axes_mul_div():
         assert isinstance(el2, BaseAxes)
         for field in dataclasses.fields(cl):
             name = field.name
-            assert el2.__getattribute__(name) == int(el1.__getattribute__(name)/a)
-
-        el1 = cl(x=1)
-        el2 = el1 / 10
-        assert el2.y is None
-        assert el2.x == 0
+            assert el2.__getattribute__(name) == el1.__getattribute__(name)/a
