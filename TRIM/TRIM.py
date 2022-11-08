@@ -335,13 +335,20 @@ class TRIMScanner(Scanner):
         if motor_on is not None:
             cmds += cmds_from_dict(motor_on.to_dict(), basecmd='MO', scale=False)
         self._send_cmds(cmds)
+        if position is not None:
+            self._position_signal.emit(position)
         # Если все прошло успешно, то нужно поменять внутреннюю скорость сканера
         # Это необходимо, так как в самом сканере некорректно реализована команда ASP -- она возвращает нули
         if velocity is not None:
+            self._velocity_signal.emit(velocity)
             for axis in fields(velocity):
                 axis_velocity = velocity.__getattribute__(axis.name)
                 if axis_velocity is not None:
                     self._velocity.__setattr__(axis.name, axis_velocity)
+        if acceleration is not None:
+            self._acceleration_signal.emit(acceleration)
+        if deceleration is not None:
+            self._deceleration_signal.emit(deceleration)
 
     def _send_cmd(self, cmd: str) -> str:
         """
@@ -463,19 +470,33 @@ class TRIMScanner(Scanner):
     def position(self) -> Position:
         res = self._send_cmd('APS')
         ans = Position(*self._parse_A_res(res))
+        self._position_signal.emit(ans)
+        return ans
+
+    def _encoder_position(self) -> Position:
+        """
+        Реальная позиция сканера по положению энкодера
+
+        :return: реальная позиция
+        """
+        res = self._send_cmd('PS')
+        ans = Position(*self._parse_A_res(res))
         return ans
 
     def velocity(self) -> Velocity:
+        self._velocity_signal.emit(self._velocity)
         return self._velocity  # на данном сканере нельзя получить скорость
 
     def acceleration(self) -> Acceleration:
         res = self._send_cmd('AAC')
         ans = Acceleration(*self._parse_A_res(res))
+        self._acceleration_signal.emit(ans)
         return ans
 
     def deceleration(self) -> Deceleration:
         res = self._send_cmd('ADC')
         ans = Deceleration(*self._parse_A_res(res))
+        self._deceleration_signal.emit(ans)
         return ans
 
     def _motor_on(self) -> BaseAxes:
