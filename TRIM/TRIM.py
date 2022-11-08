@@ -10,7 +10,7 @@ from src import ScannerConnectionError, ScannerInternalError, ScannerMotionError
 import socket
 from typing import Union, List, Iterator, Iterable
 from dataclasses import fields
-from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal
+from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 
 
 # TODO: поменять cmd_from_dict на cmd_from_axes
@@ -240,7 +240,7 @@ def _motion_decorator(func):
     return wrapper
 
 
-class TRIMScanner(Scanner):
+class TRIMScanner(Scanner, QObject):
     """
     Класс сканера
     """
@@ -258,6 +258,7 @@ class TRIMScanner(Scanner):
         :param bufsize: размер чанка сообщения в байтах
         :param maxbufs: максимальное число чанков
         """
+        super(Scanner, self).__init__()
         self.ip = ip
         self.port = port
         self.conn = socket.socket()
