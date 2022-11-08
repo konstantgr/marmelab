@@ -258,6 +258,7 @@ class Scanner(metaclass=ABCMeta):
     def velocity_signal(self) -> pyqtBoundSignal:
         """
         Сигнал, в который передается скорость сканера
+
         :return: pyqtSignal(Velocity)
         """
 
