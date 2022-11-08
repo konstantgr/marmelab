@@ -5,6 +5,7 @@ import dataclasses
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from numbers import Number
+from PyQt6.QtCore import pyqtBoundSignal
 
 
 class ScannerConnectionError(Exception):
@@ -40,12 +41,12 @@ class ScannerMotionError(Exception):
 @dataclass
 class BaseAxes:
     """
-    Все координаты сканера
+    Все координаты сканера в мм
     """
-    x: int = None
-    y: int = None
-    z: int = None
-    w: int = None
+    x: float = None
+    y: float = None
+    z: float = None
+    w: float = None
     # e: float = None
     # f: float = None
     # g: float = None
@@ -97,7 +98,7 @@ class BaseAxes:
         for attr in dataclasses.fields(BaseAxes):
             name = attr.name
             if self.__getattribute__(name) is not None:
-                res.__setattr__(name, int(self.__getattribute__(name) * other))
+                res.__setattr__(name, self.__getattribute__(name) * other)
         return res
 
     def __rmul__(self, other):
@@ -110,7 +111,7 @@ class BaseAxes:
         for attr in dataclasses.fields(BaseAxes):
             name = attr.name
             if self.__getattribute__(name) is not None:
-                res.__setattr__(name, int(self.__getattribute__(name) / other))
+                res.__setattr__(name, self.__getattribute__(name) / other)
         return res
 
 
@@ -241,4 +242,39 @@ class Scanner(metaclass=ABCMeta):
         Перемещение сканера домой.
         Является thread safe и обрабатывается аналогично goto().
 
+        """
+
+    @property
+    @abstractmethod
+    def position_signal(self) -> pyqtBoundSignal:
+        """
+        Сигнал, в который передается положение сканера
+
+        :return: pyqtSignal(Position)
+        """
+
+    @property
+    @abstractmethod
+    def velocity_signal(self) -> pyqtBoundSignal:
+        """
+        Сигнал, в который передается скорость сканера
+        :return: pyqtSignal(Velocity)
+        """
+
+    @property
+    @abstractmethod
+    def acceleration_signal(self) -> pyqtBoundSignal:
+        """
+        Сигнал, в который передается ускорение сканера
+
+        :return: pyqtSignal(Acceleration)
+        """
+
+    @property
+    @abstractmethod
+    def deceleration_signal(self) -> pyqtBoundSignal:
+        """
+        Сигнал, в который передается замедление сканера
+
+        :return: pyqtSignal(Deceleration)
         """
