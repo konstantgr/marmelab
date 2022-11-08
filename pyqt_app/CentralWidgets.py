@@ -1,14 +1,13 @@
-import logging
 from src.scanner import BaseAxes
-from TRIM import TRIMScanner, DEFAULT_SETTINGS
-from src.scanner_utils import *
-import sys
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton, QGridLayout, QWidget, QVBoxLayout,
-                             QFrame, QLineEdit, QHBoxLayout, QSplitter, QApplication, QLabel, QSpinBox, QPlainTextEdit, QTableWidget, QHeaderView, QTableWidgetItem)
+from TRIM import DEFAULT_SETTINGS
+from pyqt_app import scanner
+from src.scanner_utils import f_home, f_X_positive, f_go_table, f_abort, f_connection
+from PyQt6.QtWidgets import QPushButton, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt6.QtWidgets import QLabel, QSpinBox, QTableWidget, QHeaderView, QTableWidgetItem
+from PyQt6.QtCore import Qt
 
-from PyQt6.QtCore import Qt, pyqtSignal, pyqtBoundSignal, QObject
+import logging
 logger = logging.getLogger()
-
 logger_print = logging.getLogger()
 
 
@@ -26,6 +25,12 @@ class Init(QWidget):
         button = QPushButton("Connect")
         layout.addWidget(button)
         button.clicked.connect(f_connection)
+
+
+class QSettingsTableWidget(QTableWidget):
+    def __init__(self, *args, **kwargs):
+        super(QSettingsTableWidget, self).__init__(*args, **kwargs)
+
 
 class RoomSettings(QWidget):
     def __init__(self):
@@ -69,17 +74,7 @@ class ScannerSettings(QWidget):
         self.table_widget.setHorizontalHeaderLabels(("X", "Y", "Z", "W"))
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table_widget.setFixedHeight(300)
-        # нереализованные чекбоксы
-        # self.table_widget.setSpan(3, 0, 1, 4)  # слияние столбцов
-        # self.table_widget.setSpan(4, 0, 1, 4)
-        # self.table_widget.setSpan(5, 0, 1, 4)
 
-        # chkBoxItem = QTableWidgetItem()
-        # chkBoxItem.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-        # chkBoxItem.setCheckState(Qt.CheckState.Unchecked)
-        # self.table_widget.setItem(5, 0, chkBoxItem)
-
-        # добавление всех виджетов в слои
         self.layout().addWidget(self.table_widget)
         self.layout().addWidget(self.button_apply)
         self.layout().addWidget(self.button_default_set)
@@ -96,10 +91,10 @@ class ScannerSettings(QWidget):
             w = self.table_widget.item(j, 3)
 
             user_settings[key] = cl(
-                x=x if x is None else int(x.text()),
-                y=y if y is None else int(y.text()),
-                z=z if z is None else int(z.text()),
-                w=w if w is None else int(w.text()),
+                x=x if x is None else float(x.text()),
+                y=y if y is None else float(y.text()),
+                z=z if z is None else float(z.text()),
+                w=w if w is None else float(w.text()),
             )
         return user_settings
 
@@ -117,7 +112,7 @@ class ScannerSettings(QWidget):
             self.table_widget.setItem(j, 3, QTableWidgetItem(str(w)))
 
     def apply_settings(self):
-        sc.set_settings(**self.settings_to_dict())
+        scanner.set_settings(**self.settings_to_dict())
 
 
 class ScannerControl(QWidget):
@@ -244,7 +239,7 @@ class ScannerControl(QWidget):
         """
         This function shows current position
         """
-        current_position = sc.position()
+        current_position = scanner.position()
         self.x_coord.setText(f"x = {current_position.x}")
         self.y_coord.setText(f"y = {current_position.y}")
         self.z_coord.setText(f"z = {current_position.z}")

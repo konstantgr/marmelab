@@ -1,15 +1,10 @@
 import CentralWidgets
 import LogWidget
 import RightWidgets
-import logging
-import sys
-from PyQt6 import QtWidgets
-from PyQt6.QtWidgets import (QApplication, QWidget, QFrame, QLineEdit, QHBoxLayout, QSplitter, QMainWindow, QPushButton,
-                             QGridLayout, QVBoxLayout, QSplitter, QStackedWidget, QListWidget,
-                             QFormLayout, QRadioButton, QLabel, QCheckBox, QDialog, QPlainTextEdit, QMenuBar, QTextEdit)
-import sys
-from PyQt6.QtCore import Qt, pyqtSignal as Signal, QObject
+from PyQt6.QtWidgets import QWidget, QFrame, QHBoxLayout, QMainWindow, QVBoxLayout, QSplitter, QStackedWidget, QListWidget
+from PyQt6.QtCore import Qt
 from enum import IntEnum, auto
+import logging
 
 # TODO: сделать нормальное позиционирование всех панелей
 # TODO: добавить вкладку с настройками комнаты (таблица/поля, размер комнаты в метрах (x, y ,z),
@@ -19,7 +14,7 @@ from enum import IntEnum, auto
 # TODO: принты (current position) в отдельные окна
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO) # установление уровня выдаваемой информации
+
 
 class CentralPanelTypes(IntEnum):
     """

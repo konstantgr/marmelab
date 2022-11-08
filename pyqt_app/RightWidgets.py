@@ -2,7 +2,6 @@ import pyqtgraph.opengl as gl
 import pyqtgraph as pg
 import numpy as np
 from stl import mesh
-from PyQt6.QtWidgets import *
 
 
 def coords_to_GL_coords(func):
@@ -19,15 +18,15 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.room_sizeY = 3  # m
         self.room_sizeZ = 3  # m
 
-        self.scanner_sizeX = 0.5314
-        self.scanner_sizeY = 2.26292
-        self.scanner_sizeZ = 2.13709
+        self.scanner_zone_sizeX = 0.5314
+        self.scanner_zone_sizeY = 2.26292
+        self.scanner_zone_sizeZ = 2.13709
 
         self.scanner_offsetX = 0.2
-        self.scanner_offsetY = (self.room_sizeY - self.scanner_sizeY) / 2
+        self.scanner_offsetY = (self.room_sizeY - self.scanner_zone_sizeY) / 2
         self.scanner_offsetZ = 0.3
 
-        points, faces = self.loadSTL('cylinder.stl')
+        points, faces = self._loadSTL('cylinder.stl')
         meshdata = gl.MeshData(vertexes=points, faces=faces)
         self.object_pillar = gl.GLMeshItem(
             meshdata=meshdata,
@@ -61,8 +60,67 @@ class ScannerVisualizer(gl.GLViewWidget):
 
     @coords_to_GL_coords
     def set_room_size(self, x: float, y: float, z: float):
+        """
+        Set room sizes in meters
+
+        :param x:
+        :param y:
+        :param z:
+        :return:
+        """
         self.room_sizeX, self.room_sizeY, self.room_sizeZ = x, y, z
         self.redraw_grid()
+
+    @property
+    def get_room_size(self):
+        """
+
+        :return: Размеры комнаты по трем осям
+        """
+        return self.room_sizeX, self.room_sizeY, self.room_sizeZ
+
+    @coords_to_GL_coords
+    def set_scanner_zone_size(self, x: float, y: float, z: float):
+        """
+        Set scanner zone sizes in meters
+
+        :param x:
+        :param y:
+        :param z:
+        :return:
+        """
+        self.scanner_zone_sizeX, self.scanner_zone_sizeY, self.scanner_zone_sizeZ = x, y, z
+        self.redraw_scanner_zone()
+
+    @property
+    def get_scanner_zone_size(self):
+        """
+
+        :return: Размеры области сканирования по трем осям в метрах
+        """
+        return self.scanner_zone_sizeX, self.scanner_zone_sizeY, self.scanner_zone_sizeZ
+
+    @coords_to_GL_coords
+    def set_offset(self, x: float, y: float, z: float):
+        """
+        Set scanner zone offset in meters
+
+        :param x:
+        :param y:
+        :param z:
+        :return:
+        """
+        self.scanner_offsetX, self.scanner_offsetY, self.scanner_offsetZ = x, y, z
+        self.redraw_scanner_zone()
+        self.redraw_scanner()
+
+    @property
+    def get_offset(self):
+        """
+
+        :return: Отступы зоны сканирования от угла комнаты по трем осям в метрах
+        """
+        return self.scanner_offsetX, self.scanner_offsetY, self.scanner_offsetZ
 
     @coords_to_GL_coords
     def set_scanner_pos(self, x: float, y: float, z: float):
@@ -120,9 +178,9 @@ class ScannerVisualizer(gl.GLViewWidget):
 
         pts = [
             [0, self.scanner_offsetY, self.scanner_offsetZ],
-            [0, self.scanner_offsetY, self.scanner_offsetZ + self.scanner_sizeZ],
-            [0, self.scanner_offsetY + self.scanner_sizeY, self.scanner_offsetZ + self.scanner_sizeZ],
-            [0, self.scanner_offsetY + self.scanner_sizeY, self.scanner_offsetZ],
+            [0, self.scanner_offsetY, self.scanner_offsetZ + self.scanner_zone_sizeZ],
+            [0, self.scanner_offsetY + self.scanner_zone_sizeY, self.scanner_offsetZ + self.scanner_zone_sizeZ],
+            [0, self.scanner_offsetY + self.scanner_zone_sizeY, self.scanner_offsetZ],
             [0, self.scanner_offsetY, self.scanner_offsetZ]
         ]
 
@@ -131,9 +189,9 @@ class ScannerVisualizer(gl.GLViewWidget):
 
         pts = [
             [self.scanner_offsetX, self.scanner_offsetY, 0],
-            [self.scanner_offsetX + self.scanner_sizeX, self.scanner_offsetY, 0],
-            [self.scanner_offsetX + self.scanner_sizeX, self.scanner_offsetY + self.scanner_sizeY, 0],
-            [self.scanner_offsetX, self.scanner_offsetY + self.scanner_sizeY, 0],
+            [self.scanner_offsetX + self.scanner_zone_sizeX, self.scanner_offsetY, 0],
+            [self.scanner_offsetX + self.scanner_zone_sizeX, self.scanner_offsetY + self.scanner_zone_sizeY, 0],
+            [self.scanner_offsetX, self.scanner_offsetY + self.scanner_zone_sizeY, 0],
             [self.scanner_offsetX, self.scanner_offsetY, 0]
         ]
 
@@ -206,7 +264,7 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.addItem(z)
 
     @staticmethod
-    def loadSTL(filename):
+    def _loadSTL(filename):
         m = mesh.Mesh.from_file(filename)
         points = m.points.reshape(-1, 3)
         faces = np.arange(points.shape[0]).reshape(-1, 3)
