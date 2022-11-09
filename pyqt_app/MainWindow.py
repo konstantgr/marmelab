@@ -6,11 +6,12 @@ from PyQt6.QtCore import Qt
 from enum import IntEnum, auto
 import logging
 from pyqt_app import scanner
+import os
 
-# TODO: сделать вывод логов в файл
+# TODO: сделать вывод логов в файл (DONE)
 # TODO: Изменить таблицу сканнер сеттингс
 # TODO: Реализация таблицы сканнер контрол (добавить пока что хождение по точкам)
-# TODO: ТАблица с настройками объекта и комнаты в рум сеттингс
+# TODO: Таблица с настройками объекта и комнаты в рум сеттингс
 # TODO: добавить вкладку с настройками комнаты (таблица/поля, размер комнаты в метрах (x, y ,z),
 #  область сканирования (x, y, z) и ее пространственная ориенатция (x, y, z), кнопка apply(pass) )
 # TODO: убрать лямбда функции
@@ -18,8 +19,16 @@ from pyqt_app import scanner
 # TODO: ПОСЛЕ ЧЕТВЕРГА
 # TODO: добавить в таблицу ск. контролл измерение и запись данных
 # TODO: аналогично во вкладке тест
+# TODO: что с абортом? рабоатет?
+# TODO: настроить все-таки дефолтный размер всех окон
 
 logger = logging.getLogger()
+
+logging.basicConfig(filename="logs",
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    datefmt='%H:%M:%S',
+                    level=logging.INFO)
 
 
 class CentralPanelTypes(IntEnum):
@@ -122,6 +131,8 @@ class LogPanel(BasePanel):
             logging.Formatter(
                 '%(asctime)s %(levelname)s: %(message)s')
         )
+
+
 
         hbox.addWidget(logging_handler.widget)
         self.setLayout(hbox)

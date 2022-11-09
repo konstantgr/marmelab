@@ -1,7 +1,7 @@
 from src.scanner import BaseAxes
 from TRIM import DEFAULT_SETTINGS
 from pyqt_app import scanner
-from src.scanner_utils import f_home, f_X_positive, f_go_table, f_abort, f_connection
+from src.scanner_utils import f_home, f_X_positive, f_abort, f_connection
 from PyQt6.QtWidgets import QPushButton, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtWidgets import QLabel, QSpinBox, QTableWidget, QHeaderView, QTableWidgetItem, QSizePolicy
 from PyQt6.QtCore import Qt
@@ -70,10 +70,7 @@ class ScannerSettings(QWidget):
         }
 
         self.table_widget = QTableWidget(len(self.settings_keys), 4)
-        self.table_widget.setColumnWidth(0, 50)
-        self.table_widget.setColumnWidth(1, 50)
-        self.table_widget.setColumnWidth(2, 50)
-        self.table_widget.setColumnWidth(3, 50)
+
         self.table_widget.setVerticalHeaderLabels(self.settings_keys.values())
         self.table_widget.setHorizontalHeaderLabels(("X", "Y", "Z", "W"))
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -86,7 +83,6 @@ class ScannerSettings(QWidget):
     def settings_to_dict(self):
         user_settings = {}
         for key, value in DEFAULT_SETTINGS.items():
-            #logger.info(f"{key}")
             j = list(self.settings_keys.keys()).index(key)
             cl = value.__class__ if isinstance(value.__class__, BaseAxes) else BaseAxes
             x = self.table_widget.item(j, 0)
@@ -146,17 +142,17 @@ class ScannerControl(QWidget):
         self.z_coord.setText("z = ")
         self.w_coord.setText("w = ")
 
-        arrow_window_x = QSpinBox(self)  #ввод координаты
-        arrow_window_y = QSpinBox(self)  #ввод координаты
-        arrow_window_z = QSpinBox(self)  #ввод координаты
-        arrow_window_w = QSpinBox(self)  #ввод координаты
+        arrow_window_x = QSpinBox(self)  # ввод координаты
+        arrow_window_y = QSpinBox(self)  # ввод координаты
+        arrow_window_z = QSpinBox(self)  # ввод координаты
+        arrow_window_w = QSpinBox(self)  # ввод координаты
 
-        arrow_window_x.setRange(-17*10 ** 6, 17 * 10 ** 6)
-        arrow_window_y.setRange(-10 ** 6, 10 ** 6)
-        arrow_window_z.setRange(-2500000, 2500000)
-        arrow_window_w.setRange(-100000, 100000)
+        arrow_window_x.setRange(-1000, 1000)
+        arrow_window_y.setRange(-1000, 1000)
+        arrow_window_z.setRange(-1000, 1000)
+        arrow_window_w.setRange(-1000, 1000)
 
-        #  создание горизонтального слоя внутри вертикального для окна с выбором значения координаты и кнопки перемещения по оси х по заданной координате
+        # создание горизонтального слоя внутри вертикального для окна с выбором значения координаты и кнопки перемещения по оси х по заданной координате
         layout_x = QHBoxLayout()
         widget_x = QWidget()
         widget_x.setLayout(layout_x)
@@ -182,18 +178,21 @@ class ScannerControl(QWidget):
         layout_w.addWidget(button_w)
 
 
-        #  создание горизонтального слоя внутри вертикального для помещения туда таблицы и кнопок пуск и аборт
+        # создание горизонтального слоя внутри вертикального для помещения туда таблицы и кнопок пуск и аборт
         layout_table = QHBoxLayout()
         widget_table = QWidget()
         widget_table.setLayout(layout_table)
         layout_table.setAlignment(Qt.AlignmentFlag.AlignTop)
         # формирование таблицы, в которой задаются значения координат, скоростей и шага для трех осей
-        tableWidget = QTableWidget(4, 3)
-        tableWidget.setHorizontalHeaderLabels(("Begin coord.", "End coord.", "Step"))
-        tableWidget.setVerticalHeaderLabels(("X", "Y", "Z", "W"))
-        tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        #tableWidget.setFixedSize(150, 150)
+
+        self.control_keys = ["Begin coordinates", "End coordinates", "Step"]
+
+        self.tableWidget = QTableWidget(len(self.control_keys), 4)
+        self.tableWidget.setVerticalHeaderLabels(self.control_keys)
+        self.tableWidget.setHorizontalHeaderLabels(("X", "Y", "Z", "W"))
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.tableWidget.setFixedHeight(300)
 
         layout_widget = QVBoxLayout()
         widget_coord = QWidget()
@@ -204,14 +203,14 @@ class ScannerControl(QWidget):
         layout_widget.addWidget(self.w_coord)
 
         layout_go_abort = QHBoxLayout()
-        widget_go_abort  = QWidget()
+        widget_go_abort = QWidget()
         widget_go_abort .setLayout(layout_go_abort )
         layout_go_abort.addWidget(button_go)
         layout_go_abort.addWidget(button_abort)
 
         layout_widget.addWidget(widget_go_abort)
 
-        layout_table.addWidget(tableWidget)
+        layout_table.addWidget(self.tableWidget)
         layout_table.addWidget(widget_coord)
 
         # добавление всех виджетов в основной слой
@@ -222,22 +221,58 @@ class ScannerControl(QWidget):
         layout.addWidget(widget_z)  # добавление горизонтального виджета в вертикальный слой
         layout.addWidget(widget_w)  # добавление горизонтального виджета в вертикальный слой
 
-
         layout.addWidget(widget_table)  # добавление горизонтального виджета в вертикальный слой
 
 
         # определение функционала кнопок
-        button_abort.clicked.connect(f_abort)  #заглушка
+        button_abort.clicked.connect(f_abort)  # Пока еще заглушка
         button_current_pos.clicked.connect(self.update_currrent_position)
         button_home.clicked.connect(f_home)
         button_x.clicked.connect(lambda x: f_X_positive(arrow_window_x.value()))
+        button_go.clicked.connect(self.go_table)
 
-        #  КОСТЫЛЬ! переделать
-        button_go.clicked.connect(
-            lambda x: f_go_table(int(tableWidget.item(0, 0).text()),
-                                 int(tableWidget.item(1, 0).text()),
-                                 int(tableWidget.item(2, 0).text()),
-                                 int(tableWidget.item(3, 0).text())))
+    def params_to_dict(self):
+        begin_coord = []
+        end_coord = []
+        step_coord = []
+        for _ in range(4):
+            begin_coord.append(self.table_widget.item(0, _))
+            end_coord .append(self.table_widget.item(1, _))
+            step_coord.append(self.table_widget.item(2, _))
+        return begin_coord, end_coord, step_coord
+
+    def go_table(self):
+        """
+        This function makes movement by coords from table
+        """
+        from src import Position
+        #  здесь вызов конвертации параметров из таблицы в списки
+        begin_coord, end_coord, step_coord = self.params_to_dict()
+
+        begin_x, begin_y, begin_z, begin_w = begin_coord[0], begin_coord[1], begin_coord[2], begin_coord[3]
+        step_x, step_y, step_z, step_w = step_coord[0], step_coord[1], step_coord[2], step_coord[3]
+        end_x, end_y, end_z, end_w = end_coord[0], end_coord[1], end_coord[2], end_coord[3]
+
+        begin_pos = Position(x=begin_x, y=begin_y, z=begin_z, w=begin_w)
+        scanner.goto(begin_pos)
+
+
+        # в каком порядке двигаться???
+
+        for i  in  :
+            old_pos = Position(x=old_x, y=old_y, z=old_z, w=old_w)
+
+
+        new_x = old_x + x_coord
+        new_y = old_y + y_coord
+        new_z = old_z + z_coord
+        new_w = old_w + w_coord
+
+
+        logger.debug("Scanner position is:")
+        logger.debug('x: ', new_pos.x)
+        logger.debug('y: ', new_pos.y)
+        logger.debug('z: ', new_pos.z)
 
     def update_currrent_position(self):
         """
