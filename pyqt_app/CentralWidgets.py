@@ -5,8 +5,10 @@ from src.scanner_utils import f_home, f_X_positive, f_abort, f_connection
 from PyQt6.QtWidgets import QPushButton, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtWidgets import QLabel, QSpinBox, QTableWidget, QHeaderView, QTableWidgetItem, QSizePolicy
 from PyQt6.QtCore import Qt
-
+import numpy as np
 import logging
+from src import Position
+
 logger = logging.getLogger()
 logger_print = logging.getLogger()
 
@@ -40,6 +42,17 @@ class RoomSettings(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
+        self.settings_keys = {
+        0: "X",
+        1: "Y",
+        2: "Z",
+        3: "W"
+        }
+        self.table_room_widget = QTableWidget(len(self.settings_keys), 4)
+
+        self.table_room_widget.setVerticalHeaderLabels(self.settings_keys.values())
+        self.table_room_widget.setHorizontalHeaderLabels(("X", "Y", "Z", "W"))
+        self.layout().addWidget(self.table_room_widget)
 
 class ScannerSettings(QWidget):
     """
@@ -185,11 +198,12 @@ class ScannerControl(QWidget):
         layout_table.setAlignment(Qt.AlignmentFlag.AlignTop)
         # формирование таблицы, в которой задаются значения координат, скоростей и шага для трех осей
 
-        self.control_keys = ["Begin coordinates", "End coordinates", "Step"]
+        self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
+        self.control_keys_H = ["X", "Y", "Z", "W"]
 
-        self.tableWidget = QTableWidget(len(self.control_keys), 4)
-        self.tableWidget.setVerticalHeaderLabels(self.control_keys)
-        self.tableWidget.setHorizontalHeaderLabels(("X", "Y", "Z", "W"))
+        self.tableWidget = QTableWidget(len(self.control_keys_V), 4)
+        self.tableWidget.setVerticalHeaderLabels(self.control_keys_V)
+        self.tableWidget.setHorizontalHeaderLabels(self.control_keys_H)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.setFixedHeight(300)
@@ -204,7 +218,7 @@ class ScannerControl(QWidget):
 
         layout_go_abort = QHBoxLayout()
         widget_go_abort = QWidget()
-        widget_go_abort .setLayout(layout_go_abort )
+        widget_go_abort.setLayout(layout_go_abort)
         layout_go_abort.addWidget(button_go)
         layout_go_abort.addWidget(button_abort)
 
@@ -232,14 +246,28 @@ class ScannerControl(QWidget):
         button_go.clicked.connect(self.go_table)
 
     def params_to_dict(self):
-        begin_coord = []
-        end_coord = []
-        step_coord = []
-        for _ in range(4):
-            begin_coord.append(self.table_widget.item(0, _))
-            end_coord .append(self.table_widget.item(1, _))
-            step_coord.append(self.table_widget.item(2, _))
-        return begin_coord, end_coord, step_coord
+        dic = {"X": [], "Y": [], "Z": [], "W": []}
+        lst_x =[]
+        lst_y =[]
+        lst_z =[]
+        lst_w =[]
+
+        order1 = [self.tableWidget.item(3, _) for _ in range(4)]
+        order = [i if i is None else int(i.text()) for i in order1]
+
+        for _ in range(3):
+            lst_x.append(self.tableWidget.item(_, self.control_keys_H.index("X")).text())
+            lst_y.append(self.tableWidget.item(_, self.control_keys_H.index("Y")).text())
+            lst_z.append(self.tableWidget.item(_, self.control_keys_H.index("Z")).text())
+            lst_w.append(self.tableWidget.item(_, self.control_keys_H.index("W")).text())
+
+
+        dic["X"] = lst_x
+        dic["Y"] = lst_y
+        dic["Z"] = lst_z
+        dic["W"] = lst_w
+        print(dic, order)
+        return dic, order
 
     def go_table(self):
         """
@@ -247,32 +275,108 @@ class ScannerControl(QWidget):
         """
         from src import Position
         #  здесь вызов конвертации параметров из таблицы в списки
-        begin_coord, end_coord, step_coord = self.params_to_dict()
+        #  здесь нет связи с self.control_keys_H. если там что-то изменится, нельзя будет отследить
+        control_keys = {
+            1: "X",
+            2: "Y",
+            3: "Z",
+            4: "W"
+        }# СДЕЛАТЬ СВЯЗЬ
 
-        begin_x, begin_y, begin_z, begin_w = begin_coord[0], begin_coord[1], begin_coord[2], begin_coord[3]
-        step_x, step_y, step_z, step_w = step_coord[0], step_coord[1], step_coord[2], step_coord[3]
-        end_x, end_y, end_z, end_w = end_coord[0], end_coord[1], end_coord[2], end_coord[3]
-
-        begin_pos = Position(x=begin_x, y=begin_y, z=begin_z, w=begin_w)
-        scanner.goto(begin_pos)
-
-
-        # в каком порядке двигаться???
-
-        for i  in  :
-            old_pos = Position(x=old_x, y=old_y, z=old_z, w=old_w)
-
-
-        new_x = old_x + x_coord
-        new_y = old_y + y_coord
-        new_z = old_z + z_coord
-        new_w = old_w + w_coord
+        dic, order = self.params_to_dict()
+        print(dic.get(control_keys.get(order[0])))
+        self.movement(dic.get(control_keys.get(order[0])), order[0])
+        self.movement(dic.get(control_keys.get(order[1])), order[1])
+        self.movement(dic.get(control_keys.get(order[2])), order[2])
+        self.movement(dic.get(control_keys.get(order[3])), order[3])
 
 
-        logger.debug("Scanner position is:")
-        logger.debug('x: ', new_pos.x)
-        logger.debug('y: ', new_pos.y)
-        logger.debug('z: ', new_pos.z)
+    def movement(self, lst=[], order=0):
+        print(lst)
+        if order == 1:
+            start = float(lst[0])
+            end = float(lst[1])
+            step = float(lst[2])
+
+            new_pos = Position(x=start)
+            scanner.goto(new_pos)
+
+            arr = int(abs(start - end - 1) / step)
+            a = np.linspace(start, end, arr)
+
+
+
+
+            for i in a:
+                print(i)
+                new_pos = Position(x=i)
+                scanner.goto(new_pos)
+                current_position = scanner.position()
+                self.measurements()
+                self.x_coord.setText(f"x = {current_position.x}") # виснет
+                self.y_coord.setText(f"y = {current_position.y}")
+                self.z_coord.setText(f"z = {current_position.z}")
+                self.w_coord.setText(f"w = {current_position.w}")
+
+        elif order == 2:
+            start = float(lst[0])
+            end = float(lst[1])
+            step = float(lst[2])
+
+            new_pos = Position(y=start)
+            scanner.goto(new_pos)
+
+            arr = int(abs(start - end - 1) / step)
+            a = np.linspace(start, end, arr)
+
+            for i in a:
+                new_pos = Position(y=i)
+                scanner.goto(new_pos)
+                self.measurements()
+
+        elif order == 3:
+            start = float(lst[0])
+            end = float(lst[1])
+            step = float(lst[2])
+
+            new_pos = Position(z=start)
+            scanner.goto(new_pos)
+
+
+            arr = int(abs(start - end - 1) / step)
+            a = np.linspace(start, end, arr)
+
+            for i in a:
+                new_pos = Position(z=i)
+                scanner.goto(new_pos)
+                self.measurements()
+
+        elif order == 4:
+            start = float(lst[0])
+            end = float(lst[1])
+            step = float(lst[2])
+
+            new_pos = Position(w=start)
+            scanner.goto(new_pos)
+
+
+            arr = int(abs(start - end - 1) / step)
+            a = np.linspace(start, end, arr)
+
+            for i in a:
+                new_pos = Position(w=i)
+                scanner.goto(new_pos)
+                self.measurements()
+
+
+
+    def measurements(self):
+        """
+        функция-заглушка. вместо нее надо функцию измерения сделать
+        :return:
+        """
+        pass
+
 
     def update_currrent_position(self):
         """
