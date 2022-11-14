@@ -1,7 +1,9 @@
 from MainWindow import MainWindow
 from PyQt6.QtWidgets import QApplication
 import sys
-from pyqt_app import logger
+import logging
+
+logger = logging.getLogger()
 
 
 def except_hook(cls, exception, traceback):

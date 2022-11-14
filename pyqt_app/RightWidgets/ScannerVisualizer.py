@@ -3,6 +3,7 @@ import pyqtgraph as pg
 import numpy as np
 from stl import mesh
 from src.scanner import BaseAxes
+import os
 
 
 def coords_to_GL_coords(func):
@@ -13,7 +14,7 @@ def coords_to_GL_coords(func):
 
 def BaseAxes_to_GL_coords(func):
     def wrapper(_, axes: BaseAxes):
-        return func(_, x=axes.z, y=axes.x, z=axes.y)
+        return func(_, x=axes.z, y=axes.x, z=axes.y, w=axes.w)
     return wrapper
 
 
@@ -32,7 +33,7 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.scanner_offsetY = (self.room_sizeY - self.scanner_zone_sizeY) / 2
         self.scanner_offsetZ = 300
 
-        points, faces = self._loadSTL('cylinder.stl')
+        points, faces = self._loadSTL(os.path.join(os.path.dirname(__file__), 'assets/cylinder.stl'))
         meshdata = gl.MeshData(vertexes=points, faces=faces)
         self.object_pillar = gl.GLMeshItem(
             meshdata=meshdata,
@@ -49,16 +50,8 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.setGeometry(400, 400, 400, 400)
         self.pan(self.room_sizeX / 2, self.room_sizeY / 2, 0)
 
-        self.scanner_pos = {
-            'X': 500,
-            'Y': 500,
-            'Z': 100,
-        }
-        self.object_pos = {
-            'X': 1000,
-            'Y': 1000,
-            'Z': 1000,
-        }
+        self.scanner_pos = BaseAxes(0, 0, 0, 0)
+        self.object_pos = BaseAxes(self.room_sizeX/2, self.room_sizeY/2, self.room_sizeZ/2)
 
         self.grid_items = self.draw_grid()
         self.scanner_zone_items = self.draw_scanner_zone()
@@ -131,13 +124,13 @@ class ScannerVisualizer(gl.GLViewWidget):
         return self.scanner_offsetX, self.scanner_offsetY, self.scanner_offsetZ
 
     @BaseAxes_to_GL_coords
-    def set_scanner_pos(self, x: float, y: float, z: float):
-        self.scanner_pos = {'X': x, 'Y': y, 'Z': z}
+    def set_scanner_pos(self, x: float, y: float, z: float, w: float):
+        self.scanner_pos = BaseAxes(x, y, z, w)
         self.redraw_scanner()
 
     @BaseAxes_to_GL_coords
-    def set_object_pos(self, x: float, y: float, z: float):
-        self.object_pos = {'X': x, 'Y': y, 'Z': z}
+    def set_object_pos(self, x: float, y: float, z: float, *args):
+        self.object_pos = BaseAxes(x, y, z)
         self.redraw_object()
 
     def draw_grid(self):
@@ -215,29 +208,37 @@ class ScannerVisualizer(gl.GLViewWidget):
 
     def draw_scanner(self):
         color1 = pg.mkColor((200, 0, 0, 200))
+        color2 = pg.mkColor((0, 0, 200, 200))
         pts = [
-            [0, self.scanner_offsetY + self.scanner_pos['Y'], self.scanner_offsetZ + self.scanner_pos['Z']],
-            [self.scanner_offsetX + self.scanner_pos['X'], self.scanner_offsetY + self.scanner_pos['Y'],
-             self.scanner_offsetZ + self.scanner_pos['Z']]
+            [0, self.scanner_offsetY + self.scanner_pos.y, self.scanner_offsetZ + self.scanner_pos.z],
+            [self.scanner_offsetX + self.scanner_pos.x, self.scanner_offsetY + self.scanner_pos.y,
+             self.scanner_offsetZ + self.scanner_pos.z]
         ]
         linex = gl.GLLinePlotItem(pos=pts, antialias=True, width=3, color=color1)
         self.addItem(linex)
 
         pts = [
-            [0, 0, self.scanner_offsetZ + self.scanner_pos['Z']],
-            [0, self.scanner_offsetY + self.scanner_pos['Y'], self.scanner_offsetZ + self.scanner_pos['Z']]
+            [0, 0, self.scanner_offsetZ + self.scanner_pos.z],
+            [0, self.scanner_offsetY + self.scanner_pos.y, self.scanner_offsetZ + self.scanner_pos.z]
         ]
         liney = gl.GLLinePlotItem(pos=pts, antialias=True, width=2, color=color1)
         self.addItem(liney)
 
         pts = [
-            [0, self.scanner_offsetY + self.scanner_pos['Y'], 0],
-            [0, self.scanner_offsetY + self.scanner_pos['Y'], self.scanner_offsetZ + self.scanner_pos['Z']]
+            [0, self.scanner_offsetY + self.scanner_pos.y, 0],
+            [0, self.scanner_offsetY + self.scanner_pos.y, self.scanner_offsetZ + self.scanner_pos.z]
         ]
         linez = gl.GLLinePlotItem(pos=pts, antialias=True, width=2, color=color1)
         self.addItem(linez)
 
-        return linex, liney, linez
+        pts = [
+            [self.object_pos.x, self.object_pos.y, 0],
+            [self.object_pos.x-500*np.cos(self.scanner_pos.w), self.object_pos.y-500*np.sin(self.scanner_pos.w), 0]
+        ]
+        linew = gl.GLLinePlotItem(pos=pts, antialias=True, width=2, color=color2)
+        self.addItem(linew)
+
+        return linex, liney, linez, linew
 
     def redraw_scanner(self):
         for item in self.scanner_items:
@@ -247,12 +248,12 @@ class ScannerVisualizer(gl.GLViewWidget):
     def draw_object(self):
         tt = np.eye(4)
         tt[3, 3] = 1
-        tt[2, 2] = 10 * self.object_pos['Z']
+        tt[2, 2] = 10 * self.object_pos.z
         tt[0, 0] = 300
         tt[1, 1] = 300
         tr = pg.Transform3D(tt)
         self.object_pillar.applyTransform(tr, False)
-        self.object_pillar.translate(self.object_pos['X'], self.object_pos['Y'], 0)
+        self.object_pillar.translate(self.object_pos.x, self.object_pos.y, 0)
         self.addItem(self.object_pillar)
 
         return [self.object_pillar]
