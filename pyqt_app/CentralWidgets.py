@@ -1,4 +1,5 @@
 from src.scanner import BaseAxes
+from typing import List
 from TRIM import DEFAULT_SETTINGS
 from pyqt_app import scanner
 from src.scanner_utils import f_home, f_X_positive, f_abort, f_connection
@@ -41,18 +42,22 @@ class RoomSettings(QWidget):
         super(RoomSettings, self).__init__()
         layout = QVBoxLayout()
         self.setLayout(layout)
-
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.settings_keys = {
-        0: "X",
-        1: "Y",
-        2: "Z",
-        3: "W"
+            0: "X",
+            1: "Y",
+            2: "Z",
+            3: "W"
         }
         self.table_room_widget = QTableWidget(len(self.settings_keys), 4)
 
         self.table_room_widget.setVerticalHeaderLabels(self.settings_keys.values())
         self.table_room_widget.setHorizontalHeaderLabels(("X", "Y", "Z", "W"))
+        self.table_room_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table_room_widget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table_room_widget.setFixedHeight(200)
         self.layout().addWidget(self.table_room_widget)
+
 
 class ScannerSettings(QWidget):
     """
@@ -165,7 +170,8 @@ class ScannerControl(QWidget):
         arrow_window_z.setRange(-1000, 1000)
         arrow_window_w.setRange(-1000, 1000)
 
-        # создание горизонтального слоя внутри вертикального для окна с выбором значения координаты и кнопки перемещения по оси х по заданной координате
+        # создание горизонтального слоя внутри вертикального для окна с выбором значения координаты и
+        # кнопки перемещения по оси х по заданной координате
         layout_x = QHBoxLayout()
         widget_x = QWidget()
         widget_x.setLayout(layout_x)
@@ -190,7 +196,6 @@ class ScannerControl(QWidget):
         layout_w.addWidget(arrow_window_w)
         layout_w.addWidget(button_w)
 
-
         # создание горизонтального слоя внутри вертикального для помещения туда таблицы и кнопок пуск и аборт
         layout_table = QHBoxLayout()
         widget_table = QWidget()
@@ -206,7 +211,7 @@ class ScannerControl(QWidget):
         self.tableWidget.setHorizontalHeaderLabels(self.control_keys_H)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.tableWidget.setFixedHeight(300)
+        self.tableWidget.setFixedHeight(200)
 
         layout_widget = QVBoxLayout()
         widget_coord = QWidget()
@@ -237,20 +242,20 @@ class ScannerControl(QWidget):
 
         layout.addWidget(widget_table)  # добавление горизонтального виджета в вертикальный слой
 
-
         # определение функционала кнопок
         button_abort.clicked.connect(f_abort)  # Пока еще заглушка
-        button_current_pos.clicked.connect(self.update_currrent_position)
+        button_current_pos.clicked.connect(scanner.position)
+        scanner.position_signal.connect(self.update_currrent_position)
         button_home.clicked.connect(f_home)
         button_x.clicked.connect(lambda x: f_X_positive(arrow_window_x.value()))
         button_go.clicked.connect(self.go_table)
 
     def params_to_dict(self):
         dic = {"X": [], "Y": [], "Z": [], "W": []}
-        lst_x =[]
-        lst_y =[]
-        lst_z =[]
-        lst_w =[]
+        lst_x = []
+        lst_y = []
+        lst_z = []
+        lst_w = []
 
         order1 = [self.tableWidget.item(3, _) for _ in range(4)]
         order = [i if i is None else int(i.text()) for i in order1]
@@ -260,7 +265,6 @@ class ScannerControl(QWidget):
             lst_y.append(self.tableWidget.item(_, self.control_keys_H.index("Y")).text())
             lst_z.append(self.tableWidget.item(_, self.control_keys_H.index("Z")).text())
             lst_w.append(self.tableWidget.item(_, self.control_keys_H.index("W")).text())
-
 
         dic["X"] = lst_x
         dic["Y"] = lst_y
@@ -273,15 +277,16 @@ class ScannerControl(QWidget):
         """
         This function makes movement by coords from table
         """
-        from src import Position
         #  здесь вызов конвертации параметров из таблицы в списки
         #  здесь нет связи с self.control_keys_H. если там что-то изменится, нельзя будет отследить
+
+
         control_keys = {
-            1: "X",
-            2: "Y",
-            3: "Z",
-            4: "W"
-        }# СДЕЛАТЬ СВЯЗЬ
+            1: self.control_keys_H[0],
+            2: self.control_keys_H[1],
+            3: self.control_keys_H[2],
+            4: self.control_keys_H[3]
+        }
 
         dic, order = self.params_to_dict()
         print(dic.get(control_keys.get(order[0])))
@@ -290,10 +295,9 @@ class ScannerControl(QWidget):
         self.movement(dic.get(control_keys.get(order[2])), order[2])
         self.movement(dic.get(control_keys.get(order[3])), order[3])
 
-
-    def movement(self, lst=[], order=0):
+    def movement(self, lst:List, order):
         print(lst)
-        if order == 1:
+        if order == self.control_keys_H[0]:
             start = float(lst[0])
             end = float(lst[1])
             step = float(lst[2])
@@ -304,21 +308,19 @@ class ScannerControl(QWidget):
             arr = int(abs(start - end - 1) / step)
             a = np.linspace(start, end, arr)
 
-
-
-
+            # попытка сделать отображения точек при каждом изменении координат
             for i in a:
                 print(i)
                 new_pos = Position(x=i)
                 scanner.goto(new_pos)
                 current_position = scanner.position()
                 self.measurements()
-                self.x_coord.setText(f"x = {current_position.x}") # виснет
+                self.x_coord.setText(f"x = {current_position.x}")  # виснет
                 self.y_coord.setText(f"y = {current_position.y}")
                 self.z_coord.setText(f"z = {current_position.z}")
                 self.w_coord.setText(f"w = {current_position.w}")
 
-        elif order == 2:
+        elif order == self.control_keys_H[1]:
             start = float(lst[0])
             end = float(lst[1])
             step = float(lst[2])
@@ -334,14 +336,13 @@ class ScannerControl(QWidget):
                 scanner.goto(new_pos)
                 self.measurements()
 
-        elif order == 3:
+        elif order == self.control_keys_H[2]:
             start = float(lst[0])
             end = float(lst[1])
             step = float(lst[2])
 
             new_pos = Position(z=start)
             scanner.goto(new_pos)
-
 
             arr = int(abs(start - end - 1) / step)
             a = np.linspace(start, end, arr)
@@ -351,14 +352,13 @@ class ScannerControl(QWidget):
                 scanner.goto(new_pos)
                 self.measurements()
 
-        elif order == 4:
+        elif order == self.control_keys_H[3]:
             start = float(lst[0])
             end = float(lst[1])
             step = float(lst[2])
 
             new_pos = Position(w=start)
             scanner.goto(new_pos)
-
 
             arr = int(abs(start - end - 1) / step)
             a = np.linspace(start, end, arr)
@@ -368,8 +368,6 @@ class ScannerControl(QWidget):
                 scanner.goto(new_pos)
                 self.measurements()
 
-
-
     def measurements(self):
         """
         функция-заглушка. вместо нее надо функцию измерения сделать
@@ -377,19 +375,15 @@ class ScannerControl(QWidget):
         """
         pass
 
-
-    def update_currrent_position(self):
+    def update_currrent_position(self, position: Position):
         """
         This function shows current position
         """
-        current_position = scanner.position()
-        self.x_coord.setText(f"x = {current_position.x}")
-        self.y_coord.setText(f"y = {current_position.y}")
-        self.z_coord.setText(f"z = {current_position.z}")
-        self.w_coord.setText(f"w = {current_position.w}")
-        # print('x: ', current_position.x)
-        # print('y: ', current_position.y)
-        # print('z: ', current_position.z)
+        self.x_coord.setText(f"x = {position.x}")
+        self.y_coord.setText(f"y = {position.y}")
+        self.z_coord.setText(f"z = {position.z}")
+        self.w_coord.setText(f"w = {position.w}")
+
 
 
 class Test(QWidget):

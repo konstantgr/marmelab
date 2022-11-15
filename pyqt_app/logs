@@ -66,3 +66,12 @@
 18:09:58,371 root INFO Scanner is connected
 18:26:11,82 root ERROR 
 18:26:17,667 root INFO Scanner is connected
+10:05:02,752 root INFO Scanner is connected
+10:05:16,255 root INFO Moving along x-axes on 200
+10:05:46,917 root INFO Moving along x-axes on 200
+10:06:09,58 root INFO Moving along x-axes on 200
+16:20:46,888 root INFO Scanner is connected
+16:21:00,418 root ERROR 'NoneType' object has no attribute 'text'
+16:21:56,506 root ERROR invalid literal for int() with base 10: 'âûà'
+16:58:23,947 root INFO Scanner is connected
+16:58:36,979 root INFO Moving along x-axes on 2

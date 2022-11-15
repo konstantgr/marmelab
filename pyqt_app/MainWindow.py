@@ -1,7 +1,8 @@
 import CentralWidgets
 import LogWidget
 import RightWidgets
-from PyQt6.QtWidgets import QWidget, QFrame, QHBoxLayout, QMainWindow, QVBoxLayout, QSplitter, QStackedWidget, QListWidget, QScrollArea, QSizePolicy
+from PyQt6.QtWidgets import (QWidget, QFrame, QHBoxLayout, QMainWindow, QVBoxLayout, QSplitter,
+                             QStackedWidget, QListWidget, QScrollArea, QSizePolicy)
 from PyQt6.QtCore import Qt
 from enum import IntEnum, auto
 import logging
@@ -11,9 +12,10 @@ import os
 # TODO: сделать вывод логов в файл (DONE)
 # TODO: Реализация таблицы сканнер контрол (добавить пока что хождение по точкам) (DONE)
 
+# TODO: meshgrid
 # TODO: Изменить таблицу сканнер сеттингс (я не оч понимаю зачем)
 # TODO: Таблица с настройками объекта и комнаты в рум сеттингс
-# TODO: отображать координаты в реальном времени
+# TODO: отображать координаты в реальном времени (как это грамотнее сделать?)
 # TODO: добавить вкладку с настройками комнаты (таблица/поля, размер комнаты в метрах (x, y ,z),
 #  область сканирования (x, y, z) и ее пространственная ориенатция (x, y, z), кнопка apply(pass) )
 # TODO: убрать лямбда функции
@@ -134,8 +136,6 @@ class LogPanel(BasePanel):
             logging.Formatter(
                 '%(asctime)s %(levelname)s: %(message)s')
         )
-
-
 
         hbox.addWidget(logging_handler.widget)
         self.setLayout(hbox)

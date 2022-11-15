@@ -32,8 +32,6 @@ def f_X_positive(x_coord=10):
     logger.info(f'Moving along x-axes on {x_coord}')
 
 
-
-
 def f_abort():
     """
     This functions breaks any movements
