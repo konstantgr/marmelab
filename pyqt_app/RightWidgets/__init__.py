@@ -1,1 +1,1 @@
-from .ScannerVisualizer import ScannerVisualizer
+from .ScannerVisualizer import ScannerVisualizer, DEFAULT_SETTINGS

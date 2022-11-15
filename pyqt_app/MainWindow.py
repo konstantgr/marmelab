@@ -92,16 +92,16 @@ class CentralPanel(QScrollArea, BasePanel):
         создание виджетов в центр. панели. В слои они добавляются в классе централ виджет
         """
         super(CentralPanel, self).__init__(*args, **kwargs)
-        pages = {
+        self.pages = {
             CentralPanelTypes.Initial: CentralWidgets.Init(),
-            CentralPanelTypes.RoomSettings: CentralWidgets.RoomSettings(),
+            CentralPanelTypes.RoomSettings: CentralWidgets.RoomSettings(default_settings=RightWidgets.DEFAULT_SETTINGS),
             CentralPanelTypes.ScannerSettings: CentralWidgets.ScannerSettings(),
             CentralPanelTypes.Scanner: CentralWidgets.ScannerControl(),
             CentralPanelTypes.Test: CentralWidgets.Test(),
         }
         self.stacked_widget = QStackedWidget(self)
-        for key in pages.keys():
-            self.stacked_widget.insertWidget(key, pages[key])  # добавление виджетов в центральную панель
+        for key in self.pages.keys():
+            self.stacked_widget.insertWidget(key, self.pages[key])  # добавление виджетов в центральную панель
 
         self.setWidget(self.stacked_widget)
         self.setWidgetResizable(True)
@@ -136,10 +136,14 @@ class MainWindow(QMainWindow):
         self.main_widget.setLayout(hbox)
 
         self.left_panel = LeftPanel(self.main_widget)  # settings selector
+
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
+        room_settings: CentralWidgets.RoomSettings = self.center_panel.pages[CentralPanelTypes.RoomSettings]
         self.right_panel = RightPanel(self.main_widget)  # graphics
         self.log_panel = LogPanel(self.main_widget)  # log window
+
         self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
+        room_settings.settings_signal.connect(self.right_panel.scanner_widget.set_settings_from_dict)
 
         splitter2 = QSplitter(orientation=Qt.Orientation.Horizontal)
         splitter2.insertWidget(0, self.left_panel)

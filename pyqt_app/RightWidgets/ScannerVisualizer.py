@@ -4,6 +4,15 @@ import numpy as np
 from stl import mesh
 from src.scanner import BaseAxes
 import os
+from typing import Tuple
+
+
+DEFAULT_SETTINGS = {
+    'room_size': (3000, 3000, 5000, ),
+    'scanner_zone_size': (2262.92, 2137.09, 531.4, ),
+    'scanner_offset': (368.54, 300, 200, ),
+    'scanner_L': (0, 0, 200, ),
+}
 
 
 def coords_to_GL_coords(func):
@@ -29,19 +38,16 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.scanner_zone_sizeY = 2262.92
         self.scanner_zone_sizeZ = 2137.09
 
+        self.scanner_LX = 200
+        self.scanner_LY = 0
+        self.scanner_LZ = 0
+
         self.scanner_offsetX = 200
         self.scanner_offsetY = (self.room_sizeY - self.scanner_zone_sizeY) / 2
         self.scanner_offsetZ = 300
 
         points, faces = self._loadSTL(os.path.join(os.path.dirname(__file__), 'assets/cylinder.stl'))
-        meshdata = gl.MeshData(vertexes=points, faces=faces)
-        self.object_pillar = gl.GLMeshItem(
-            meshdata=meshdata,
-            smooth=True,
-            drawFaces=True,
-            color=pg.mkColor((100, 100, 100, 100)),
-            glOptions='translucent',  # translucent, opaque, additive
-        )
+        self.pillar_meshdata = gl.MeshData(vertexes=points, faces=faces)
 
         self.setBackgroundColor(pg.mkColor('white'))
 
@@ -72,14 +78,6 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.room_sizeX, self.room_sizeY, self.room_sizeZ = x, y, z
         self.redraw_grid()
 
-    @property
-    def get_room_size(self):
-        """
-
-        :return: Размеры комнаты по трем осям
-        """
-        return self.room_sizeX, self.room_sizeY, self.room_sizeZ
-
     @coords_to_GL_coords
     def set_scanner_zone_size(self, x: float, y: float, z: float):
         """
@@ -92,14 +90,6 @@ class ScannerVisualizer(gl.GLViewWidget):
         """
         self.scanner_zone_sizeX, self.scanner_zone_sizeY, self.scanner_zone_sizeZ = x, y, z
         self.redraw_scanner_zone()
-
-    @property
-    def get_scanner_zone_size(self):
-        """
-
-        :return: Размеры области сканирования по трем осям в метрах
-        """
-        return self.scanner_zone_sizeX, self.scanner_zone_sizeY, self.scanner_zone_sizeZ
 
     @coords_to_GL_coords
     def set_offset(self, x: float, y: float, z: float):
@@ -115,13 +105,31 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.redraw_scanner_zone()
         self.redraw_scanner()
 
-    @property
-    def get_offset(self):
-        """
+    @coords_to_GL_coords
+    def set_scanner_L(self, x: float, y: float, z: float):
+        self.scanner_LX, self.scanner_LY, self.scanner_LZ = x, y, z
+        self.redraw_scanner_zone()
+        self.redraw_scanner()
 
-        :return: Отступы зоны сканирования от угла комнаты по трем осям в метрах
-        """
-        return self.scanner_offsetX, self.scanner_offsetY, self.scanner_offsetZ
+    def set_settings(
+            self,
+            room_size: tuple[float, float, float] = None,
+            scanner_zone_size: tuple[float, float, float] = None,
+            scanner_offset: tuple[float, float, float] = None,
+            scanner_L: tuple[float, float, float] = None
+    ):
+        if room_size is not None:
+            self.set_room_size(x=room_size[0], y=room_size[1], z=room_size[2])
+        if scanner_zone_size is not None:
+            self.set_scanner_zone_size(x=scanner_zone_size[0], y=scanner_zone_size[1], z=scanner_zone_size[2])
+        if scanner_offset is not None:
+            self.set_offset(x=scanner_offset[0], y=scanner_offset[1], z=scanner_offset[2])
+        if scanner_L is not None:
+            self.set_scanner_L(x=scanner_L[0], y=scanner_L[1], z=scanner_L[2])
+        self.redraw_object()
+
+    def set_settings_from_dict(self, settings: dict):
+        self.set_settings(**settings)
 
     @BaseAxes_to_GL_coords
     def set_scanner_pos(self, x: float, y: float, z: float, w: float):
@@ -178,22 +186,58 @@ class ScannerVisualizer(gl.GLViewWidget):
         color1 = pg.mkColor((0, 200, 0, 200))
 
         pts = [
-            [0, self.scanner_offsetY, self.scanner_offsetZ],
-            [0, self.scanner_offsetY, self.scanner_offsetZ + self.scanner_zone_sizeZ],
-            [0, self.scanner_offsetY + self.scanner_zone_sizeY, self.scanner_offsetZ + self.scanner_zone_sizeZ],
-            [0, self.scanner_offsetY + self.scanner_zone_sizeY, self.scanner_offsetZ],
-            [0, self.scanner_offsetY, self.scanner_offsetZ]
+            [0, self.scanner_offsetY + self.scanner_LY, self.scanner_offsetZ + self.scanner_LZ],
+            [
+                0,
+                self.scanner_offsetY + self.scanner_LY,
+                self.scanner_offsetZ + self.scanner_LZ + self.scanner_zone_sizeZ
+            ],
+            [
+                0,
+                self.scanner_offsetY + self.scanner_LY + self.scanner_zone_sizeY,
+                self.scanner_offsetZ + self.scanner_LZ + self.scanner_zone_sizeZ
+            ],
+            [
+                0,
+                self.scanner_offsetY + self.scanner_LY + self.scanner_zone_sizeY,
+                self.scanner_offsetZ + self.scanner_LZ
+            ],
+            [
+                0,
+                self.scanner_offsetY + self.scanner_LY,
+                self.scanner_offsetZ + self.scanner_LZ
+            ]
         ]
 
         zonex = gl.GLLinePlotItem(pos=pts, antialias=True, width=2, color=color1)
         self.addItem(zonex)
 
         pts = [
-            [self.scanner_offsetX, self.scanner_offsetY, 0],
-            [self.scanner_offsetX + self.scanner_zone_sizeX, self.scanner_offsetY, 0],
-            [self.scanner_offsetX + self.scanner_zone_sizeX, self.scanner_offsetY + self.scanner_zone_sizeY, 0],
-            [self.scanner_offsetX, self.scanner_offsetY + self.scanner_zone_sizeY, 0],
-            [self.scanner_offsetX, self.scanner_offsetY, 0]
+            [
+                self.scanner_offsetX + self.scanner_LX,
+                self.scanner_offsetY + self.scanner_LY,
+                0
+            ],
+            [
+                self.scanner_offsetX + self.scanner_LX + self.scanner_zone_sizeX,
+                self.scanner_offsetY + self.scanner_LY,
+                0
+            ],
+            [
+                self.scanner_offsetX + self.scanner_LX + self.scanner_zone_sizeX,
+                self.scanner_offsetY + self.scanner_LY + self.scanner_zone_sizeY,
+                0
+            ],
+            [
+                self.scanner_offsetX + self.scanner_LX,
+                self.scanner_offsetY + self.scanner_LY + self.scanner_zone_sizeY,
+                0
+            ],
+            [
+                self.scanner_offsetX + self.scanner_LX,
+                self.scanner_offsetY + self.scanner_LY,
+                0
+            ]
         ]
 
         zonez = gl.GLLinePlotItem(pos=pts, antialias=True, width=2, color=color1)
@@ -210,9 +254,16 @@ class ScannerVisualizer(gl.GLViewWidget):
         color1 = pg.mkColor((200, 0, 0, 200))
         color2 = pg.mkColor((0, 0, 200, 200))
         pts = [
-            [0, self.scanner_offsetY + self.scanner_pos.y, self.scanner_offsetZ + self.scanner_pos.z],
-            [self.scanner_offsetX + self.scanner_pos.x, self.scanner_offsetY + self.scanner_pos.y,
-             self.scanner_offsetZ + self.scanner_pos.z]
+            [
+                0,
+                self.scanner_offsetY + self.scanner_pos.y,
+                self.scanner_offsetZ + self.scanner_pos.z
+            ],
+            [
+                self.scanner_offsetX + self.scanner_pos.x,
+                self.scanner_offsetY + self.scanner_pos.y,
+                self.scanner_offsetZ + self.scanner_pos.z
+            ]
         ]
         linex = gl.GLLinePlotItem(pos=pts, antialias=True, width=3, color=color1)
         self.addItem(linex)
@@ -232,13 +283,28 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.addItem(linez)
 
         pts = [
+            [
+                self.scanner_offsetX + self.scanner_pos.x,
+                self.scanner_offsetY + self.scanner_pos.y,
+                self.scanner_offsetZ + self.scanner_pos.z
+            ],
+            [
+                self.scanner_offsetX + self.scanner_pos.x + self.scanner_LX,
+                self.scanner_offsetY + self.scanner_pos.y + self.scanner_LY,
+                self.scanner_offsetZ + self.scanner_pos.z + self.scanner_LZ
+            ],
+        ]
+        lineL = gl.GLLinePlotItem(pos=pts, antialias=True, width=2, color=color2)
+        self.addItem(lineL)
+
+        pts = [
             [self.object_pos.x, self.object_pos.y, 0],
             [self.object_pos.x-500*np.cos(self.scanner_pos.w), self.object_pos.y-500*np.sin(self.scanner_pos.w), 0]
         ]
         linew = gl.GLLinePlotItem(pos=pts, antialias=True, width=2, color=color2)
         self.addItem(linew)
 
-        return linex, liney, linez, linew
+        return linex, liney, linez, linew, lineL
 
     def redraw_scanner(self):
         for item in self.scanner_items:
@@ -246,17 +312,24 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.scanner_items = self.draw_scanner()
 
     def draw_object(self):
+        object_pillar = gl.GLMeshItem(
+            meshdata=self.pillar_meshdata,
+            smooth=True,
+            drawFaces=True,
+            color=pg.mkColor((100, 100, 100, 100)),
+            glOptions='translucent',  # translucent, opaque, additive
+        )
         tt = np.eye(4)
         tt[3, 3] = 1
-        tt[2, 2] = 10 * self.object_pos.z
         tt[0, 0] = 300
         tt[1, 1] = 300
+        tt[2, 2] = 10 * self.object_pos.z
+        tt[0, 3] = self.object_pos.x
+        tt[1, 3] = self.object_pos.y
         tr = pg.Transform3D(tt)
-        self.object_pillar.applyTransform(tr, False)
-        self.object_pillar.translate(self.object_pos.x, self.object_pos.y, 0)
-        self.addItem(self.object_pillar)
-
-        return [self.object_pillar]
+        object_pillar.applyTransform(tr, False)
+        self.addItem(object_pillar)
+        return object_pillar,
 
     def redraw_object(self):
         for item in self.object_items:

@@ -1,26 +1,37 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QHBoxLayout
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QHBoxLayout, QSplitter
 from .QSmartTable import QSmartTable, Variable, Length, NoUnit, Time, Frequency
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt
+from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 
 
 class RoomSettings(QWidget):
-    def __init__(self):
+    settings_signal: pyqtBoundSignal = pyqtSignal(dict)
+
+    def __init__(self, default_settings: dict):
         super(RoomSettings, self).__init__()
+        self.splitter = QSplitter(orientation=Qt.Orientation.Vertical)
         self.layout = QVBoxLayout()
+        self.layout.addWidget(self.splitter)
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(self.layout)
+        self.default_settings = default_settings
 
-        settings = [
-            Variable(name='test', unit=NoUnit, default_value=1, description='kek', type=float),
-            Variable(name='test2', unit=Length, default_value=2, description='kek12394 324 j234k 23j4lk2j 4j2k l4j2j 2lk3 j42lk3j 4lk23j4 k2j4 3', type=float)
-        ]
+        settings = []
+        for key, value in self.default_settings.items():
+            for i, suffix in enumerate(['x', 'y', 'z']):
+                setting = Variable(name=key + suffix, unit=Length, default_value=value[i], description="", type=float)
+                settings.append(setting)
+
         self.table = QSmartTable(settings)
-        self.table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
-        self.layout.addWidget(self.table)
+        self.table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.splitter.addWidget(self.table)
 
+        buttons_widget = QWidget()
         buttons_layout = QHBoxLayout()
-        buttons_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        buttons_widget.setLayout(buttons_layout)
+        buttons_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        # buttons_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         set_default_button = QtWidgets.QPushButton("Set default")
         set_default_button.clicked.connect(self.table.set_default)
@@ -34,8 +45,14 @@ class RoomSettings(QWidget):
         buttons_layout.setStretch(0, 1)
         buttons_layout.setStretch(1, 1)
 
-        self.layout.addLayout(buttons_layout)
-
+        self.splitter.addWidget(buttons_widget)
 
     def apply(self):
-        print(self.table.to_dict())
+        user_settings = self.table.to_dict()
+        settings = {}
+        for key, value in self.default_settings.items():
+            r = []
+            for i, suffix in enumerate(['x', 'y', 'z']):
+                r.append(user_settings.get(key + suffix))
+            settings[key] = tuple(r)
+        self.settings_signal.emit(settings)
