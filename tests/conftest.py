@@ -1,7 +1,7 @@
 import pytest
 import threading
 from TRIM import TRIMScanner
-from TRIM_emulator import emulator
+from TRIM.TRIM_emulator import emulator
 
 TEST_IP = "127.0.0.1"
 TEST_PORT = 9002

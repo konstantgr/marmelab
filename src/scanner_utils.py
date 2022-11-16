@@ -1,4 +1,4 @@
-from tests.TRIM_emulator import run  # use it only for emulating
+from TRIM.TRIM_emulator import run  # use it only for emulating
 from pyqt_app import scanner
 import logging
 logger = logging.getLogger()
@@ -31,28 +31,6 @@ def f_X_positive(x_coord=10):
     scanner.goto(new_pos)
     logger.info(f'Moving along x-axes on {x_coord}')
 
-
-def f_go_table(x_coord=0, y_coord=0, z_coord=0, w_coord=0):
-    """
-    This function makes movement by coords from table
-    """
-    from src import Position
-    old_x = scanner.position().x
-    old_y = scanner.position().y
-    old_z = scanner.position().z
-    old_w = scanner.position().w
-
-    new_x = old_x + x_coord  # не работает...
-    new_y = old_y + y_coord
-    new_z = old_z + z_coord
-    new_w = old_z + w_coord
-    new_pos = Position(x=new_x, y=new_y, z=new_z, w=new_w)
-    scanner.goto(new_pos)
-
-    logger.debug("Scanner position is:")
-    logger.debug('x: ', new_pos.x)
-    logger.debug('y: ', new_pos.y)
-    logger.debug('z: ', new_pos.z)
 
 
 def f_abort():
