@@ -3,7 +3,6 @@ import time
 
 import TRIM
 import src
-from tests import TRIM_emulator
 from TRIM import TRIMScanner
 from src import Position
 
