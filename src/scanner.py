@@ -37,7 +37,6 @@ class ScannerMotionError(Exception):
             f'Scanner motion error:\n{message}'
         )
 
-
 @dataclass
 class BaseAxes:
     """

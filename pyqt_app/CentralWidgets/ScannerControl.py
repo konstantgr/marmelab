@@ -78,7 +78,7 @@ class ScannerControl(QWidget):
         # формирование таблицы, в которой задаются значения координат, скоростей и шага для трех осей
 
         self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
-        self.control_keys_H = ["X", "Y", "Z", "W"]
+        self.control_keys_H = ["x", "y", "z", "w"]
 
         self.tableWidget = QTableWidget(len(self.control_keys_V), 4)
         self.tableWidget.setVerticalHeaderLabels(self.control_keys_V)
@@ -124,8 +124,7 @@ class ScannerControl(QWidget):
         button_x.clicked.connect(lambda x: f_X_positive(arrow_window_x.value()))
         button_go.clicked.connect(self.go_table)
 
-    def params_to_dict(self):
-        dic = {"X": [], "Y": [], "Z": [], "W": []}
+    def params_to_linspace(self):
         lst_x = []
         lst_y = []
         lst_z = []
@@ -135,112 +134,72 @@ class ScannerControl(QWidget):
         order = [i if i is None else int(i.text()) for i in order1]
 
         for _ in range(3):
-            lst_x.append(self.tableWidget.item(_, self.control_keys_H.index("X")).text())
-            lst_y.append(self.tableWidget.item(_, self.control_keys_H.index("Y")).text())
-            lst_z.append(self.tableWidget.item(_, self.control_keys_H.index("Z")).text())
-            lst_w.append(self.tableWidget.item(_, self.control_keys_H.index("W")).text())
+            lst_x.append(self.tableWidget.item(_, self.control_keys_H.index("x")).text())
+            lst_y.append(self.tableWidget.item(_, self.control_keys_H.index("y")).text())
+            lst_z.append(self.tableWidget.item(_, self.control_keys_H.index("z")).text())
+            lst_w.append(self.tableWidget.item(_, self.control_keys_H.index("w")).text())
 
-        dic["X"] = lst_x
-        dic["Y"] = lst_y
-        dic["Z"] = lst_z
-        dic["W"] = lst_w
-        print(dic, order)
-        return dic, order
+
+        lst_x = [int(i) for i in lst_x]
+        lst_y = [int(i) for i in lst_y]
+        lst_z = [int(i) for i in lst_z]
+        lst_w = [int(i) for i in lst_w]
+
+        arr_x = int(abs(lst_x[0] - lst_x[1] - 1) / lst_x[2])  # шаг сетки x
+        x = np.linspace(lst_x[0], lst_x[1], arr_x)
+
+        arr_y = int(abs(lst_y[0] - lst_y[1] - 1) / lst_y[2])  # шаг сетки y
+        y = np.linspace(lst_y[0], lst_y[1], arr_y)
+
+        arr_z = int(abs(lst_z[0] - lst_z[1] - 1) / lst_z[2])  # шаг сетки z
+        z = np.linspace(lst_z[0], lst_z[1], arr_z)
+
+        arr_w = int(abs(lst_w[0] - lst_w[1] - 1) / lst_w[2])  # шаг сетки w
+        w = np.linspace(lst_w[0], lst_w[1], arr_w)
+
+        return x, y, z, w, order
 
     def go_table(self):
         """
         This function makes movement by coords from table
         """
         #  здесь вызов конвертации параметров из таблицы в списки
-        #  здесь нет связи с self.control_keys_H. если там что-то изменится, нельзя будет отследить
 
-
-        control_keys = {
+        keys_str = {
             1: self.control_keys_H[0],
             2: self.control_keys_H[1],
             3: self.control_keys_H[2],
             4: self.control_keys_H[3]
         }
 
-        dic, order = self.params_to_dict()
-        print(dic.get(control_keys.get(order[0])))
-        self.movement(dic.get(control_keys.get(order[0])), order[0])
-        self.movement(dic.get(control_keys.get(order[1])), order[1])
-        self.movement(dic.get(control_keys.get(order[2])), order[2])
-        self.movement(dic.get(control_keys.get(order[3])), order[3])
+        x, y, z, w, order = self.params_to_linspace()
 
-    def movement(self, lst:List, order):
-        print(lst)
-        if order == self.control_keys_H[0]:
-            start = float(lst[0])
-            end = float(lst[1])
-            step = float(lst[2])
+        keys = {
+            1: x,
+            2: y,
+            3: z,
+            4: w,
+        }
 
-            new_pos = Position(x=start)
-            scanner.goto(new_pos)
+        self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
+                                                                                        # по координатам в соответствии с
+                                                                                        # порядком
 
-            arr = int(abs(start - end - 1) / step)
-            a = np.linspace(start, end, arr)
 
-            # попытка сделать отображения точек при каждом изменении координат
-            for i in a:
-                print(i)
-                new_pos = Position(x=i)
+    def do_line(self, coords: List[np.array], order: str, current_position: List = None):
+        if current_position is None:
+            current_position = []
+        if len(coords) > 1:
+            for coord in coords[0]:
+                self.do_line(coords[1:], order, [*current_position, coord])
+        else:
+            for coord in coords[0]:
+                temp_coord = [*current_position, coord]
+                temp_doc = {order[i]: temp_coord[i] for i in range(len(order))}
+                new_pos = Position(**temp_doc)
                 scanner.goto(new_pos)
-                current_position = scanner.position()
-                self.measurements()
-                self.x_coord.setText(f"x = {current_position.x}")  # виснет
-                self.y_coord.setText(f"y = {current_position.y}")
-                self.z_coord.setText(f"z = {current_position.z}")
-                self.w_coord.setText(f"w = {current_position.w}")
-
-        elif order == self.control_keys_H[1]:
-            start = float(lst[0])
-            end = float(lst[1])
-            step = float(lst[2])
-
-            new_pos = Position(y=start)
-            scanner.goto(new_pos)
-
-            arr = int(abs(start - end - 1) / step)
-            a = np.linspace(start, end, arr)
-
-            for i in a:
-                new_pos = Position(y=i)
-                scanner.goto(new_pos)
-                self.measurements()
-
-        elif order == self.control_keys_H[2]:
-            start = float(lst[0])
-            end = float(lst[1])
-            step = float(lst[2])
-
-            new_pos = Position(z=start)
-            scanner.goto(new_pos)
-
-            arr = int(abs(start - end - 1) / step)
-            a = np.linspace(start, end, arr)
-
-            for i in a:
-                new_pos = Position(z=i)
-                scanner.goto(new_pos)
-                self.measurements()
-
-        elif order == self.control_keys_H[3]:
-            start = float(lst[0])
-            end = float(lst[1])
-            step = float(lst[2])
-
-            new_pos = Position(w=start)
-            scanner.goto(new_pos)
-
-            arr = int(abs(start - end - 1) / step)
-            a = np.linspace(start, end, arr)
-
-            for i in a:
-                new_pos = Position(w=i)
-                scanner.goto(new_pos)
-                self.measurements()
+                self.measurements()  # пока заглушка. надо сделать чтобы измеряла что-то в точке
+                print(temp_doc)
 
     def measurements(self):
         """
