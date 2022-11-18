@@ -1,10 +1,72 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSpinBox, QHBoxLayout, QTableWidget, QHeaderView
+from PyQt6.QtCore import Qt, QObject, QModelIndex
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSpinBox, QHBoxLayout, QTableWidget, QHeaderView, QTableView
 from typing import List
 from pyqt_app import scanner
 from src.scanner_utils import f_abort, f_home, f_X_positive
 import numpy as np
 from src import Position
+from .QSmartTable import QSmartTableModel, Variable, Length
+from typing import Union, Type, Any
+from PyQt6.QtGui import QColor, QValidator
+import re
+
+
+class MeshTableModel(QSmartTableModel):
+    def __init__(self, headers, v_headers, parent: QObject = None, ):
+        super(QSmartTableModel, self).__init__()
+        self.variable = Variable(name="", default_value=0, type=float, unit=Length, description="")
+        self._data = [["" for _ in range(len(headers))] for _ in range(4)]  # добавить None в валидные значения
+        self.headers = headers
+        self.v_headers = v_headers
+        self.pattern = re.compile(r"^\d+(?:\.\d+)?\s*(?:\[\s*[a-zA-Z]*\s*])?$")
+
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...) -> Any:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return self.headers[section]
+            else:
+                return self.v_headers[section]
+
+    def data(self, index: QModelIndex, role: int = ...) -> Any:
+        row = index.row()
+        column = index.column()
+        if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.EditRole:
+            return self._data[row][column]
+        elif role == Qt.ItemDataRole.BackgroundRole:
+            if self._data[row][column] == "":
+                return QColor('lightgrey')
+            elif self._valid(self._data[row][column], self.variable):
+                return
+            return QColor('red')
+
+    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
+        flags = Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
+        flags |= Qt.ItemFlag.ItemIsEditable
+        return flags
+
+    def setData(self, index: QModelIndex, value: Any, role: int = ...) -> bool:
+        if role == Qt.ItemDataRole.EditRole:
+            row = index.row()
+            column = index.column()
+            self._data[row][column] = value
+            self.dataChanged.emit(index, index)
+        return True
+
+
+class MeshTable(QTableView):
+    """
+    Реализация умной таблицы
+    """
+
+    def __init__(self, header: List[str], v_header: List[str], parent: QWidget = None):
+        super(MeshTable, self).__init__(parent)
+        self.header = header
+        self.v_header = v_header
+        self.setModel(MeshTableModel(header, v_header, parent))
+
+        header = self.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        header.setStretchLastSection(True)
 
 
 class ScannerControl(QWidget):
@@ -24,6 +86,9 @@ class ScannerControl(QWidget):
         button_z = QPushButton("z")
         button_w = QPushButton("w")
         button_go = QPushButton("Go")
+        self.control_keys_V = ["Begin coordinates [mm]", "End coordinates [mm]", "Step [mm]", "Order"]
+        self.control_keys_H = ["x", "y", "z", "w"]
+
         self.x_coord = QLabel(self)
         self.y_coord = QLabel(self)
         self.z_coord = QLabel(self)
@@ -73,16 +138,12 @@ class ScannerControl(QWidget):
         # создание горизонтального слоя внутри вертикального для помещения туда таблицы и кнопок пуск и аборт
         layout_table = QHBoxLayout()
         widget_table = QWidget()
+
+
         widget_table.setLayout(layout_table)
         layout_table.setAlignment(Qt.AlignmentFlag.AlignTop)
         # формирование таблицы, в которой задаются значения координат, скоростей и шага для трех осей
-
-        self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
-        self.control_keys_H = ["x", "y", "z", "w"]
-
-        self.tableWidget = QTableWidget(len(self.control_keys_V), 4)
-        self.tableWidget.setVerticalHeaderLabels(self.control_keys_V)
-        self.tableWidget.setHorizontalHeaderLabels(self.control_keys_H)
+        self.tableWidget = MeshTable(self.control_keys_H, self.control_keys_V, self)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.setFixedHeight(200)
@@ -123,7 +184,7 @@ class ScannerControl(QWidget):
         button_home.clicked.connect(f_home)
         button_x.clicked.connect(lambda x: f_X_positive(arrow_window_x.value()))
         button_go.clicked.connect(self.go_table)
-
+        #self.tableWidget.model().index().data().
     def params_to_linspace(self):
         lst_x = []
         lst_y = []
@@ -184,7 +245,6 @@ class ScannerControl(QWidget):
         self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
                                                                                         # по координатам в соответствии с
                                                                                         # порядком
-
 
     def do_line(self, coords: List[np.array], order: str, current_position: List = None):
         if current_position is None:
