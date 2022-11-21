@@ -1,0 +1,79 @@
+13:18:36,248 root ERROR Error in scanner connection
+13:20:19,424 root ERROR Error in scanner connection
+13:22:33,379 root INFO Scanner is connected
+16:22:43,340 root ERROR 
+17:10:40,447 root INFO Scanner is connected
+17:11:04,963 root INFO Moving along x-axes on 16
+17:11:13,13 root INFO Moving along x-axes on 16
+17:26:44,643 root ERROR Error in scanner connection
+14:31:44,778 root INFO Scanner is connected
+14:32:45,618 root ERROR 'ScannerControl' object has no attribute 'table_widget'
+14:33:43,825 root ERROR 
+14:33:47,671 root INFO Scanner is connected
+14:33:51,559 root ERROR 'ScannerControl' object has no attribute 'table_widget'
+14:34:22,394 root INFO Scanner is connected
+14:36:20,718 root ERROR 
+14:36:39,179 root INFO Scanner is connected
+14:39:33,974 root ERROR 
+14:39:40,382 root INFO Scanner is connected
+14:40:05,152 root ERROR 'NoneType' object has no attribute 'text'
+14:47:59,47 root ERROR 
+14:48:05,746 root INFO Scanner is connected
+14:48:06,835 root INFO Scanner is connected
+14:48:22,387 root ERROR 'NoneType' object has no attribute 'text'
+14:51:41,389 root INFO Scanner is connected
+14:51:56,639 root ERROR 'NoneType' object has no attribute 'text'
+14:56:33,878 root INFO Scanner is connected
+14:56:55,365 root ERROR 'NoneType' object has no attribute 'text'
+15:11:14,275 root INFO Scanner is connected
+15:11:28,813 root ERROR 'NoneType' object has no attribute 'text'
+15:15:30,657 root INFO Scanner is connected
+15:15:45,102 root ERROR 'NoneType' object has no attribute 'text'
+15:33:24,493 root INFO Scanner is connected
+15:33:41,733 root ERROR could not convert string to float: ''
+15:37:29,68 root INFO Scanner is connected
+15:37:47,450 root ERROR 'NoneType' object has no attribute 'text'
+15:38:47,825 root INFO Scanner is connected
+15:38:57,86 root ERROR unhashable type: 'QTableWidgetItem'
+15:39:24,963 root ERROR 
+15:39:35,743 root INFO Scanner is connected
+15:40:03,932 root ERROR string index out of range
+15:41:08,289 root INFO Scanner is connected
+15:41:31,335 root ERROR string index out of range
+15:42:16,551 root INFO Scanner is connected
+15:42:43,627 root ERROR string index out of range
+15:44:08,89 root INFO Scanner is connected
+15:44:32,966 root ERROR string index out of range
+15:48:16,103 root INFO Scanner is connected
+15:48:45,649 root ERROR unsupported operand type(s) for -: 'str' and 'str'
+15:49:58,647 root INFO Scanner is connected
+15:50:18,798 root ERROR unsupported operand type(s) for -: 'str' and 'str'
+15:52:46,288 root ERROR 
+15:52:49,350 root ERROR Error in scanner connection
+15:52:55,720 root INFO Scanner is connected
+15:53:19,610 root ERROR goto() got an unexpected keyword argument 'y'
+16:00:40,74 root ERROR 
+16:00:56,150 root INFO Scanner is connected
+17:44:18,810 root INFO Scanner is connected
+17:46:26,169 root INFO Scanner is connected
+17:49:36,525 root INFO Scanner is connected
+17:52:32,250 root INFO Scanner is connected
+17:53:43,967 root ERROR 'NoneType' object is not subscriptable
+18:01:58,326 root ERROR 
+18:02:03,709 root INFO Scanner is connected
+18:02:44,931 root ERROR 'NoneType' object is not subscriptable
+18:05:30,869 root INFO Scanner is connected
+18:09:58,371 root INFO Scanner is connected
+18:26:11,82 root ERROR 
+18:26:17,667 root INFO Scanner is connected
+10:05:02,752 root INFO Scanner is connected
+10:05:16,255 root INFO Moving along x-axes on 200
+10:05:46,917 root INFO Moving along x-axes on 200
+10:06:09,58 root INFO Moving along x-axes on 200
+16:20:46,888 root INFO Scanner is connected
+16:21:00,418 root ERROR 'NoneType' object has no attribute 'text'
+16:21:56,506 root ERROR invalid literal for int() with base 10: 'âûà'
+16:58:23,947 root INFO Scanner is connected
+16:58:36,979 root INFO Moving along x-axes on 2
+11:37:56,636 root INFO Scanner is connected
+11:40:00,841 root INFO Scanner is connected

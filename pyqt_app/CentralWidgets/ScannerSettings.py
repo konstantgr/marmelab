@@ -42,7 +42,9 @@ class ScannerSettings(QWidget):
         self.table_widget.setVerticalHeaderLabels(self.settings_keys.values())
         self.table_widget.setHorizontalHeaderLabels(("X", "Y", "Z", "W"))
         self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table_widget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table_widget.setFixedHeight(300)
+
 
         self.layout().addWidget(self.table_widget)
         self.layout().addWidget(self.button_apply)
