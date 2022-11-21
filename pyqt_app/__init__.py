@@ -3,12 +3,13 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 from pathlib import Path
+from analyzator.rohde_schwarz.rohde_schwarz import RohdeSchwarzAnalyzator
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 scanner = TRIMScanner(ip="127.0.0.1", port=9000)
-
+analyzator = RohdeSchwarzAnalyzator(ip="192.168.5.168", port="9000")
 # in-file logging
 
 logs_folder_path = os.path.join(Path(__file__).parents[1], 'logs')
