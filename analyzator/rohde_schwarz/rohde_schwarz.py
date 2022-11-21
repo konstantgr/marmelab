@@ -3,7 +3,7 @@ import threading
 
 from typing import List, Union
 from analyzator.analyzator_parameters import (
-    AnalyzatorType, ResultsFormatType, FrequencyParameters, SParameters,
+    AnalyzatorType, ResultsFormatType, FrequencyParameters, SParameters, FrequencyTypes
 )
 from analyzator.base_analyzator import BaseAnalyzator, AnalyzatorConnectionError
 
@@ -29,51 +29,50 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
         self.bufsize, self.maxbufs = bufsize, maxbufs
         self.tcp_lock = threading.Lock()
         self.is_connected = False
+        self.instrument = None
 
     def connect(self) -> None:
-        if self.is_connected:
-            return
-        try:
-            self.conn.close()
-            self.conn = socket.socket()
-            self.conn.connect((self.ip, self.port))
-            self.is_connected = True
-        except socket.error as e:
-            raise AnalyzatorConnectionError from e
+        resource = f'TCPIP::{self.ip}::{self.port}::SOCKET'  # VISA resource string for the device
+        self.instrument = RsInstrument(resource, True, True, "SelectVisa='socket'")
+        self.is_connected = True
 
     def disconnect(self) -> None:
         if not self.is_connected:
             return
         try:
-            self.conn.shutdown(socket.SHUT_RDWR)
-            self.conn.close()
-        except socket.error:
+            self.instrument.close()
             self.is_connected = False
 
     def get_scattering_parameters(
             self,
-            parameter: List[SParameters],
+            parameters: List[SParameters],
             frequency_parameters: FrequencyParameters,
             results_formats: List[ResultsFormatType]
     ) -> dict[str: List[float]]:
-        # znb = RsInstrument(resource, True, True, "SelectVisa='rs'")
 
-        # points = 401  # Number of sweep points
-        # znb.write_str('SENSe1:FREQuency:STARt 0.01GHZ')  # Start frequency to 10 MHz
-        # znb.write_str('SENSe1:FREQuency:STOP 1.0GHZ')  # Stop frequency to 1 GHz
-        #
-        # znb.write('SENSe1:SWEep:POINts ' + str(points))  # Set number of sweep points to the defined number
-        # znb.write_str('CALCulate1:PARameter:MEASure "Trc1", "S21"')  # Measurement now is S21
-        # sleep(0.5)  # It will take some time to perform a complete sweep - wait for it
+        fr_type = FrequencyParameters.frequency_type.value
+        res = {}
 
-        # points_count = znb.query_int('SENSe1:SWEep:POINts?')  # Request number of frequency points
-        # trace_data = znb.query_str('CALC1:DATA? FDAT')  # Get measurement values for complete trace
-        # trace_tup = tuple(map(str, trace_data.split(',')))  # Convert the received string into a tuple
-        # freq_list = znb.query_str('CALC:DATA:STIM?')  # Get frequency list for complete trace
-        # freq_tup = tuple(map(str, freq_list.split(',')))  # Convert the received string into a tuple
-        # return {'freq': freq_tup, 'magn': trace_tup}
+        is not self.is_connected:
+            return
 
-        return None
+        for num, S_param in enumerate(parameters):
+            self.instrument.write(f'CALC{num}:PAR:SDEF "Trc{num}", "{S_param}"')
+            self.instrument.write_str(f'SENSe{num}:FREQuency:STARt {FrequencyParameters.start}{fr_type}')
+            self.instrument.write_str(f'SENSe{num}:FREQuency:STOP {FrequencyParameters.stop}{fr_type}')
+            self.instrument.write(f'SENSe{num}:SWEep:POINts {FrequencyParameters.num}')
+
+            self.instrument.write_str(f'CALCulate{num}:PARameter:MEASure "Trc{num}", "{S_param}"')
+            trace_data = znb.query_str(f'CALC{num}:DATA? FDAT')
+            trace_tup = tuple(map(str, trace_data.split(',')))
+
+            freq_list = znb.query_str(f'CALC{num}:DATA:STIM?')
+            freq_tup = tuple(map(str, freq_list.split(',')))
+
+            res[f'{S_param}_freq'] = np.array(freq_tup).astype(float)
+            res[f'{S_param}'] = np.array(trace_tup).astype(float)
+
+        return res
 
     def __enter__(self):
         pass
@@ -83,5 +82,17 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
 
 
 if __name__ == "__main__":
-    analyzator = RohdeSchwarzAnalyzator(1, 2)
+    analyzator = RohdeSchwarzAnalyzator(
+        ip="172.16.22.182",
+        port="5025"
+    )
+    analyzator.connect()
 
+    sp = ['S11', 'S23']
+    fp = FrequencyParameters(
+        1000, 5000, FrequencyTypes.MHZ, 200
+    )
+    results = analyzator.get_scattering_parameters(
+        sp, fp
+    )
+    print(results['S11_freq'], results['S11'])

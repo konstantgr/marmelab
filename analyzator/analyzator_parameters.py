@@ -4,10 +4,18 @@ from typing import List
 from dataclasses import dataclass
 
 
+@unique
+class FrequencyTypes(Enum):
+    HZ = "HZ"
+    MHZ = "MHZ"
+    GHZ = "GHZ"
+
+
 @dataclass
 class FrequencyParameters:
     start: float = None
     stop: float = None
+    frequency_type: FrequencyTypes = None
     num_points: int = None
 
 
