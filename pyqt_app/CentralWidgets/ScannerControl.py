@@ -84,12 +84,12 @@ class ScannerControl(QWidget):
         button_abort = QPushButton("Abort")
         button_current_pos = QPushButton("Current position is..")
         button_home = QPushButton("Home")
-        button_x = QPushButton("X")
-        button_y = QPushButton("Y")
-        button_Z = QPushButton("Z")
-        button_w = QPushButton("W")
+        button_x = QPushButton("X [mm]")
+        button_y = QPushButton("Y [mm]")
+        button_z = QPushButton("Z [mm]")
+        button_w = QPushButton("W [deg]")
         button_go = QPushButton("Go")
-        self.control_keys_V = ["Begin coordinates [mm]", "End coordinates [mm]", "Step [mm]", "Order"]
+        self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
         self.control_keys_H = ["X", "Y", "Z", "W"]
 
         self.x_coord = QLabel(self)
@@ -104,12 +104,12 @@ class ScannerControl(QWidget):
 
         arrow_window_x = QSpinBox(self)  # ввод координаты
         arrow_window_y = QSpinBox(self)  # ввод координаты
-        arrow_window_Z = QSpinBox(self)  # ввод координаты
+        arrow_window_z = QSpinBox(self)  # ввод координаты
         arrow_window_w = QSpinBox(self)  # ввод координаты
 
         arrow_window_x.setRange(-1000, 1000)
         arrow_window_y.setRange(-1000, 1000)
-        arrow_window_Z.setRange(-1000, 1000)
+        arrow_window_z.setRange(-1000, 1000)
         arrow_window_w.setRange(-1000, 1000)
 
         # создание горизонтального слоя внутри вертикального для окна с выбором значения координаты и
@@ -126,11 +126,11 @@ class ScannerControl(QWidget):
         layout_y.addWidget(arrow_window_y)
         layout_y.addWidget(button_y)
 
-        layout_Z = QHBoxLayout()
-        widget_Z = QWidget()
-        widget_Z.setLayout(layout_Z)
-        layout_Z.addWidget(arrow_window_Z)
-        layout_Z.addWidget(button_Z)
+        layout_z = QHBoxLayout()
+        widget_z = QWidget()
+        widget_z.setLayout(layout_z)
+        layout_z.addWidget(arrow_window_z)
+        layout_z.addWidget(button_z)
 
         layout_w = QHBoxLayout()
         widget_w = QWidget()
@@ -141,7 +141,6 @@ class ScannerControl(QWidget):
         # создание горизонтального слоя внутри вертикального для помещения туда таблицы и кнопок пуск и аборт
         layout_table = QHBoxLayout()
         widget_table = QWidget()
-
 
         widget_table.setLayout(layout_table)
         layout_table.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -175,7 +174,7 @@ class ScannerControl(QWidget):
         layout.addWidget(button_current_pos)
         layout.addWidget(widget_x)  # добавление горизонтального виджета в вертикальный слой
         layout.addWidget(widget_y)  # добавление горизонтального виджета в вертикальный слой
-        layout.addWidget(widget_Z)  # добавление горизонтального виджета в вертикальный слой
+        layout.addWidget(widget_z)  # добавление горизонтального виджета в вертикальный слой
         layout.addWidget(widget_w)  # добавление горизонтального виджета в вертикальный слой
 
         layout.addWidget(widget_table)  # добавление горизонтального виджета в вертикальный слой
@@ -187,30 +186,35 @@ class ScannerControl(QWidget):
         button_home.clicked.connect(f_home)
         button_x.clicked.connect(lambda x: f_moving_along_x(arrow_window_x.value()))
         button_y.clicked.connect(lambda x: f_moving_along_y(arrow_window_y.value()))
-        button_Z.clicked.connect(lambda x: f_moving_along_z(arrow_window_Z.value()))
+        button_z.clicked.connect(lambda x: f_moving_along_z(arrow_window_z.value()))
         button_w.clicked.connect(lambda x: f_moving_along_w(arrow_window_w.value()))
         button_go.clicked.connect(self.go_table)
-        #self.tableWidget.model().index().data().
+
+        # self.tableWidget.model().index().data().
     def params_to_linspace(self):
         lst_x = []
         lst_y = []
-        lst_Z = []
+        lst_z = []
         lst_w = []
+        order1 = []
 
-        order1 = [self.tableWidget.item(3, _) for _ in range(4)]
-        order = [i if i is None else int(i.text()) for i in order1]
+        for _ in range(4):
+            order1.append((self.tableWidget.model().index(3, _).data()))
+
+        order = [int(i) for i in order1 if i is not None]
+        print(order)
+        #  реализация считывания данных в таблице
 
         for _ in range(3):
-            lst_x.append(self.tableWidget.item(_, self.control_keys_H.index("X")).text())
-            lst_y.append(self.tableWidget.item(_, self.control_keys_H.index("Y")).text())
-            lst_Z.append(self.tableWidget.item(_, self.control_keys_H.index("Z")).text())
-            lst_w.append(self.tableWidget.item(_, self.control_keys_H.index("W")).text())
+            lst_x.append(self.tableWidget.model().index(_, self.control_keys_H.index("X")).data())
+            lst_y.append(self.tableWidget.model().index(_, self.control_keys_H.index("Y")).data())
+            lst_z.append(self.tableWidget.model().index(_, self.control_keys_H.index("Z")).data())
+            lst_w.append(self.tableWidget.model().index(_, self.control_keys_H.index("W")).data())
 
-
-        lst_x = [int(i) for i in lst_x]
-        lst_y = [int(i) for i in lst_y]
-        lst_Z = [int(i) for i in lst_Z]
-        lst_w = [int(i) for i in lst_w]
+        lst_x = [int(float(i)) for i in lst_x]
+        lst_y = [int(float(i)) for i in lst_y]
+        lst_z = [int(float(i)) for i in lst_z]
+        lst_w = [int(float(i)) for i in lst_w]
 
         arr_x = int(abs(lst_x[0] - lst_x[1] - 1) / lst_x[2])  # шаг сетки x
         x = np.linspace(lst_x[0], lst_x[1], arr_x)
@@ -218,8 +222,8 @@ class ScannerControl(QWidget):
         arr_y = int(abs(lst_y[0] - lst_y[1] - 1) / lst_y[2])  # шаг сетки y
         y = np.linspace(lst_y[0], lst_y[1], arr_y)
 
-        arr_Z = int(abs(lst_Z[0] - lst_Z[1] - 1) / lst_Z[2])  # шаг сетки Z
-        z = np.linspace(lst_Z[0], lst_Z[1], arr_Z)
+        arr_Z = int(abs(lst_z[0] - lst_z[1] - 1) / lst_z[2])  # шаг сетки Z
+        z = np.linspace(lst_z[0], lst_z[1], arr_Z)
 
         arr_w = int(abs(lst_w[0] - lst_w[1] - 1) / lst_w[2])  # шаг сетки w
         w = np.linspace(lst_w[0], lst_w[1], arr_w)
@@ -262,10 +266,9 @@ class ScannerControl(QWidget):
             for coord in coords[0]:
                 temp_coord = [*current_position, coord]
                 temp_doc = {order[i]: temp_coord[i] for i in range(len(order))}
-                new_pos = Position(**temp_doc)
+                new_pos = Position(*temp_doc.values())
                 scanner.goto(new_pos)
                 self.measurements()  # пока заглушка. надо сделать чтобы измеряла что-то в точке
-                print(temp_doc)
 
     def measurements(self):
         """
@@ -278,9 +281,9 @@ class ScannerControl(QWidget):
         """
         This function shows current position
         """
-        self.x_coord.setText(f"X = {position.x}")
-        self.y_coord.setText(f"Y = {position.y}")
-        self.Z_coord.setText(f"Z = {position.z}")
-        self.w_coord.setText(f"W = {position.w}")
+        self.x_coord.setText(f"X = {position.x} [mm]")
+        self.y_coord.setText(f"Y = {position.y} [mm]")
+        self.Z_coord.setText(f"Z = {position.z} [mm]")
+        self.w_coord.setText(f"W = {position.w} [deg]")
 
 
