@@ -20,7 +20,7 @@ def f_default():
     pass
 
 
-def f_X_positive(x_coord=10):
+def f_moving_along_x(x_coord=10):
     """
     This function makes movement to the X positive direction
     """
@@ -31,6 +31,43 @@ def f_X_positive(x_coord=10):
     scanner.goto(new_pos)
     logger.info(f'Moving along x-axes on {x_coord}')
 
+
+def f_moving_along_y(y_coord=10):
+    """
+    This function makes movement to the X positive direction
+    """
+    from src import Position
+    old_y = scanner.position().y
+    new_y = old_y + y_coord
+    new_pos = Position(y=new_y)
+    scanner.goto(new_pos)
+    logger.info(f'Moving along y-axes on {y_coord}')
+
+
+
+def f_moving_along_z(z_coord=10):
+    """
+    This function makes movement to the X positive direction
+    """
+    from src import Position
+    old_z = scanner.position().z
+    new_z = old_z + z_coord
+    new_pos = Position(z=new_z)
+    scanner.goto(new_pos)
+    logger.info(f'Moving along z-axes on {z_coord}')
+
+
+
+def f_moving_along_w(w_coord=10):
+    """
+    This function makes movement to the X positive direction
+    """
+    from src import Position
+    old_w = scanner.position().w
+    new_w = old_w + w_coord
+    new_pos = Position(w=new_w)
+    scanner.goto(new_pos)
+    logger.info(f'Moving along w-axes on {w_coord}')
 
 
 def f_abort():

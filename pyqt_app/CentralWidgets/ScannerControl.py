@@ -1,10 +1,75 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSpinBox, QHBoxLayout, QTableWidget, QHeaderView
+from PyQt6.QtCore import Qt, QObject, QModelIndex
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSpinBox, QHBoxLayout, QTableWidget, QHeaderView, QTableView
 from typing import List
 from pyqt_app import scanner
-from src.scanner_utils import f_abort, f_home, f_X_positive
+from src.scanner_utils import f_abort, f_home, f_moving_along_x, f_moving_along_y, f_moving_along_z, f_moving_along_w
 import numpy as np
 from src import Position
+from .QSmartTable import QSmartTableModel, Variable, Length
+from typing import Union, Type, Any
+from PyQt6.QtGui import QColor, QValidator
+import re
+
+
+class MeshTableModel(QSmartTableModel):
+    """
+    класс, обеспечивающий проверку значений в таблице
+    """
+    def __init__(self, headers, v_headers, parent: QObject = None, ):
+        super(QSmartTableModel, self).__init__()
+        self.variable = Variable(name="", default_value=0, type=float, unit=Length, description="")
+        self._data = [["" for _ in range(len(headers))] for _ in range(4)]  # добавить None в валидные значения
+        self.headers = headers
+        self.v_headers = v_headers
+        self.pattern = re.compile(r"^\d+(?:\.\d+)?\s*(?:\[\s*[a-zA-Z]*\s*])?$")
+
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...) -> Any:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return self.headers[section]
+            else:
+                return self.v_headers[section]
+
+    def data(self, index: QModelIndex, role: int = ...) -> Any:
+        row = index.row()
+        column = index.column()
+        if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.EditRole:
+            return self._data[row][column]
+        elif role == Qt.ItemDataRole.BackgroundRole:
+            if self._data[row][column] == "":
+                return QColor('lightgrey')
+            elif self._valid(self._data[row][column], self.variable):
+                return
+            return QColor('red')
+
+    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
+        flags = Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
+        flags |= Qt.ItemFlag.ItemIsEditable
+        return flags
+
+    def setData(self, index: QModelIndex, value: Any, role: int = ...) -> bool:
+        if role == Qt.ItemDataRole.EditRole:
+            row = index.row()
+            column = index.column()
+            self._data[row][column] = value
+            self.dataChanged.emit(index, index)
+        return True
+
+
+class MeshTable(QTableView):
+    """
+    Реализация умной таблицы
+    """
+
+    def __init__(self, header: List[str], v_header: List[str], parent: QWidget = None):
+        super(MeshTable, self).__init__(parent)
+        self.header = header
+        self.v_header = v_header
+        self.setModel(MeshTableModel(header, v_header, parent))
+
+        header = self.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        header.setStretchLastSection(True)
 
 
 class ScannerControl(QWidget):
@@ -19,19 +84,22 @@ class ScannerControl(QWidget):
         button_abort = QPushButton("Abort")
         button_current_pos = QPushButton("Current position is..")
         button_home = QPushButton("Home")
-        button_x = QPushButton("x")
-        button_y = QPushButton("y")
-        button_z = QPushButton("z")
-        button_w = QPushButton("w")
+        button_x = QPushButton("X [mm]")
+        button_y = QPushButton("Y [mm]")
+        button_z = QPushButton("Z [mm]")
+        button_w = QPushButton("W [deg]")
         button_go = QPushButton("Go")
+        self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
+        self.control_keys_H = ["X", "Y", "Z", "W"]
+
         self.x_coord = QLabel(self)
         self.y_coord = QLabel(self)
-        self.z_coord = QLabel(self)
+        self.Z_coord = QLabel(self)
         self.w_coord = QLabel(self)
 
-        self.x_coord.setText("x = ")
-        self.y_coord.setText("y = ")
-        self.z_coord.setText("z = ")
+        self.x_coord.setText("X = ")
+        self.y_coord.setText("Y = ")
+        self.Z_coord.setText("Z = ")
         self.w_coord.setText("w = ")
 
         arrow_window_x = QSpinBox(self)  # ввод координаты
@@ -73,16 +141,11 @@ class ScannerControl(QWidget):
         # создание горизонтального слоя внутри вертикального для помещения туда таблицы и кнопок пуск и аборт
         layout_table = QHBoxLayout()
         widget_table = QWidget()
+
         widget_table.setLayout(layout_table)
         layout_table.setAlignment(Qt.AlignmentFlag.AlignTop)
         # формирование таблицы, в которой задаются значения координат, скоростей и шага для трех осей
-
-        self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
-        self.control_keys_H = ["X", "Y", "Z", "W"]
-
-        self.tableWidget = QTableWidget(len(self.control_keys_V), 4)
-        self.tableWidget.setVerticalHeaderLabels(self.control_keys_V)
-        self.tableWidget.setHorizontalHeaderLabels(self.control_keys_H)
+        self.tableWidget = MeshTable(self.control_keys_H, self.control_keys_V, self)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.setFixedHeight(200)
@@ -92,7 +155,7 @@ class ScannerControl(QWidget):
         widget_coord.setLayout(layout_widget)
         layout_widget.addWidget(self.x_coord)
         layout_widget.addWidget(self.y_coord)
-        layout_widget.addWidget(self.z_coord)
+        layout_widget.addWidget(self.Z_coord)
         layout_widget.addWidget(self.w_coord)
 
         layout_go_abort = QHBoxLayout()
@@ -121,126 +184,96 @@ class ScannerControl(QWidget):
         button_current_pos.clicked.connect(scanner.position)
         scanner.position_signal.connect(self.update_currrent_position)
         button_home.clicked.connect(f_home)
-        button_x.clicked.connect(lambda x: f_X_positive(arrow_window_x.value()))
+        button_x.clicked.connect(lambda x: f_moving_along_x(arrow_window_x.value()))
+        button_y.clicked.connect(lambda x: f_moving_along_y(arrow_window_y.value()))
+        button_z.clicked.connect(lambda x: f_moving_along_z(arrow_window_z.value()))
+        button_w.clicked.connect(lambda x: f_moving_along_w(arrow_window_w.value()))
         button_go.clicked.connect(self.go_table)
 
-    def params_to_dict(self):
-        dic = {"X": [], "Y": [], "Z": [], "W": []}
+    def params_to_linspace(self):
         lst_x = []
         lst_y = []
         lst_z = []
         lst_w = []
+        order1 = []
 
-        order1 = [self.tableWidget.item(3, _) for _ in range(4)]
-        order = [i if i is None else int(i.text()) for i in order1]
+        x, y, z, w = [], [], [], []
+
+        for _ in range(4):
+            order1.append((self.tableWidget.model().index(3, _).data()))
+
+        order = [int(i) for i in order1 if i.isdigit()]
+        print(order)
+        #  реализация считывания данных в таблице
 
         for _ in range(3):
-            lst_x.append(self.tableWidget.item(_, self.control_keys_H.index("X")).text())
-            lst_y.append(self.tableWidget.item(_, self.control_keys_H.index("Y")).text())
-            lst_z.append(self.tableWidget.item(_, self.control_keys_H.index("Z")).text())
-            lst_w.append(self.tableWidget.item(_, self.control_keys_H.index("W")).text())
+            lst_x.append(self.tableWidget.model().index(_, self.control_keys_H.index("X")).data())
+            lst_y.append(self.tableWidget.model().index(_, self.control_keys_H.index("Y")).data())
+            lst_z.append(self.tableWidget.model().index(_, self.control_keys_H.index("Z")).data())
+            lst_w.append(self.tableWidget.model().index(_, self.control_keys_H.index("W")).data())
 
-        dic["X"] = lst_x
-        dic["Y"] = lst_y
-        dic["Z"] = lst_z
-        dic["W"] = lst_w
-        print(dic, order)
-        return dic, order
+        lst_x = [int(float(i)) for i in lst_x if i.isdigit()]
+        lst_y = [int(float(i)) for i in lst_y if i.isdigit()]
+        lst_z = [int(float(i)) for i in lst_z if i.isdigit()]
+        lst_w = [int(float(i)) for i in lst_w if i.isdigit()]
+
+        if len(lst_x) != 0:
+            arr_x = int(abs(lst_x[0] - lst_x[1] - 1) / lst_x[2])  # шаг сетки x
+            x = np.linspace(lst_x[0], lst_x[1], arr_x)
+
+        if len(lst_y) != 0:
+            arr_y = int(abs(lst_y[0] - lst_y[1] - 1) / lst_y[2])  # шаг сетки y
+            y = np.linspace(lst_y[0], lst_y[1], arr_y)
+
+        if len(lst_z) != 0:
+            arr_z = int(abs(lst_z[0] - lst_z[1] - 1) / lst_z[2])  # шаг сетки Z
+            z = np.linspace(lst_z[0], lst_z[1], arr_z)
+
+        if len(lst_w) != 0:
+            arr_w = int(abs(lst_w[0] - lst_w[1] - 1) / lst_w[2])  # шаг сетки w
+            w = np.linspace(lst_w[0], lst_w[1], arr_w)
+
+        return x, y, z, w, order
 
     def go_table(self):
         """
         This function makes movement by coords from table
         """
         #  здесь вызов конвертации параметров из таблицы в списки
-        #  здесь нет связи с self.control_keys_H. если там что-то изменится, нельзя будет отследить
 
-
-        control_keys = {
+        keys_str = {
             1: self.control_keys_H[0],
             2: self.control_keys_H[1],
             3: self.control_keys_H[2],
             4: self.control_keys_H[3]
         }
 
-        dic, order = self.params_to_dict()
-        print(dic.get(control_keys.get(order[0])))
-        self.movement(dic.get(control_keys.get(order[0])), order[0])
-        self.movement(dic.get(control_keys.get(order[1])), order[1])
-        self.movement(dic.get(control_keys.get(order[2])), order[2])
-        self.movement(dic.get(control_keys.get(order[3])), order[3])
+        x, y, z, w, order = self.params_to_linspace()
 
-    def movement(self, lst:List, order):
-        print(lst)
-        if order == self.control_keys_H[0]:
-            start = float(lst[0])
-            end = float(lst[1])
-            step = float(lst[2])
+        keys = {
+            1: x,
+            2: y,
+            3: z,
+            4: w,
+        }
 
-            new_pos = Position(x=start)
-            scanner.goto(new_pos)
+        self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
+                                                                                        # по координатам в соответствии с
+                                                                                        # порядком
 
-            arr = int(abs(start - end - 1) / step)
-            a = np.linspace(start, end, arr)
-
-            # попытка сделать отображения точек при каждом изменении координат
-            for i in a:
-                print(i)
-                new_pos = Position(x=i)
+    def do_line(self, coords: List[np.array], order: str, current_position: List = None):
+        if current_position is None:
+            current_position = []
+        if len(coords) > 1:
+            for coord in coords[0]:
+                self.do_line(coords[1:], order, [*current_position, coord])
+        else:
+            for coord in coords[0]:
+                temp_coord = [*current_position, coord]
+                temp_doc = {order[i]: temp_coord[i] for i in range(len(order))}
+                new_pos = Position(*temp_doc.values())
                 scanner.goto(new_pos)
-                current_position = scanner.position()
-                self.measurements()
-                self.x_coord.setText(f"x = {current_position.x}")  # виснет
-                self.y_coord.setText(f"y = {current_position.y}")
-                self.z_coord.setText(f"z = {current_position.z}")
-                self.w_coord.setText(f"w = {current_position.w}")
-
-        elif order == self.control_keys_H[1]:
-            start = float(lst[0])
-            end = float(lst[1])
-            step = float(lst[2])
-
-            new_pos = Position(y=start)
-            scanner.goto(new_pos)
-
-            arr = int(abs(start - end - 1) / step)
-            a = np.linspace(start, end, arr)
-
-            for i in a:
-                new_pos = Position(y=i)
-                scanner.goto(new_pos)
-                self.measurements()
-
-        elif order == self.control_keys_H[2]:
-            start = float(lst[0])
-            end = float(lst[1])
-            step = float(lst[2])
-
-            new_pos = Position(z=start)
-            scanner.goto(new_pos)
-
-            arr = int(abs(start - end - 1) / step)
-            a = np.linspace(start, end, arr)
-
-            for i in a:
-                new_pos = Position(z=i)
-                scanner.goto(new_pos)
-                self.measurements()
-
-        elif order == self.control_keys_H[3]:
-            start = float(lst[0])
-            end = float(lst[1])
-            step = float(lst[2])
-
-            new_pos = Position(w=start)
-            scanner.goto(new_pos)
-
-            arr = int(abs(start - end - 1) / step)
-            a = np.linspace(start, end, arr)
-
-            for i in a:
-                new_pos = Position(w=i)
-                scanner.goto(new_pos)
-                self.measurements()
+                self.measurements()  # пока заглушка. надо сделать чтобы измеряла что-то в точке
 
     def measurements(self):
         """
@@ -253,9 +286,9 @@ class ScannerControl(QWidget):
         """
         This function shows current position
         """
-        self.x_coord.setText(f"x = {position.x}")
-        self.y_coord.setText(f"y = {position.y}")
-        self.z_coord.setText(f"z = {position.z}")
-        self.w_coord.setText(f"w = {position.w}")
+        self.x_coord.setText(f"X = {position.x} [mm]")
+        self.y_coord.setText(f"Y = {position.y} [mm]")
+        self.Z_coord.setText(f"Z = {position.z} [mm]")
+        self.w_coord.setText(f"W = {position.w} [deg]")
 
 

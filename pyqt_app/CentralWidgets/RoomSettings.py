@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QHBoxLayout, QSplitter
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QHBoxLayout, QSplitter, QHeaderView
 from .QSmartTable import QSmartTable, Variable, Length, NoUnit, Time, Frequency
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt
@@ -25,6 +25,9 @@ class RoomSettings(QWidget):
 
         self.table = QSmartTable(settings)
         self.table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.setFixedHeight(340)
         self.splitter.addWidget(self.table)
 
         buttons_widget = QWidget()

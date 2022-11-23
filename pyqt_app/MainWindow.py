@@ -83,6 +83,11 @@ class RightPanel(BasePanel):
         scanner.position_signal.connect(self.scanner_widget.set_scanner_pos)
 
 
+class GraphPanel(BasePanel):
+    pass
+
+
+
 class CentralPanel(QScrollArea, BasePanel):
     """
     This class makes widgets on the central panel
@@ -136,10 +141,10 @@ class MainWindow(QMainWindow):
         self.main_widget.setLayout(hbox)
 
         self.left_panel = LeftPanel(self.main_widget)  # settings selector
-
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
         room_settings: CentralWidgets.RoomSettings = self.center_panel.pages[CentralPanelTypes.RoomSettings]
         self.right_panel = RightPanel(self.main_widget)  # graphics
+        self.graph_panel = GraphPanel(self.main_widget)
         self.log_panel = LogPanel(self.main_widget)  # log window
 
         self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
@@ -168,6 +173,9 @@ class MainWindow(QMainWindow):
         splitter0.setStretchFactor(1, 10)
         splitter0.setCollapsible(0, False)
         splitter0.setCollapsible(1, False)
+
+
+
 
         hbox.addWidget(splitter0)
 
