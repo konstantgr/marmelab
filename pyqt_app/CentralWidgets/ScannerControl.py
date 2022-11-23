@@ -190,7 +190,6 @@ class ScannerControl(QWidget):
         button_w.clicked.connect(lambda x: f_moving_along_w(arrow_window_w.value()))
         button_go.clicked.connect(self.go_table)
 
-        # self.tableWidget.model().index().data().
     def params_to_linspace(self):
         lst_x = []
         lst_y = []
@@ -198,10 +197,12 @@ class ScannerControl(QWidget):
         lst_w = []
         order1 = []
 
+        x, y, z, w = [], [], [], []
+
         for _ in range(4):
             order1.append((self.tableWidget.model().index(3, _).data()))
 
-        order = [int(i) for i in order1 if i is not None]
+        order = [int(i) for i in order1 if i.isdigit()]
         print(order)
         #  реализация считывания данных в таблице
 
@@ -211,22 +212,26 @@ class ScannerControl(QWidget):
             lst_z.append(self.tableWidget.model().index(_, self.control_keys_H.index("Z")).data())
             lst_w.append(self.tableWidget.model().index(_, self.control_keys_H.index("W")).data())
 
-        lst_x = [int(float(i)) for i in lst_x]
-        lst_y = [int(float(i)) for i in lst_y]
-        lst_z = [int(float(i)) for i in lst_z]
-        lst_w = [int(float(i)) for i in lst_w]
+        lst_x = [int(float(i)) for i in lst_x if i.isdigit()]
+        lst_y = [int(float(i)) for i in lst_y if i.isdigit()]
+        lst_z = [int(float(i)) for i in lst_z if i.isdigit()]
+        lst_w = [int(float(i)) for i in lst_w if i.isdigit()]
 
-        arr_x = int(abs(lst_x[0] - lst_x[1] - 1) / lst_x[2])  # шаг сетки x
-        x = np.linspace(lst_x[0], lst_x[1], arr_x)
+        if len(lst_x) != 0:
+            arr_x = int(abs(lst_x[0] - lst_x[1] - 1) / lst_x[2])  # шаг сетки x
+            x = np.linspace(lst_x[0], lst_x[1], arr_x)
 
-        arr_y = int(abs(lst_y[0] - lst_y[1] - 1) / lst_y[2])  # шаг сетки y
-        y = np.linspace(lst_y[0], lst_y[1], arr_y)
+        if len(lst_y) != 0:
+            arr_y = int(abs(lst_y[0] - lst_y[1] - 1) / lst_y[2])  # шаг сетки y
+            y = np.linspace(lst_y[0], lst_y[1], arr_y)
 
-        arr_Z = int(abs(lst_z[0] - lst_z[1] - 1) / lst_z[2])  # шаг сетки Z
-        z = np.linspace(lst_z[0], lst_z[1], arr_Z)
+        if len(lst_z) != 0:
+            arr_z = int(abs(lst_z[0] - lst_z[1] - 1) / lst_z[2])  # шаг сетки Z
+            z = np.linspace(lst_z[0], lst_z[1], arr_z)
 
-        arr_w = int(abs(lst_w[0] - lst_w[1] - 1) / lst_w[2])  # шаг сетки w
-        w = np.linspace(lst_w[0], lst_w[1], arr_w)
+        if len(lst_w) != 0:
+            arr_w = int(abs(lst_w[0] - lst_w[1] - 1) / lst_w[2])  # шаг сетки w
+            w = np.linspace(lst_w[0], lst_w[1], arr_w)
 
         return x, y, z, w, order
 
