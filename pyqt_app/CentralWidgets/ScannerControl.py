@@ -90,7 +90,7 @@ class ScannerControl(QWidget):
         button_w = QPushButton("W [deg]")
         button_go = QPushButton("Go")
         self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
-        self.control_keys_H = ["X", "Y", "Z", "W"]
+        self.control_keys_H = ["x", "y", "z", "w"]
 
         self.x_coord = QLabel(self)
         self.y_coord = QLabel(self)
@@ -207,10 +207,10 @@ class ScannerControl(QWidget):
         #  реализация считывания данных в таблице
 
         for _ in range(3):
-            lst_x.append(self.tableWidget.model().index(_, self.control_keys_H.index("X")).data())
-            lst_y.append(self.tableWidget.model().index(_, self.control_keys_H.index("Y")).data())
-            lst_z.append(self.tableWidget.model().index(_, self.control_keys_H.index("Z")).data())
-            lst_w.append(self.tableWidget.model().index(_, self.control_keys_H.index("W")).data())
+            lst_x.append(self.tableWidget.model().index(_, self.control_keys_H.index("x")).data())
+            lst_y.append(self.tableWidget.model().index(_, self.control_keys_H.index("y")).data())
+            lst_z.append(self.tableWidget.model().index(_, self.control_keys_H.index("z")).data())
+            lst_w.append(self.tableWidget.model().index(_, self.control_keys_H.index("w")).data())
 
         lst_x = [int(float(i)) for i in lst_x if i.isdigit()]
         lst_y = [int(float(i)) for i in lst_y if i.isdigit()]
@@ -271,7 +271,7 @@ class ScannerControl(QWidget):
             for coord in coords[0]:
                 temp_coord = [*current_position, coord]
                 temp_doc = {order[i]: temp_coord[i] for i in range(len(order))}
-                new_pos = Position(*temp_doc.values())
+                new_pos = Position(**temp_doc)
                 scanner.goto(new_pos)
                 self.measurements()  # пока заглушка. надо сделать чтобы измеряла что-то в точке
 

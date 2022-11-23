@@ -1,3 +1,5 @@
+import numpy as np
+import pandas as pd
 import CentralWidgets
 import LogWidget
 import RightWidgets
@@ -6,7 +8,7 @@ from PyQt6.QtCore import Qt
 from enum import IntEnum, auto
 import logging
 from pyqt_app import scanner
-import pyqtgraph as pg
+
 
 # TODO: сделать вывод логов в файл
 # TODO: Изменить таблицу сканнер сеттингс
@@ -77,16 +79,16 @@ class RightPanel(BasePanel):
         self.setLayout(self.vbox)
 
         self.scanner_widget = RightWidgets.ScannerVisualizer(self)
-        self.vbox.addWidget(self.scanner_widget)
+        self.graph_widget = RightWidgets.GraphWidget(self)
 
-        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+
+        graphs_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
+        graphs_splitter.insertWidget(0, self.scanner_widget)
+        graphs_splitter.insertWidget(1, self.graph_widget)
+        self.vbox.addWidget(graphs_splitter)
 
         scanner.position_signal.connect(self.scanner_widget.set_scanner_pos)
-
-
-class GraphPanel(BasePanel):
-    pass
-
 
 
 class CentralPanel(QScrollArea, BasePanel):
@@ -145,22 +147,21 @@ class MainWindow(QMainWindow):
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
         room_settings: CentralWidgets.RoomSettings = self.center_panel.pages[CentralPanelTypes.RoomSettings]
         self.right_panel = RightPanel(self.main_widget)  # graphics
-        self.graph_panel = GraphPanel(self.main_widget)
         self.log_panel = LogPanel(self.main_widget)  # log window
 
         self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
         room_settings.settings_signal.connect(self.right_panel.scanner_widget.set_settings_from_dict)
 
-        log_central_splitter = QSplitter(orientation=Qt.Orientation.Horizontal)
-        log_central_splitter.insertWidget(0, self.left_panel)
-        log_central_splitter.insertWidget(1, self.center_panel)
-        log_central_splitter.setStretchFactor(0, 0)
-        log_central_splitter.setStretchFactor(1, 1)
-        log_central_splitter.setCollapsible(0, False)
-        log_central_splitter.setCollapsible(1, False)
+        left_center_splitter = QSplitter(orientation=Qt.Orientation.Horizontal)
+        left_center_splitter.insertWidget(0, self.left_panel)
+        left_center_splitter.insertWidget(1, self.center_panel)
+        left_center_splitter.setStretchFactor(0, 0)
+        left_center_splitter.setStretchFactor(1, 1)
+        left_center_splitter.setCollapsible(0, False)
+        left_center_splitter.setCollapsible(1, False)
 
         log_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
-        log_splitter.insertWidget(0, log_central_splitter)
+        log_splitter.insertWidget(0, left_center_splitter)
         log_splitter.insertWidget(1, self.log_panel)
         log_splitter.setStretchFactor(0, 4)
         log_splitter.setStretchFactor(1, 1)
@@ -169,19 +170,12 @@ class MainWindow(QMainWindow):
 
         main_splitter = QSplitter(orientation=Qt.Orientation.Horizontal)
         main_splitter.insertWidget(0, log_splitter)
-
-        graphs_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
-        graphs_splitter.insertWidget(0, self.right_panel)
-        graphs_splitter.insertWidget(1, self.graph_panel)
-
-
-        main_splitter.insertWidget(1, graphs_splitter)
+        main_splitter.insertWidget(1, self.right_panel)
 
         main_splitter.setStretchFactor(0, 1)
-        main_splitter.setStretchFactor(1, 10)
+        main_splitter.setStretchFactor(1, 1)
         main_splitter.setCollapsible(0, False)
         main_splitter.setCollapsible(1, False)
-
 
         hbox.addWidget(main_splitter)
 
