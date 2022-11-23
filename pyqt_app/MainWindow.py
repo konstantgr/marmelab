@@ -144,7 +144,7 @@ class MainWindow(QMainWindow):
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
         room_settings: CentralWidgets.RoomSettings = self.center_panel.pages[CentralPanelTypes.RoomSettings]
         self.right_panel = RightPanel(self.main_widget)  # graphics
-        self.graph_panel = GraphPanel(self.main_widget)
+        #self.graph_panel = GraphPanel(self.main_widget)
         self.log_panel = LogPanel(self.main_widget)  # log window
 
         self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
