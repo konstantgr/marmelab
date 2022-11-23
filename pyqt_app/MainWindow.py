@@ -6,6 +6,7 @@ from PyQt6.QtCore import Qt
 from enum import IntEnum, auto
 import logging
 from pyqt_app import scanner
+import pyqtgraph as pg
 
 # TODO: сделать вывод логов в файл
 # TODO: Изменить таблицу сканнер сеттингс
@@ -144,40 +145,45 @@ class MainWindow(QMainWindow):
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
         room_settings: CentralWidgets.RoomSettings = self.center_panel.pages[CentralPanelTypes.RoomSettings]
         self.right_panel = RightPanel(self.main_widget)  # graphics
-        #self.graph_panel = GraphPanel(self.main_widget)
+        self.graph_panel = GraphPanel(self.main_widget)
         self.log_panel = LogPanel(self.main_widget)  # log window
 
         self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
         room_settings.settings_signal.connect(self.right_panel.scanner_widget.set_settings_from_dict)
 
-        splitter2 = QSplitter(orientation=Qt.Orientation.Horizontal)
-        splitter2.insertWidget(0, self.left_panel)
-        splitter2.insertWidget(1, self.center_panel)
-        splitter2.setStretchFactor(0, 0)
-        splitter2.setStretchFactor(1, 1)
-        splitter2.setCollapsible(0, False)
-        splitter2.setCollapsible(1, False)
+        log_central_splitter = QSplitter(orientation=Qt.Orientation.Horizontal)
+        log_central_splitter.insertWidget(0, self.left_panel)
+        log_central_splitter.insertWidget(1, self.center_panel)
+        log_central_splitter.setStretchFactor(0, 0)
+        log_central_splitter.setStretchFactor(1, 1)
+        log_central_splitter.setCollapsible(0, False)
+        log_central_splitter.setCollapsible(1, False)
 
-        splitter1 = QSplitter(orientation=Qt.Orientation.Vertical)
-        splitter1.insertWidget(0, splitter2)
-        splitter1.insertWidget(1, self.log_panel)
-        splitter1.setStretchFactor(0, 4)
-        splitter1.setStretchFactor(1, 1)
-        splitter1.setCollapsible(0, False)
-        splitter1.setCollapsible(1, False)
+        log_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
+        log_splitter.insertWidget(0, log_central_splitter)
+        log_splitter.insertWidget(1, self.log_panel)
+        log_splitter.setStretchFactor(0, 4)
+        log_splitter.setStretchFactor(1, 1)
+        log_splitter.setCollapsible(0, False)
+        log_splitter.setCollapsible(1, False)
 
-        splitter0 = QSplitter(orientation=Qt.Orientation.Horizontal)
-        splitter0.insertWidget(0, splitter1)
-        splitter0.insertWidget(1, self.right_panel)
-        splitter0.setStretchFactor(0, 1)
-        splitter0.setStretchFactor(1, 10)
-        splitter0.setCollapsible(0, False)
-        splitter0.setCollapsible(1, False)
+        main_splitter = QSplitter(orientation=Qt.Orientation.Horizontal)
+        main_splitter.insertWidget(0, log_splitter)
 
+        graphs_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
+        graphs_splitter.insertWidget(0, self.right_panel)
+        graphs_splitter.insertWidget(1, self.graph_panel)
 
 
+        main_splitter.insertWidget(1, graphs_splitter)
 
-        hbox.addWidget(splitter0)
+        main_splitter.setStretchFactor(0, 1)
+        main_splitter.setStretchFactor(1, 10)
+        main_splitter.setCollapsible(0, False)
+        main_splitter.setCollapsible(1, False)
+
+
+        hbox.addWidget(main_splitter)
 
         self.setGeometry(300, 300, 450, 400)
         self.setWindowTitle('Scanner control')

@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton
 from pyqt_app import analyzator
 from analyzator.analyzator_parameters import FrequencyParameters, FrequencyTypes
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 class Test(QWidget):
