@@ -1,4 +1,4 @@
-from src.scanner_utils import f_connection
+from .scanner_utils import f_connection
 from PyQt6.QtWidgets import QPushButton, QWidget, QHBoxLayout
 from PyQt6.QtWidgets import QSizePolicy
 

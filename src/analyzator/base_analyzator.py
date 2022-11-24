@@ -1,7 +1,6 @@
 import abc
-from dataclasses import dataclass
 from typing import List
-from analyzator.analyzator_parameters import SParameters, FrequencyParameters, AnalyzatorType, ResultsFormatType
+from src.analyzator.analyzator_parameters import SParameters, FrequencyParameters, AnalyzatorType, ResultsFormatType
 
 
 class AnalyzatorConnectionError(Exception):

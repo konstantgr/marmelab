@@ -1,14 +1,6 @@
-import numpy as np
-import pandas as pd
-import CentralWidgets
-import LogWidget
-import RightWidgets
-from PyQt6.QtWidgets import QWidget, QFrame, QHBoxLayout, QMainWindow, QVBoxLayout, QSplitter, QStackedWidget, QListWidget, QScrollArea, QSizePolicy
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter
 from PyQt6.QtCore import Qt
-from enum import IntEnum, auto
-import logging
-from pyqt_app import scanner
-
+from Panels import *
 
 # TODO: сделать вывод логов в файл
 # TODO: Изменить таблицу сканнер сеттингс
@@ -22,118 +14,6 @@ from pyqt_app import scanner
 # TODO: добавить в таблицу ск. контролл измерение и запись данных
 # TODO: аналогично во вкладке тест
 
-logger = logging.getLogger()
-
-
-class CentralPanelTypes(IntEnum):
-    """
-    замена цифр на названия
-    """
-    Initial: int = auto()
-    RoomSettings = auto()
-    ScannerSettings: int = auto()
-    Scanner: int = auto()
-    Test: int = auto()
-
-
-class BasePanel(QFrame):
-    """
-    This class makes base construction for all panel
-    """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setFrameShape(QFrame.Shape.StyledPanel)
-
-
-class LeftPanel(BasePanel):
-    """
-    This class makes widgets on the left panel
-    """
-    def __init__(self, *args, **kwargs):
-        """
-        Формирование стеков виджетов на левой панели
-        """
-        super().__init__(*args, **kwargs)
-        self.leftlist = QListWidget(self)
-        self.leftlist.insertItem(CentralPanelTypes.Initial, 'Initial')
-        self.leftlist.insertItem(CentralPanelTypes.RoomSettings, 'RoomSettings')
-        self.leftlist.insertItem(CentralPanelTypes.ScannerSettings, 'Scanner settings')
-        self.leftlist.insertItem(CentralPanelTypes.Scanner, 'Scanner control')
-        self.leftlist.insertItem(CentralPanelTypes.Test, 'Test')
-        # обращение к виджетам из центр. указывает на номер отображаемого виджета
-
-        hbox = QHBoxLayout(self)
-        hbox.addWidget(self.leftlist)
-        self.setLayout(hbox)
-        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
-
-
-class RightPanel(BasePanel):
-    """
-    This class makes widgets on the right panel
-    """
-    def __init__(self, *args, **kwargs):
-        super(RightPanel, self).__init__(*args, **kwargs)
-
-        self.vbox = QVBoxLayout(self)
-        self.setLayout(self.vbox)
-
-        self.scanner_widget = RightWidgets.ScannerVisualizer(self)
-        self.graph_widget = RightWidgets.GraphWidget(self)
-
-        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
-
-        graphs_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
-        graphs_splitter.insertWidget(0, self.scanner_widget)
-        graphs_splitter.insertWidget(1, self.graph_widget)
-        self.vbox.addWidget(graphs_splitter)
-
-        scanner.position_signal.connect(self.scanner_widget.set_scanner_pos)
-
-
-class CentralPanel(QScrollArea, BasePanel):
-    """
-    This class makes widgets on the central panel
-    """
-    def __init__(self, *args, **kwargs):
-        """
-        создание виджетов в центр. панели. В слои они добавляются в классе централ виджет
-        """
-        super(CentralPanel, self).__init__(*args, **kwargs)
-        self.pages = {
-            CentralPanelTypes.Initial: CentralWidgets.Init(),
-            CentralPanelTypes.RoomSettings: CentralWidgets.RoomSettings(default_settings=RightWidgets.DEFAULT_SETTINGS),
-            CentralPanelTypes.ScannerSettings: CentralWidgets.ScannerSettings(),
-            CentralPanelTypes.Scanner: CentralWidgets.ScannerControl(),
-            CentralPanelTypes.Test: CentralWidgets.Test(),
-        }
-        self.stacked_widget = QStackedWidget(self)
-        for key in self.pages.keys():
-            self.stacked_widget.insertWidget(key, self.pages[key])  # добавление виджетов в центральную панель
-
-        self.setWidget(self.stacked_widget)
-        self.setWidgetResizable(True)
-
-    def display(self, i):
-        self.stacked_widget.setCurrentIndex(i)
-
-
-class LogPanel(BasePanel):
-    """
-    This class makes widgets on the log panel
-    """
-    def __init__(self, *args, **kwargs):
-        super(LogPanel, self).__init__(*args, **kwargs)
-        hbox = QHBoxLayout(self)
-        logging_handler = LogWidget.QTextEditLogger(self)
-        logging_handler.setFormatter(
-            logging.Formatter(
-                '%(asctime)s %(levelname)s: %(message)s')
-        )
-
-        hbox.addWidget(logging_handler.widget)
-        self.setLayout(hbox)
-        logger.addHandler(logging_handler)  # добавление в логгер всего то, что получит обработчик
 
 
 class MainWindow(QMainWindow):
@@ -145,13 +25,12 @@ class MainWindow(QMainWindow):
 
         self.left_panel = LeftPanel(self.main_widget)  # settings selector
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
-        room_settings: CentralWidgets.RoomSettings = self.center_panel.pages[CentralPanelTypes.RoomSettings]
         self.right_panel = RightPanel(self.main_widget)  # graphics
         self.log_panel = LogPanel(self.main_widget)  # log window
 
         self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
+        room_settings = self.center_panel.room_settings
         room_settings.settings_signal.connect(self.right_panel.scanner_widget.set_settings_from_dict)
-
         left_center_splitter = QSplitter(orientation=Qt.Orientation.Horizontal)
         left_center_splitter.insertWidget(0, self.left_panel)
         left_center_splitter.insertWidget(1, self.center_panel)

@@ -3,7 +3,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 from pathlib import Path
-from analyzator.rohde_schwarz.rohde_schwarz import RohdeSchwarzAnalyzator
+from src.analyzator.rohde_schwarz.rohde_schwarz import RohdeSchwarzAnalyzator
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

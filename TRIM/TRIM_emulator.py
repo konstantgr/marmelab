@@ -1,10 +1,10 @@
 import socket
-from src import Position, Velocity, Acceleration, Deceleration, BaseAxes
+from src.scanner import Position, Velocity, Acceleration, Deceleration, BaseAxes
 import threading
 import time
 from dataclasses import dataclass
 import dataclasses
-from typing import Union, List, Any, Iterable
+from typing import Union, Any, Iterable
 
 
 @dataclass

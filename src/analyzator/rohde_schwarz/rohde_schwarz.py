@@ -2,10 +2,10 @@ import socket
 import threading
 
 from typing import List, Union
-from analyzator.analyzator_parameters import (
+from src.analyzator.analyzator_parameters import (
     AnalyzatorType, ResultsFormatType, FrequencyParameters, SParameters, FrequencyTypes
 )
-from analyzator.base_analyzator import BaseAnalyzator, AnalyzatorConnectionError
+from src.analyzator.base_analyzator import BaseAnalyzator
 #from RsInstrument import *
 import numpy as np
 
