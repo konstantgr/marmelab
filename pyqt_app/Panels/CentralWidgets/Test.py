@@ -6,7 +6,6 @@ from src.analyzator.analyzator_parameters import FrequencyParameters, FrequencyT
 
 #import matplotlib.pyplot as plt
 
-
 class Test(QWidget):
     def __init__(self):
         super(Test, self).__init__()
