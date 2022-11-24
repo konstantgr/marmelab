@@ -2,7 +2,7 @@ import pyqtgraph.opengl as gl
 import pyqtgraph as pg
 import numpy as np
 from stl import mesh
-from src.scanner import BaseAxes
+from src.scanner.scanner import BaseAxes
 import os
 from PyQt6 import QtCore, QtGui
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
@@ -331,10 +331,10 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.addItem(linew)
 
         texts = [
-            TextItem([5, 5], f'x={self.scanner_pos.y}'),
-            TextItem([5, 5+1*16], f'y={self.scanner_pos.z}[mm]'),
-            TextItem([5, 5+2*16], f'z={self.scanner_pos.x}[mm]'),
-            TextItem([5, 5+3*16], f'w={self.scanner_pos.w}[mm]')
+            TextItem([5, 5], f'x = {self.scanner_pos.y} [mm]', font_size=12),
+            TextItem([5, 5+1*16], f'y = {self.scanner_pos.z} [mm]', font_size=12),
+            TextItem([5, 5+2*16], f'z = {self.scanner_pos.x} [mm]', font_size=12),
+            TextItem([5, 5+3*16], f'w = {self.scanner_pos.w} [rad]', font_size=12)
         ]
         for text in texts:
             self.addItem(text)

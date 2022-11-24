@@ -5,10 +5,10 @@ import collections
 import threading
 import time
 
-from src import Scanner, BaseAxes, Position, Velocity, Acceleration, Deceleration
-from src import ScannerConnectionError, ScannerInternalError, ScannerMotionError
+from src.scanner import Scanner, BaseAxes, Position, Velocity, Acceleration, Deceleration
+from src.scanner import ScannerConnectionError, ScannerInternalError, ScannerMotionError
 import socket
-from typing import Union, List, Iterator, Iterable
+from typing import Union, List, Iterable
 from dataclasses import fields
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 

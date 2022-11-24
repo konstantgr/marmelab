@@ -62,8 +62,9 @@ run(blocking=False)
 `
 
 Отправить команду на перемещение на новую точку:
+
 ```python
-from src import Position
+from src.scanner import Position
 
 new_position = Position(x=100, y=200)
 sc.goto(new_position)

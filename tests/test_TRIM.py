@@ -1,5 +1,4 @@
-import pytest
-from src import Velocity, Acceleration, Deceleration, Position, BaseAxes
+from src.scanner import Position, BaseAxes
 from TRIM import DEFAULT_SETTINGS, TRIMScanner
 from TRIM.TRIM import cmds_from_dict
 from TRIM.TRIM import AXES_SCALE
