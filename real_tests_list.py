@@ -2,9 +2,9 @@ import threading
 import time
 
 import TRIM
-import src
+import src.scanner
 from TRIM import TRIMScanner
-from src import Position
+from src.scanner import Position
 
 # TRIM_emulator.run(blocking=False, ip='127.0.0.1', port=9000, motion_time=5)
 # scanner = TRIMScanner(ip='127.0.0.1', port=9000)
@@ -65,7 +65,7 @@ def goto_and_func(x, func):
     th2.start()
     try:
         scanner.goto(new_pos)
-    except src.ScannerMotionError as e:
+    except scanner.ScannerMotionError as e:
         print(e)
     time.sleep(2)
     go[0] = False
