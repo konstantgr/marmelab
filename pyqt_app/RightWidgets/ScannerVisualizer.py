@@ -6,6 +6,7 @@ from src.scanner import BaseAxes
 import os
 from PyQt6 import QtCore, QtGui
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
+from typing import Union
 
 
 DEFAULT_SETTINGS = {
@@ -17,8 +18,11 @@ DEFAULT_SETTINGS = {
 
 
 def coords_to_GL_coords(func):
-    def wrapper(*args, x, y, z):
-        return func(*args, x=z, y=x, z=y)
+    def wrapper(self, x, y, z, w=None):
+        if w is not None:
+            return func(self, x=z, y=x, z=y, w=w)
+        else:
+            return func(self, x=z, y=x, z=y)
     return wrapper
 
 
@@ -75,6 +79,9 @@ class ScannerVisualizer(gl.GLViewWidget):
         points, faces = self._loadSTL(os.path.join(os.path.dirname(__file__), 'assets/cylinder.stl'))
         self.pillar_meshdata = gl.MeshData(vertexes=points, faces=faces)
 
+        points, faces = self._loadSTL(os.path.join(os.path.dirname(__file__), 'assets/cylinder.stl'))
+        self.point_meshdata = gl.MeshData(vertexes=points, faces=faces)
+
         self.setBackgroundColor(pg.mkColor('white'))
 
         self.opts['distance'] = 100*max([self.room_sizeX, self.room_sizeY, self.room_sizeZ])
@@ -89,6 +96,7 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.scanner_zone_items = self.draw_scanner_zone()
         self.scanner_items = self.draw_scanner()
         self.object_items = self.draw_object()
+        self.points_items = self.draw_points([], [], [], [])
         self.draw_text()
 
     @coords_to_GL_coords
@@ -352,7 +360,7 @@ class ScannerVisualizer(gl.GLViewWidget):
             smooth=True,
             drawFaces=True,
             color=pg.mkColor((100, 100, 100, 100)),
-            glOptions='translucent',  # translucent, opaque, additive
+            glOptions='opaque',  # translucent, opaque, additive
         )
         tt = np.eye(4)
         tt[3, 3] = 1
@@ -386,3 +394,46 @@ class ScannerVisualizer(gl.GLViewWidget):
         points = m.points.reshape(-1, 3)
         faces = np.arange(points.shape[0]).reshape(-1, 3)
         return points, faces
+
+    def draw_points(
+            self,
+            x: Union[list, np.array],
+            y: Union[list, np.array],
+            z: Union[list, np.array],
+            w: Union[list, np.array]
+    ):
+        assert len(x) == len(y) == len(z) == len(w)
+        objects = []
+        for i in range(len(x)):
+            object_point = gl.GLMeshItem(
+                meshdata=self.point_meshdata,
+                smooth=True,
+                drawFaces=True,
+                color=pg.mkColor((100, 100, 255, 100)),
+                glOptions='opaque',  # translucent, opaque, additive
+            )
+            tt = np.eye(4)
+            tt[3, 3] = 1
+            tt[0, 0] = 100
+            tt[1, 1] = 100
+            tt[2, 2] = 1000
+            tt[2, 3] = - 50 + z[i]
+            tt[1, 3] = y[i]
+            tt[0, 3] = x[i]
+            tr = pg.Transform3D(tt)
+            object_point.applyTransform(tr, True)
+            objects.append(object_point)
+            self.addItem(object_point)
+        return objects
+
+    @coords_to_GL_coords
+    def set_points(
+            self,
+            x: Union[list, np.array],
+            y: Union[list, np.array],
+            z: Union[list, np.array],
+            w: Union[list, np.array]
+    ):
+        for item in self.points_items:
+            self.removeItem(item)
+        self.points_items = self.draw_points(x, y, z, w)
