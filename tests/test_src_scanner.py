@@ -1,4 +1,4 @@
-from src import BaseAxes, Position, Velocity, Deceleration, Acceleration
+from src.scanner import BaseAxes, Position, Velocity, Deceleration, Acceleration
 from random import randint
 import dataclasses
 import pytest

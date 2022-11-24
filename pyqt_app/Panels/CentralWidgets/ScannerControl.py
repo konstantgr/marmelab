@@ -1,13 +1,13 @@
 from PyQt6.QtCore import Qt, QObject, QModelIndex
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSpinBox, QHBoxLayout, QTableWidget, QHeaderView, QTableView
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QSpinBox, QHBoxLayout, QHeaderView, QTableView
 from typing import List
 from pyqt_app import scanner
-from src.scanner_utils import f_abort, f_home, f_moving_along_x, f_moving_along_y, f_moving_along_z, f_moving_along_w
+from .scanner_utils import f_abort, f_home, f_moving_along_x, f_moving_along_y, f_moving_along_z, f_moving_along_w
 import numpy as np
-from src import Position
+from src.scanner import Position
 from .QSmartTable import QSmartTableModel, Variable, Length
-from typing import Union, Type, Any
-from PyQt6.QtGui import QColor, QValidator
+from typing import Any
+from PyQt6.QtGui import QColor
 import re
 
 

@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy, QTab
 
 from TRIM import DEFAULT_SETTINGS
 from pyqt_app import scanner
-from src import BaseAxes
+from src.scanner import BaseAxes
 
 
 class ScannerSettings(QWidget):
