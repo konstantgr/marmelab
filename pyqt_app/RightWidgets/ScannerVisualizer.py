@@ -4,7 +4,8 @@ import numpy as np
 from stl import mesh
 from src.scanner import BaseAxes
 import os
-from typing import Tuple
+from PyQt6 import QtCore, QtGui
+from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 
 
 DEFAULT_SETTINGS = {
@@ -25,6 +26,31 @@ def BaseAxes_to_GL_coords(func):
     def wrapper(_, axes: BaseAxes):
         return func(_, x=axes.z, y=axes.x, z=axes.y, w=axes.w)
     return wrapper
+
+
+class TextItem(GLGraphicsItem):
+    """Draws text in 3D."""
+
+    def __init__(self, pos: list[int, int], text: str, font_size: int = 16, color=QtCore.Qt.GlobalColor.black):
+        """All keyword arguments are passed to setData()"""
+        GLGraphicsItem.__init__(self)
+        self.pos = pos
+        self.color = color
+        self.text = text
+        self.font_size = font_size
+        self.font = QtGui.QFont('Helvetica', font_size)
+
+    def paint(self):
+        if len(self.text) < 1:
+            return
+        self.setupGLState()
+
+        painter = QtGui.QPainter(self.view())
+        painter.setPen(self.color)
+        painter.setFont(self.font)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
+        painter.drawText(self.pos[0], self.pos[1]+self.font_size, self.text)
+        painter.end()
 
 
 class ScannerVisualizer(gl.GLViewWidget):
@@ -54,7 +80,7 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.opts['distance'] = 100*max([self.room_sizeX, self.room_sizeY, self.room_sizeZ])
         self.opts['fov'] = 1
         self.setGeometry(400, 400, 400, 400)
-        self.pan(self.room_sizeX / 2, self.room_sizeY / 2, 0)
+        self.pan(self.room_sizeX / 2, self.room_sizeY / 2, self.room_sizeZ / 2)
 
         self.scanner_pos = BaseAxes(0, 0, 0, 0)
         self.object_pos = BaseAxes(self.room_sizeX/2, self.room_sizeY/2, self.room_sizeZ/2)
@@ -304,7 +330,16 @@ class ScannerVisualizer(gl.GLViewWidget):
         linew = gl.GLLinePlotItem(pos=pts, antialias=True, width=2, color=color2)
         self.addItem(linew)
 
-        return linex, liney, linez, linew, lineL
+        texts = [
+            TextItem([5, 5], f'x={self.scanner_pos.y}'),
+            TextItem([5, 5+1*16], f'y={self.scanner_pos.z}[mm]'),
+            TextItem([5, 5+2*16], f'z={self.scanner_pos.x}[mm]'),
+            TextItem([5, 5+3*16], f'w={self.scanner_pos.w}[mm]')
+        ]
+        for text in texts:
+            self.addItem(text)
+
+        return [linex, liney, linez, linew, lineL, *texts]
 
     def redraw_scanner(self):
         for item in self.scanner_items:
