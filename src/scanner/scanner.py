@@ -51,21 +51,6 @@ class BaseAxes:
     # f: float = None
     # g: float = None
 
-    def to_dict(self) -> dict[str:int]:
-        """
-        Перевод датакласса в словарь
-
-        :return: словарь с названием осей в ключах
-        """
-        return {
-            'x': self.x,
-            'y': self.y,
-            'z': self.z,
-            'w': self.w,
-            # 'e': self.e,
-            # 'f': self.f,
-            # 'g': self.g,
-        }
 
     def __add__(self, other):
         if not isinstance(other, BaseAxes):

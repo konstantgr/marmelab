@@ -1,6 +1,6 @@
 from src.scanner import Position, BaseAxes
 from TRIM import DEFAULT_SETTINGS, TRIMScanner
-from TRIM.TRIM import cmds_from_dict
+from TRIM.TRIM import cmds_from_axes
 from TRIM.TRIM import AXES_SCALE
 from random import randint
 import dataclasses
@@ -9,15 +9,14 @@ import dataclasses
 def test_cmds_from_dict():
     x = 123
     y = 342
-    res = cmds_from_dict({'x': x, 'y': y}, 'CMD')
+    res = cmds_from_axes(BaseAxes(x=x, y=y), 'CMD')
     assert res == [f'XCMD={int(x * AXES_SCALE.x)}', f'YCMD={int(y * AXES_SCALE.y)}']
-    res = cmds_from_dict({'x': x, 'y': y}, 'CMD', val=False)
+    res = cmds_from_axes(BaseAxes(x=x, y=y), 'CMD', val=False)
     assert res == [f'XCMD', f'YCMD']
 
-    y = None
-    res = cmds_from_dict({'x': x, 'y': y}, 'CMD')
+    res = cmds_from_axes(BaseAxes(x=x), 'CMD')
     assert res == [f'XCMD={int(x * AXES_SCALE.x)}']
-    res = cmds_from_dict({'x': x, 'y': y}, 'CMD', val=False)
+    res = cmds_from_axes(BaseAxes(x=x), 'CMD', val=False)
     assert res == [f'XCMD']
 
 
@@ -51,8 +50,8 @@ def test_set_settings(TRIM_Scanner_emulator: TRIMScanner):
         }
     }.items():
         TRIM_Scanner_emulator.set_settings(**value)
-        d = value.popitem()[1].to_dict()
-        s = setting().to_dict()
+        d = dataclasses.asdict(value.popitem()[1])
+        s = dataclasses.asdict(setting())
         assert all([s[key] == d[key] for key in d.keys() if d[key] is not None])
 
     # тест motor_on, motion_mode, special_motion_mode

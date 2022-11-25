@@ -9,11 +9,9 @@ from src.scanner import Scanner, BaseAxes, Position, Velocity, Acceleration, Dec
 from src.scanner import ScannerConnectionError, ScannerInternalError, ScannerMotionError
 import socket
 from typing import Union, List, Iterable
-from dataclasses import fields
+from dataclasses import fields, astuple
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 
-
-# TODO: поменять cmd_from_dict на cmd_from_axes
 
 STEPS_PER_MM_X = 8192
 STEPS_PER_MM_Y = 5120
@@ -28,23 +26,26 @@ AXES_SCALE = BaseAxes(
 )
 
 
-def cmds_from_dict(dct: dict[str:float], basecmd: str, val: bool = True, scale: bool = True) -> List[str]:
+def cmds_from_axes(axes: BaseAxes, basecmd: str, val: bool = True, scale: bool = True) -> List[str]:
     """
-    Переводит словарь {X: V} в 'X<basecmd>=V', но только если V не None.
-    Пример: {'x': 100, 'y': None} при basecmd='PS' получаем ['XPS=100'].
+    Переводит BaseAxes(x=V) в 'X<basecmd>=V', но только если V не None.
+    Пример: BaseAxes(x=100, y=None) при basecmd='PS' получаем ['XPS=100'].
     Если val=False, то получим команды без '=V': ['XPS']
 
-    :param dct: словарь
+    :param axes: экземпляр BaseAxes
     :param basecmd: суффикс команды
     :param val: требуется ли указывать значение в команде
     :param scale: требуется ли преобразовать мм в шаги
     :return:
     """
     cmds = []
-    for axis, value in dct.items():
+    for field in fields(axes):
+        axis = field.name
+        value = axes.__getattribute__(axis)
+        scale_val = AXES_SCALE.__getattribute__(axis)
         if value is not None:
             if val:
-                cmd_value = int(value * AXES_SCALE.to_dict()[axis]) if scale else int(value)
+                cmd_value = int(value * scale_val) if scale else int(value)
                 cmds.append(f'{axis.upper()}{basecmd}={cmd_value}')
             else:
                 cmds.append(f'{axis.upper()}{basecmd}')
@@ -328,19 +329,19 @@ class TRIMScanner(Scanner):
         """
         cmds = []
         if position is not None:
-            cmds += cmds_from_dict(position.to_dict(), basecmd='PS')
+            cmds += cmds_from_axes(position, basecmd='PS')
         if velocity is not None:
-            cmds += cmds_from_dict(velocity.to_dict(), basecmd='SP')
+            cmds += cmds_from_axes(velocity, basecmd='SP')
         if acceleration is not None:
-            cmds += cmds_from_dict(acceleration.to_dict(), basecmd='AC')
+            cmds += cmds_from_axes(acceleration, basecmd='AC')
         if deceleration is not None:
-            cmds += cmds_from_dict(deceleration.to_dict(), basecmd='DC')
+            cmds += cmds_from_axes(deceleration, basecmd='DC')
         if motion_mode is not None:
-            cmds += cmds_from_dict(motion_mode.to_dict(), basecmd='MM', scale=False)
+            cmds += cmds_from_axes(motion_mode, basecmd='MM', scale=False)
         if special_motion_mode is not None:
-            cmds += cmds_from_dict(special_motion_mode.to_dict(), basecmd='SM', scale=False)
+            cmds += cmds_from_axes(special_motion_mode, basecmd='SM', scale=False)
         if motor_on is not None:
-            cmds += cmds_from_dict(motor_on.to_dict(), basecmd='MO', scale=False)
+            cmds += cmds_from_axes(motor_on, basecmd='MO', scale=False)
         self._send_cmds(cmds)
         if position is not None:
             self.position_signal[type(position)].emit(position)
@@ -410,15 +411,15 @@ class TRIMScanner(Scanner):
     def _parse_A_res(res: str, scale=True) -> Union[Iterable[int], Iterable[float]]:
         """
         Принимает строку "1,2,10" и преобразует в кортеж целых чисел (1, 2, 10).
-        Если scale=True, переводит шаги в мм
+        Если scale=True, переводит шаги в мм и радианы
 
         :param res: строка целых чисел, разделенных запятой
-        :param scale: переводить ли число в мм
+        :param scale: переводить ли число в мм и радианы
         :return: кортеж
         """
         if not scale:
             return (int(v) for v in res.split(','))
-        return (int(v) / axis_scale for v, axis_scale in zip(res.split(','), AXES_SCALE.to_dict().values()))
+        return (int(v) / axis_scale for v, axis_scale in zip(res.split(','), astuple(AXES_SCALE)))
 
     def _is_stopped(self) -> bool:
         """
@@ -451,8 +452,8 @@ class TRIMScanner(Scanner):
 
     @_motion_decorator
     def goto(self, position: Position) -> None:
-        cmds = cmds_from_dict(position.to_dict(), 'AP')
-        cmds += cmds_from_dict(position.to_dict(), 'BG', val=False, scale=False)
+        cmds = cmds_from_axes(position, 'AP')
+        cmds += cmds_from_axes(position, 'BG', val=False, scale=False)
         action_description = f'the motion to {position}'
         self._begin_motion_and_wait(cmds, action_description)
 
