@@ -19,7 +19,9 @@ class GraphWidget(QWidget):
         self.graph_widget.plot(*self.obained_data())
 
     def obained_data(self):
-        data = pd.read_excel('data.xlsx', dtype={'X': float, 'Y': float})
-        x = data['X']
-        y = data['Y']
+        # data = pd.read_excel('data.xlsx', dtype={'X': float, 'Y': float})
+        # x = data['X']
+        # y = data['Y']
+        x = [123, 124]
+        y = [3, 4]
         return x, y

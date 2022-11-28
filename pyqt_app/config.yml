@@ -1,0 +1,6 @@
+scanner:
+  ip: 127.0.0.1
+  port: 9010
+analyzer:
+  ip: 172.16.22.182
+  port: 5025

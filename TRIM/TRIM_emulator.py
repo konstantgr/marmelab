@@ -170,7 +170,7 @@ def emulator(ip="127.0.0.1", port=9000, motion_time: int = 5):
                 conn.sendall(new_data)
 
 
-def run(blocking=True, ip="127.0.0.1", port=9000, motion_time=5):
+def run(blocking=True, ip="127.0.0.1", port=9010, motion_time=5):
     server_thread = threading.Thread(target=emulator, args=(ip, port, motion_time))
     print('Starting server')
     server_thread.start()

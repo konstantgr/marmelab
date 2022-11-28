@@ -6,8 +6,9 @@ from src.analyzator.analyzator_parameters import (
     AnalyzatorType, ResultsFormatType, FrequencyParameters, SParameters, FrequencyTypes
 )
 from src.analyzator.base_analyzator import BaseAnalyzator
-#from RsInstrument import *
+from RsInstrument import RsInstrument
 import numpy as np
+
 
 class RohdeSchwarzAnalyzator(BaseAnalyzator):
     analyzator_type = AnalyzatorType.ROHDE_SCHWARZ

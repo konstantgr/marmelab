@@ -1,5 +1,5 @@
 from TRIM.TRIM_emulator import run  # use it only for emulating
-from pyqt_app import scanner
+from pyqt_app import scanner, analyzator
 import logging
 logger = logging.getLogger()
 
@@ -9,8 +9,12 @@ def f_connection():
     This function makes connection to the scanner
     """
     run(blocking=False, motion_time=2)  # use it only for emulating
-    scanner.connect()
-    logger.info('Scanner is connected')
+    try:
+        scanner.connect()
+        analyzator.connect()
+    except Exception as e:
+        logger.error(e)
+    logger.info('Scanner and analyzer are connected')
 
 
 def f_default():
@@ -85,7 +89,7 @@ def f_home():
     """
     from src.scanner import Position
     scanner.home()
-    scanner.set_settings(position=Position(0, 0, 0, 0))
+    scanner.set_settings(position=Position(2262.92, 2137.09, 0, 0))
     logger.debug("Scanner at home. Scanner position is:")
     current_position = scanner.position()
     logger.debug('x: ', current_position.x)
