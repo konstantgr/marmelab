@@ -102,40 +102,40 @@ class ScannerControl(QWidget):
         self.Z_coord.setText("Z = ")
         self.w_coord.setText("w = ")
 
-        arrow_window_x = QSpinBox(self)  # ввод координаты
-        arrow_window_y = QSpinBox(self)  # ввод координаты
-        arrow_window_z = QSpinBox(self)  # ввод координаты
-        arrow_window_w = QSpinBox(self)  # ввод координаты
+        self.arrow_window_x = QSpinBox(self)  # ввод координат
+        self.arrow_window_y = QSpinBox(self)  # ввод координаты
+        self.arrow_window_z = QSpinBox(self)  # ввод координаты
+        self.arrow_window_w = QSpinBox(self)  # ввод координаты
 
-        arrow_window_x.setRange(-1000, 1000)
-        arrow_window_y.setRange(-1000, 1000)
-        arrow_window_z.setRange(-1000, 1000)
-        arrow_window_w.setRange(-1000, 1000)
+        self.arrow_window_x.setRange(-1000, 1000)
+        self.arrow_window_y.setRange(-1000, 1000)
+        self.arrow_window_z.setRange(-1000, 1000)
+        self.arrow_window_w.setRange(-1000, 1000)
 
         # создание горизонтального слоя внутри вертикального для окна с выбором значения координаты и
         # кнопки перемещения по оси х по заданной координате
         layout_x = QHBoxLayout()
         widget_x = QWidget()
         widget_x.setLayout(layout_x)
-        layout_x.addWidget(arrow_window_x)
+        layout_x.addWidget(self.arrow_window_x)
         layout_x.addWidget(button_x)
 
         layout_y = QHBoxLayout()
         widget_y = QWidget()
         widget_y.setLayout(layout_y)
-        layout_y.addWidget(arrow_window_y)
+        layout_y.addWidget(self.arrow_window_y)
         layout_y.addWidget(button_y)
 
         layout_z = QHBoxLayout()
         widget_z = QWidget()
         widget_z.setLayout(layout_z)
-        layout_z.addWidget(arrow_window_z)
+        layout_z.addWidget(self.arrow_window_z)
         layout_z.addWidget(button_z)
 
         layout_w = QHBoxLayout()
         widget_w = QWidget()
         widget_w.setLayout(layout_w)
-        layout_w.addWidget(arrow_window_w)
+        layout_w.addWidget(self.arrow_window_w)
         layout_w.addWidget(button_w)
 
         # создание горизонтального слоя внутри вертикального для помещения туда таблицы и кнопок пуск и аборт
@@ -184,11 +184,41 @@ class ScannerControl(QWidget):
         button_current_pos.clicked.connect(scanner.position)
         scanner.position_signal.connect(self.update_currrent_position)
         button_home.clicked.connect(f_home)
-        button_x.clicked.connect(lambda x: f_moving_along_x(arrow_window_x.value()))
-        button_y.clicked.connect(lambda x: f_moving_along_y(arrow_window_y.value()))
-        button_z.clicked.connect(lambda x: f_moving_along_z(arrow_window_z.value()))
-        button_w.clicked.connect(lambda x: f_moving_along_w(arrow_window_w.value()))
+
+        button_x.clicked.connect(self.button_x_click)
+        button_y.clicked.connect(self.button_y_click)
+        button_z.clicked.connect(self.button_z_click)
+        button_w.clicked.connect(self.button_w_click)
         button_go.clicked.connect(self.go_table)
+
+    def button_x_click(self):
+        """
+        передача аргументов в фукцию, перемещающую сканер по оси х
+        :return:
+        """
+        f_moving_along_x(self.arrow_window_x.value())
+
+    def button_y_click(self):
+        """
+        передача аргументов в фукцию, перемещающую сканер по оси y
+        :return:
+        """
+        f_moving_along_y(format(self.arrow_window_y.text()))
+
+    def button_z_click(self):
+        """
+        передача аргументов в фукцию, перемещающую сканер по оси z
+        :return:
+        """
+        f_moving_along_z(format(self.arrow_window_z.text()))
+
+    def button_w_click(self):
+        """
+        передача аргументов в фукцию, перемещающую сканер по оси y
+        :return:
+        """
+        f_moving_along_w(format(self.arrow_window_w.text()))
+
 
     def params_to_linspace(self):
         lst_x = []
