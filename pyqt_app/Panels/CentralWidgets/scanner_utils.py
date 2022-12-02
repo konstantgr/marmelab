@@ -10,7 +10,9 @@ def f_connection():
     """
     run(blocking=False, motion_time=2)  # use it only for emulating
     scanner.connect()
+
     logger.info('Scanner is connected')
+
 
 
 def f_default():

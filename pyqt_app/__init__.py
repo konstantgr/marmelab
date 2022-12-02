@@ -20,3 +20,6 @@ logs_path = os.path.join(logs_folder_path, 'logs.txt')
 fh = RotatingFileHandler(logs_path, maxBytes=1048576, backupCount=10, encoding='utf-8')
 fh.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s]: %(message)s'))
 logger.addHandler(fh)
+
+
+

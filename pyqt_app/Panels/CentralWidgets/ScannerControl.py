@@ -203,21 +203,21 @@ class ScannerControl(QWidget):
         передача аргументов в фукцию, перемещающую сканер по оси y
         :return:
         """
-        f_moving_along_y(format(self.arrow_window_y.text()))
+        f_moving_along_y(self.arrow_window_y.text())
 
     def button_z_click(self):
         """
         передача аргументов в фукцию, перемещающую сканер по оси z
         :return:
         """
-        f_moving_along_z(format(self.arrow_window_z.text()))
+        f_moving_along_z(self.arrow_window_z.text())
 
     def button_w_click(self):
         """
         передача аргументов в фукцию, перемещающую сканер по оси y
         :return:
         """
-        f_moving_along_w(format(self.arrow_window_w.text()))
+        f_moving_along_w(self.arrow_window_w.text())
 
 
     def params_to_linspace(self):

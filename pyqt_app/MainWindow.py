@@ -1,18 +1,8 @@
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter, QStatusBar
 from PyQt6.QtCore import Qt
 from Panels import *
 
-# TODO: сделать вывод логов в файл
-# TODO: Изменить таблицу сканнер сеттингс
-# TODO: Реализация таблицы сканнер контрол (добавить пока что хождение по точкам)
-# TODO: ТАблица с настройками объекта и комнаты в рум сеттингс
-# TODO: добавить вкладку с настройками комнаты (таблица/поля, размер комнаты в метрах (x, y ,z),
-#  область сканирования (x, y, z) и ее пространственная ориенатция (x, y, z), кнопка apply(pass) )
-# TODO: убрать лямбда функции
 # TODO: вкладка Next --> Test. реализация кнопки Go, которая измеряет и выдает данные
-# TODO: ПОСЛЕ ЧЕТВЕРГА
-# TODO: добавить в таблицу ск. контролл измерение и запись данных
-# TODO: аналогично во вкладке тест
 
 
 
@@ -27,7 +17,9 @@ class MainWindow(QMainWindow):
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
         self.right_panel = RightPanel(self.main_widget)  # graphics
         self.log_panel = LogPanel(self.main_widget)  # log window
-
+        self.bar = QStatusBar()
+        self.bar_status = "disconnected"
+        self.bar.showMessage("Scanner status: " + self.bar_status)
         self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
         room_settings = self.center_panel.room_settings
         room_settings.settings_signal.connect(self.right_panel.scanner_widget.set_settings_from_dict)
@@ -42,22 +34,28 @@ class MainWindow(QMainWindow):
         log_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
         log_splitter.insertWidget(0, left_center_splitter)
         log_splitter.insertWidget(1, self.log_panel)
+        log_splitter.insertWidget(2, self.bar)  # статус бар состояния сканера
         log_splitter.setStretchFactor(0, 4)
         log_splitter.setStretchFactor(1, 1)
         log_splitter.setCollapsible(0, False)
         log_splitter.setCollapsible(1, False)
 
+
         main_splitter = QSplitter(orientation=Qt.Orientation.Horizontal)
         main_splitter.insertWidget(0, log_splitter)
         main_splitter.insertWidget(1, self.right_panel)
+
+
+
 
         main_splitter.setStretchFactor(0, 1)
         main_splitter.setStretchFactor(1, 1)
         main_splitter.setCollapsible(0, False)
         main_splitter.setCollapsible(1, False)
 
-        hbox.addWidget(main_splitter)
 
+        hbox.addWidget(main_splitter)
         self.setGeometry(300, 300, 450, 400)
         self.setWindowTitle('Scanner control')
         self.setCentralWidget(self.main_widget)
+
