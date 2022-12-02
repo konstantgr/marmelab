@@ -1,9 +1,8 @@
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter, QStatusBar
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter
 from PyQt6.QtCore import Qt
 from Panels import *
 
 # TODO: вкладка Next --> Test. реализация кнопки Go, которая измеряет и выдает данные
-
 
 
 class MainWindow(QMainWindow):
@@ -17,9 +16,9 @@ class MainWindow(QMainWindow):
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
         self.right_panel = RightPanel(self.main_widget)  # graphics
         self.log_panel = LogPanel(self.main_widget)  # log window
-        self.bar = QStatusBar()
-        self.bar_status = "disconnected"
-        self.bar.showMessage("Scanner status: " + self.bar_status)
+        self.bar_panel = BarPanel(self.main_widget)  # bar window
+        self.bar_panel.bar.showMessage("Scanner status: ")  # не работает
+
         self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
         room_settings = self.center_panel.room_settings
         room_settings.settings_signal.connect(self.right_panel.scanner_widget.set_settings_from_dict)
@@ -34,7 +33,7 @@ class MainWindow(QMainWindow):
         log_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
         log_splitter.insertWidget(0, left_center_splitter)
         log_splitter.insertWidget(1, self.log_panel)
-        log_splitter.insertWidget(2, self.bar)  # статус бар состояния сканера
+        log_splitter.insertWidget(2, self.bar_panel)  # статус бар состояния сканера
         log_splitter.setStretchFactor(0, 4)
         log_splitter.setStretchFactor(1, 1)
         log_splitter.setCollapsible(0, False)
