@@ -6,11 +6,10 @@ from src.analyzator.analyzator_parameters import (
     AnalyzatorType, ResultsFormatType, FrequencyParameters, SParameters, FrequencyTypes
 )
 from src.analyzator.base_analyzator import BaseAnalyzator
-import RsInstrument
 import numpy as np
 
 
-class RohdeSchwarzAnalyzator(BaseAnalyzator):
+class RohdeSchwarzEmulator(BaseAnalyzator):
     analyzator_type = AnalyzatorType.ROHDE_SCHWARZ
 
     def __init__(
@@ -41,21 +40,15 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
             self.instrument.write_str_with_opc(cmd)
 
     def set_settings(self, channel: int, settings: FrequencyParameters) -> None:
-        self._send_cmd(f'SENSe{channel}:FREQuency:STARt {settings.start}{settings.frequency_type}')
-        self._send_cmd(f'SENSe{channel}:FREQuency:STOP {settings.stop}{settings.frequency_type}')
-        self._send_cmd(f'SENSe{channel}:SWEep:POINts {settings.num_points}')
         self.settings = settings
 
     def connect(self) -> None:
-        resource = f'TCPIP::{self.ip}::{self.port}::SOCKET'  # VISA resource string for the device
-        self.instrument = RsInstrument.RsInstrument(resource, True, True, "SelectVisa='socket'")
         self.is_connected = True
 
     def disconnect(self) -> None:
         if not self.is_connected:
             return
         try:
-            self.instrument.close()
             self.is_connected = False
         except Exception as e:
             return
@@ -75,16 +68,11 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
         channel = 1
         self.set_settings(channel=channel, settings=frequency_parameters)
 
+        freq_tup = tuple(np.zeros(frequency_parameters.num_points))
+        res[f'f'] = np.array(freq_tup).astype(float)
+
         for num, S_param in enumerate(parameters):
-            num += 1
-            self._send_cmd(f'CALC{channel}:PAR:SDEF "Trc{num}", "{S_param}"')
-            trace_data = self._send_cmd(f'CALC{channel}:DATA? FDAT')
-            trace_tup = tuple(map(str, trace_data.split(',')))
-
-            freq_list = self._send_cmd(f'CALC{channel}:DATA:STIM?')
-            freq_tup = tuple(map(str, freq_list.split(',')))
-
-            res[f'f'] = np.array(freq_tup).astype(float)
+            trace_tup = tuple(np.zeros(frequency_parameters.num_points))
             res[f'{S_param}'] = np.array(trace_tup).astype(float)
 
         return res
@@ -97,7 +85,7 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
 
 
 if __name__ == "__main__":
-    analyzator = RohdeSchwarzAnalyzator(
+    analyzator = RohdeSchwarzEmulator(
         ip="172.16.22.182",
         port="5025"
     )

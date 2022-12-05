@@ -85,7 +85,7 @@ def f_home():
     """
     from src.scanner import Position
     scanner.home()
-    scanner.set_settings(position=Position(0, 0, 0, 0))
+    scanner.set_settings(,,
     logger.debug("Scanner at home. Scanner position is:")
     current_position = scanner.position()
     logger.debug('x: ', current_position.x)

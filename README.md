@@ -70,10 +70,11 @@ new_position = Position(x=100, y=200)
 sc.goto(new_position)
 ```
 Передать дефолтные настройки
+
 ```python
 from TRIM import DEFAULT_SETTINGS
 
-sc.set_settings(DEFAULT_SETTINGS)
+sc.set_settings(DEFAULT_SETTINGS, )
 ```
 
 Узнать координаты сканера
