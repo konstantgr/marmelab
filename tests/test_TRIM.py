@@ -1,7 +1,7 @@
 from src.scanner import Position, BaseAxes
-from TRIM import DEFAULT_SETTINGS, TRIMScanner
-from TRIM.TRIM import cmds_from_axes
-from TRIM.TRIM import AXES_SCALE
+from src.scanner.TRIM import DEFAULT_SETTINGS, TRIMScanner
+from src.scanner.TRIM.TRIM import cmds_from_axes
+from src.scanner.TRIM.TRIM import AXES_SCALE
 from random import randint
 import dataclasses
 

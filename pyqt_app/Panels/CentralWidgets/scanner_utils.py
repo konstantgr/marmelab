@@ -1,4 +1,4 @@
-from TRIM.TRIM_emulator import run  # use it only for emulating
+from src.scanner.TRIM.TRIM_emulator import run  # use it only for emulating
 from pyqt_app import scanner
 import logging
 logger = logging.getLogger()

@@ -1,4 +1,4 @@
-from TRIM import TRIMScanner
+from src.scanner.TRIM import TRIMScanner
 import logging
 from logging.handlers import RotatingFileHandler
 import os

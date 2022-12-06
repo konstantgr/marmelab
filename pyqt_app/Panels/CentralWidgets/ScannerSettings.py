@@ -1,7 +1,7 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QSizePolicy, QTableWidget, QHeaderView, QTableWidgetItem
 
-from TRIM import DEFAULT_SETTINGS
+from src.scanner.TRIM import DEFAULT_SETTINGS
 from pyqt_app import scanner
 from src.scanner import BaseAxes
 
