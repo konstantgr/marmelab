@@ -581,6 +581,7 @@ class TRIMScanner(Scanner):
         # возвращаем point-to-point режим работы
         self.set_settings(**PTP_MODE_SETTINGS)
 
+        time.sleep(1)
         stop_reasons = list(self._end_of_motion_reason())
         if not (stop_reasons[0] == stop_reasons[1] == stop_reasons[2] == 2):
             raise scanner_motion_error(action_description, stop_reasons)
