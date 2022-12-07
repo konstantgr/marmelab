@@ -7,10 +7,10 @@ import time
 
 from src.scanner import Scanner, BaseAxes, Position, Velocity, Acceleration, Deceleration
 from src.scanner import ScannerConnectionError, ScannerInternalError, ScannerMotionError
+from src.scanner import ScannerSignals
 import socket
 from typing import Union, List, Iterable
 from dataclasses import fields, astuple
-from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 
 
 STEPS_PER_MM_X = 8192
@@ -241,16 +241,6 @@ def _motion_decorator(func):
     return wrapper
 
 
-class ScannerSignals(QObject):
-    """
-    Класс сигналов для сканера
-    """
-    position_signal: pyqtBoundSignal = pyqtSignal([BaseAxes], [Position])
-    velocity_signal: pyqtBoundSignal = pyqtSignal([BaseAxes], [Velocity])
-    acceleration_signal: pyqtBoundSignal = pyqtSignal([BaseAxes], [Acceleration])
-    deceleration_signal: pyqtBoundSignal = pyqtSignal([BaseAxes], [Deceleration])
-
-
 class TRIMScanner(Scanner):
     """
     Класс сканера
@@ -261,6 +251,7 @@ class TRIMScanner(Scanner):
             port: Union[str, int],
             bufsize: int = 1024,
             maxbufs: int = 1024,
+            signals: ScannerSignals = None
     ):
         """
 
@@ -282,7 +273,7 @@ class TRIMScanner(Scanner):
         self.is_connected = False
         self._velocity = Velocity()
 
-        self._signals = ScannerSignals()
+        self._signals = signals
 
     def connect(self) -> None:
         if self.is_connected:
@@ -587,17 +578,17 @@ class TRIMScanner(Scanner):
             raise scanner_motion_error(action_description, stop_reasons)
 
     @property
-    def position_signal(self) -> pyqtBoundSignal:
+    def position_signal(self):
         return self._signals.position_signal
 
     @property
-    def velocity_signal(self) -> pyqtBoundSignal:
+    def velocity_signal(self):
         return self._signals.velocity_signal
 
     @property
-    def acceleration_signal(self) -> pyqtBoundSignal:
+    def acceleration_signal(self):
         return self._signals.acceleration_signal
 
     @property
-    def deceleration_signal(self) -> pyqtBoundSignal:
+    def deceleration_signal(self):
         return self._signals.deceleration_signal

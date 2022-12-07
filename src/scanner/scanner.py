@@ -2,10 +2,11 @@
 Базовые классы для управления сканером
 """
 import dataclasses
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractclassmethod
 from dataclasses import dataclass
 from numbers import Number
-from PyQt6.QtCore import pyqtBoundSignal
+from typing import TypeVar, Union
+from src import EmptySignal
 
 
 class ScannerConnectionError(Exception):
@@ -128,6 +129,20 @@ class Deceleration(BaseAxes):
     """
 
 
+class ScannerSignals(metaclass=ABCMeta):
+    """
+    Базовые сигналы сканера
+    """
+    @classmethod
+    @property
+    @abstractmethod
+    def position(cls) -> EmptySignal:
+    position: EmptySignal
+    velocity: EmptySignal
+    acceleration: EmptySignal
+    deceleration: EmptySignal
+
+
 class Scanner(metaclass=ABCMeta):
     """
     Базовый класс сканера
@@ -227,40 +242,4 @@ class Scanner(metaclass=ABCMeta):
         Перемещение сканера домой.
         Является thread safe и обрабатывается аналогично goto().
 
-        """
-
-    @property
-    @abstractmethod
-    def position_signal(self) -> pyqtBoundSignal:
-        """
-        Сигнал, в который передается положение сканера
-
-        :return: pyqtSignal(Position)
-        """
-
-    @property
-    @abstractmethod
-    def velocity_signal(self) -> pyqtBoundSignal:
-        """
-        Сигнал, в который передается скорость сканера
-
-        :return: pyqtSignal(Velocity)
-        """
-
-    @property
-    @abstractmethod
-    def acceleration_signal(self) -> pyqtBoundSignal:
-        """
-        Сигнал, в который передается ускорение сканера
-
-        :return: pyqtSignal(Acceleration)
-        """
-
-    @property
-    @abstractmethod
-    def deceleration_signal(self) -> pyqtBoundSignal:
-        """
-        Сигнал, в который передается замедление сканера
-
-        :return: pyqtSignal(Deceleration)
         """
