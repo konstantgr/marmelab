@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QListWidget, QHBoxLayout, QSizePolicy
 from .BasePanel import BasePanel
 from .CentralPanel import CentralPanelTypes
 
+
 class LeftPanel(BasePanel):
     """
     This class makes widgets on the left panel

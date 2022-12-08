@@ -1,6 +1,6 @@
 class EmptySignal:
     """
-    Реализация пустого сигнала по аналогии с PyQt
+    Реализация пустого сигнала
     """
     def emit(self, *args, **kwargs):
         pass

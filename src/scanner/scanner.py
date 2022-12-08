@@ -2,10 +2,9 @@
 Базовые классы для управления сканером
 """
 import dataclasses
-from abc import ABCMeta, abstractmethod, abstractclassmethod
+from abc import ABCMeta, abstractmethod, ABC
 from dataclasses import dataclass
 from numbers import Number
-from typing import TypeVar, Union
 from src import EmptySignal
 
 
@@ -51,7 +50,6 @@ class BaseAxes:
     # e: float = None
     # f: float = None
     # g: float = None
-
 
     def __add__(self, other):
         if not isinstance(other, BaseAxes):
@@ -133,14 +131,34 @@ class ScannerSignals(metaclass=ABCMeta):
     """
     Базовые сигналы сканера
     """
-    @classmethod
+
     @property
     @abstractmethod
-    def position(cls) -> EmptySignal:
-    position: EmptySignal
-    velocity: EmptySignal
-    acceleration: EmptySignal
-    deceleration: EmptySignal
+    def position(self) -> EmptySignal:
+        """
+        Сигнал с позицией сканера
+        """
+
+    @property
+    @abstractmethod
+    def velocity(self) -> EmptySignal:
+        """
+        Сигнал со скоростью сканера
+        """
+
+    @property
+    @abstractmethod
+    def acceleration(self) -> EmptySignal:
+        """
+        Сигнал с ускорением сканера
+        """
+
+    @property
+    @abstractmethod
+    def deceleration(self) -> EmptySignal:
+        """
+        Сигнал с замедлением сканера
+        """
 
 
 class Scanner(metaclass=ABCMeta):
@@ -152,8 +170,7 @@ class Scanner(metaclass=ABCMeta):
     def goto(self, position: Position) -> None:
         """
         Переместиться в точку point.
-        Является thread safe!
-        Однако, команда stop будет действовать только на первый из потоков в очереди.
+        Обязан быть thread safe!
 
         :param position: то, куда необходимо переместиться
         :type position: Position
@@ -242,4 +259,14 @@ class Scanner(metaclass=ABCMeta):
         Перемещение сканера домой.
         Является thread safe и обрабатывается аналогично goto().
 
+        """
+
+    @abstractmethod
+    def set_settings(self, *args, **kwargs) -> None:
+        """
+        Применение настроек
+
+        :param args:
+        :param kwargs:
+        :return:
         """

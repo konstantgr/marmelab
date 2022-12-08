@@ -8,6 +8,7 @@ import time
 from src.scanner import Scanner, BaseAxes, Position, Velocity, Acceleration, Deceleration
 from src.scanner import ScannerConnectionError, ScannerInternalError, ScannerMotionError
 from src.scanner import ScannerSignals
+from src import EmptySignal
 import socket
 from typing import Union, List, Iterable
 from dataclasses import fields, astuple
@@ -241,6 +242,13 @@ def _motion_decorator(func):
     return wrapper
 
 
+class TRIMScannerSignals(ScannerSignals):
+    position = EmptySignal()
+    velocity = EmptySignal()
+    acceleration = EmptySignal()
+    deceleration = EmptySignal()
+
+
 class TRIMScanner(Scanner):
     """
     Класс сканера
@@ -273,7 +281,10 @@ class TRIMScanner(Scanner):
         self.is_connected = False
         self._velocity = Velocity()
 
-        self._signals = signals
+        if signals is not None:
+            self._signals = signals
+        else:
+            self._signals = TRIMScannerSignals()
 
     def connect(self) -> None:
         if self.is_connected:
@@ -579,16 +590,16 @@ class TRIMScanner(Scanner):
 
     @property
     def position_signal(self):
-        return self._signals.position_signal
+        return self._signals.position
 
     @property
     def velocity_signal(self):
-        return self._signals.velocity_signal
+        return self._signals.velocity
 
     @property
     def acceleration_signal(self):
-        return self._signals.acceleration_signal
+        return self._signals.acceleration
 
     @property
     def deceleration_signal(self):
-        return self._signals.deceleration_signal
+        return self._signals.deceleration
