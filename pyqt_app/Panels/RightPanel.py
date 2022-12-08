@@ -2,7 +2,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QVBoxLayout, QSizePolicy, QSplitter
 
 from .BasePanel import BasePanel
-from src.Project import PScannerVisualizer, PAnalyzerVisualizer
+from src.project import PScannerVisualizer, PAnalyzerVisualizer
 
 
 class RightPanel(BasePanel):

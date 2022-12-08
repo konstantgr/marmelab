@@ -3,8 +3,10 @@ import pyqtgraph as pg
 import numpy as np
 from stl import mesh
 from src.scanner.scanner import BaseAxes
+from src.project import PScanner, PScannerVisualizer, PWidget
 import os
 from PyQt6 import QtCore, QtGui
+from PyQt6.QtWidgets import QWidget, QTextEdit
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 from typing import Union
 
@@ -58,8 +60,8 @@ class TextItem(GLGraphicsItem):
 
 
 class ScannerVisualizer(gl.GLViewWidget):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, scanner: PScanner, **kwargs):
+        super().__init__(**kwargs)
         self.room_sizeX = 5000  # mm
         self.room_sizeY = 3000  # mm
         self.room_sizeZ = 3000  # mm
@@ -98,6 +100,8 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.object_items = self.draw_object()
         self.points_items = self.draw_points([], [], [], [])
         self.draw_text()
+
+        scanner.signals.position.connect(self.set_scanner_pos)
 
     @coords_to_GL_coords
     def set_room_size(self, x: float, y: float, z: float):
@@ -437,3 +441,31 @@ class ScannerVisualizer(gl.GLViewWidget):
         for item in self.points_items:
             self.removeItem(item)
         self.points_items = self.draw_points(x, y, z, w)
+
+
+class Settings(QTextEdit):
+    def __init__(self):
+        super(Settings, self).__init__()
+        self.setText('Scanner Visualizer Settings')
+
+
+class PScannerVisualizer3D(PScannerVisualizer):
+    def __init__(
+            self, *args, **kwargs
+    ):
+        super(PScannerVisualizer3D, self).__init__(*args, **kwargs)
+        self._widget = ScannerVisualizer(scanner=self.instrument)
+        self._control_widgets = [
+            PWidget(
+                'Settings',
+                Settings()
+            )
+        ]
+
+    @property
+    def widget(self) -> QWidget:
+        return self._widget
+
+    @property
+    def control_widgets(self) -> list[PWidget]:
+        return self._control_widgets

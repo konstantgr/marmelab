@@ -1,1 +1,1 @@
-from TRIM import TRIMPScanner
+from .TRIM import TRIMPScanner

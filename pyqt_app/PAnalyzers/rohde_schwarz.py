@@ -1,27 +1,27 @@
-from src.project import PScanner, PWidget, PScannerSignals
-from src.scanner.TRIM import TRIMScanner
+from src.project import PAnalyzer, PWidget, PAnalyzerSignals
+from src.analyzator.rohde_schwarz import RohdeSchwarzAnalyzator
 from PyQt6.QtWidgets import QWidget, QTextEdit
 
 
 class Control(QTextEdit):
-    def __init__(self, signals: PScannerSignals):
+    def __init__(self, signals: PAnalyzerSignals):
         super(Control, self).__init__()
-        self.setText('Scanner Control')
+        self.setText('Analyzer Control')
 
 
 class Settings(QTextEdit):
-    def __init__(self, signals: PScannerSignals):
+    def __init__(self, signals: PAnalyzerSignals):
         super(Settings, self).__init__()
-        self.setText('Scanner Settings')
+        self.setText('Analyzer Settings')
 
 
-class TRIMPScanner(PScanner):
+class RohdeSchwarzPAnalyzer(PAnalyzer):
     def __init__(
             self,
-            signals: PScannerSignals,
-            instrument: TRIMScanner,
+            signals: PAnalyzerSignals,
+            instrument: RohdeSchwarzAnalyzator,
     ):
-        super(TRIMPScanner, self).__init__(
+        super(RohdeSchwarzPAnalyzer, self).__init__(
             signals=signals,
             instrument=instrument
         )

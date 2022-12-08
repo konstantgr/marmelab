@@ -23,7 +23,7 @@ class PWidget:
 
 
 class PScannerSignals(QObject, ScannerSignals, metaclass=_meta_resolve(ScannerSignals)):
-    position = pyqtSignal([BaseAxes], [Position])
+    position: pyqtBoundSignal = pyqtSignal([BaseAxes], [Position])
     velocity: pyqtBoundSignal = pyqtSignal([BaseAxes], [Velocity])
     acceleration: pyqtBoundSignal = pyqtSignal([BaseAxes], [Acceleration])
     deceleration: pyqtBoundSignal = pyqtSignal([BaseAxes], [Deceleration])

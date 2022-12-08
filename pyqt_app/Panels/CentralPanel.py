@@ -1,7 +1,7 @@
 from enum import IntEnum, auto
 from PyQt6.QtWidgets import QScrollArea, QStackedWidget
 from .BasePanel import BasePanel
-from .. import Visualizers
+from .. import PVisualizers
 from . import CentralWidgets
 
 
@@ -27,7 +27,7 @@ class CentralPanel(QScrollArea, BasePanel):
         super(CentralPanel, self).__init__(*args, **kwargs)
         self.pages = {
             CentralPanelTypes.Initial: CentralWidgets.Init(),
-            CentralPanelTypes.RoomSettings: CentralWidgets.RoomSettings(default_settings=Visualizers.DEFAULT_SETTINGS),
+            CentralPanelTypes.RoomSettings: CentralWidgets.RoomSettings(default_settings=PVisualizers.DEFAULT_SETTINGS),
             CentralPanelTypes.ScannerSettings: CentralWidgets.ScannerSettings(),
             CentralPanelTypes.Scanner: CentralWidgets.ScannerControl(),
             CentralPanelTypes.Test: CentralWidgets.Test(),
