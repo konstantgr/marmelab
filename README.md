@@ -75,7 +75,7 @@ sc.goto(new_position)
 ```python
 from src.scanner.TRIM import DEFAULT_SETTINGS
 
-sc.set_settings(DEFAULT_SETTINGS)
+sc.set_settings(DEFAULT_SETTINGS, )
 ```
 
 Узнать координаты сканера
