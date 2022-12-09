@@ -39,22 +39,16 @@ class MainWindow(QMainWindow):
         log_splitter.setCollapsible(0, False)
         log_splitter.setCollapsible(1, False)
 
-
         main_splitter = QSplitter(orientation=Qt.Orientation.Horizontal)
         main_splitter.insertWidget(0, log_splitter)
         main_splitter.insertWidget(1, self.right_panel)
-
-
-
 
         main_splitter.setStretchFactor(0, 1)
         main_splitter.setStretchFactor(1, 1)
         main_splitter.setCollapsible(0, False)
         main_splitter.setCollapsible(1, False)
 
-
         hbox.addWidget(main_splitter)
         self.setGeometry(300, 300, 450, 400)
         self.setWindowTitle('Scanner control')
         self.setCentralWidget(self.main_widget)
-

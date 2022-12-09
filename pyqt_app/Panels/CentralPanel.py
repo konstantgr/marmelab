@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QScrollArea, QStackedWidget
 from .BasePanel import BasePanel
 from . import RightWidgets
 from . import CentralWidgets
-
+from PyQt6 import QtWidgets
 
 class CentralPanelTypes(IntEnum):
     """
@@ -32,11 +32,31 @@ class CentralPanel(QScrollArea, BasePanel):
             CentralPanelTypes.Scanner: CentralWidgets.ScannerControl(),
             CentralPanelTypes.Test: CentralWidgets.Test(),
         }
-        self.stacked_widget = QStackedWidget(self)
-        for key in self.pages.keys():
-            self.stacked_widget.insertWidget(key, self.pages[key])  # добавление виджетов в центральную панель
 
-        self.setWidget(self.stacked_widget)
+        self.tree_widget = QtWidgets.QTreeWidget()
+        self.tree_widget.setColumnCount(2)
+
+
+
+        #self.tree_widget.show()
+        self.stacked_widget = QStackedWidget()
+        panels = ["Analyser", "Scanner", "Test"]
+
+        for i in panels:
+            panels_item = QtWidgets.QTreeWidgetItem(self.tree_widget)
+            panels_item.setText(0, i)
+
+            for j in self.pages[i]:
+                pages_item = QtWidgets.QTreeWidgetItem(self.tree_widget)
+                pages_item.setText(0, j)
+
+
+        for key in self.pages.keys():
+            self.tree_widget.insertTopLevelItems(key, self.pages[key])  # добавление виджетов в центральную панель
+            self.stacked_widget.insertWidget(key, self.pages[key])
+
+
+        self.setWidget(self.tree_widget)
         self.setWidgetResizable(True)
         self.room_settings: CentralWidgets.RoomSettings = self.pages[CentralPanelTypes.RoomSettings]
 
