@@ -17,7 +17,7 @@ class MainWindow(QMainWindow):
         self.right_panel = RightPanel(self.main_widget)  # graphics
         self.log_panel = LogPanel(self.main_widget)  # log window
         self.bar_panel = BarPanel(self.main_widget)  # bar window
-        self.bar_panel.bar.showMessage("Scanner status: ")  # не работает
+        #self.bar_panel.bar.messageChanged("dsfds")  # не работает
 
         self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
         room_settings = self.center_panel.room_settings

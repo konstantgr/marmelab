@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from src.analyzator.rohde_schwarz.rohde_schwarz import RohdeSchwarzAnalyzator
 
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
