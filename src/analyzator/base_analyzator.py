@@ -21,6 +21,13 @@ class AnalyzerSignals(metaclass=abc.ABCMeta):
         Сигнал с данными анализатора
         """
 
+    @property
+    @abc.abstractmethod
+    def is_connected(self) -> EmptySignal:
+        """
+        Сигнал с состоянием анализатора
+        """
+
 
 class BaseAnalyzator(abc.ABC):
     @property

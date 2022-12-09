@@ -247,6 +247,7 @@ class TRIMScannerSignals(ScannerSignals):
     velocity = EmptySignal()
     acceleration = EmptySignal()
     deceleration = EmptySignal()
+    is_connected = EmptySignal()
 
 
 class TRIMScanner(Scanner):
@@ -294,6 +295,7 @@ class TRIMScanner(Scanner):
             self.conn = socket.socket()
             self.conn.connect((self.ip, self.port))
             self.is_connected = True
+            self._signals.is_connected.emit(True)
         except socket.error as e:
             raise ScannerConnectionError from e
 
@@ -304,8 +306,10 @@ class TRIMScanner(Scanner):
             self.conn.shutdown(socket.SHUT_RDWR)
             self.conn.close()
             self.is_connected = False
+            self._signals.is_connected.emit(False)
         except socket.error:
             self.is_connected = False
+            self._signals.is_connected.emit(False)
 
     def set_settings(
             self,
@@ -395,6 +399,7 @@ class TRIMScanner(Scanner):
                 return answer
             except socket.error as e:
                 self.is_connected = False
+                self._signals.is_connected.emit(False)
                 raise ScannerConnectionError from e
 
     def _send_cmds(self, cmds: List[str]) -> List[str]:

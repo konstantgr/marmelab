@@ -29,5 +29,6 @@ class TRIMPScanner(PScanner):
             )
         ]
 
+    @property
     def control_widgets(self) -> list[PWidget]:
         return self._control_widgets

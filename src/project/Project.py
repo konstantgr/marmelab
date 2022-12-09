@@ -27,6 +27,7 @@ class PScannerSignals(QObject, ScannerSignals, metaclass=_meta_resolve(ScannerSi
     velocity: pyqtBoundSignal = pyqtSignal([BaseAxes], [Velocity])
     acceleration: pyqtBoundSignal = pyqtSignal([BaseAxes], [Acceleration])
     deceleration: pyqtBoundSignal = pyqtSignal([BaseAxes], [Deceleration])
+    is_connected: pyqtBoundSignal = pyqtSignal(bool)
     set_settings: pyqtBoundSignal = pyqtSignal(dict)
     stop: pyqtBoundSignal = pyqtSignal()
     abort: pyqtBoundSignal = pyqtSignal()
@@ -83,6 +84,7 @@ class PAnalyzerSignals(QObject, AnalyzerSignals, metaclass=_meta_resolve(Analyze
     connect: pyqtBoundSignal = pyqtSignal()
     disconnect: pyqtBoundSignal = pyqtSignal()
     set_settings: pyqtBoundSignal = pyqtSignal(dict)
+    is_connected: pyqtBoundSignal = pyqtSignal(bool)
 
 
 class PAnalyzer(abc.ABC):
@@ -188,18 +190,28 @@ class Project:
         self.paths = paths if paths is not None else PStorage()
         self.experiments = experiments if experiments is not None else PStorage()
 
-    def create_tree(self):
-        tree = []
+    def tree(self) -> dict[str: list[PWidget]]:
+        tree = dict()
 
         scanner_widgets = []
         for widget in self.scanner.control_widgets:
-            scanner_widgets.append(widget.widget)
-        tree.append(scanner_widgets)
+            scanner_widgets.append(widget)
+        tree['Scanner'] = scanner_widgets
 
         analyzer_widgets = []
         for widget in self.analyzer.control_widgets:
-            analyzer_widgets.append(widget.widget)
-        tree.append(analyzer_widgets)
+            analyzer_widgets.append(widget)
+        tree['Analyzer'] = analyzer_widgets
+
+        tree['Scanner graphics'] = self.scanner_visualizer.control_widgets
+        tree['Analyzer graphics'] = self.analyzer_visualizer.control_widgets
+
+        tree['Objects'] = []
+        tree['Paths'] = []
+        tree['Experiments'] = []
+
+        return tree
+
 
 
 

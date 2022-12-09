@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter, QTextEdit
 from PyQt6.QtCore import Qt
-from Panels import LogPanel, RightPanel
+from Panels import LogPanel, RightPanel, LeftPanel, CentralPanel
 from pyqt_app import project
 # TODO: сделать вывод логов в файл
 # TODO: Изменить таблицу сканнер сеттингс
@@ -22,8 +22,9 @@ class MainWindow(QMainWindow):
         hbox = QHBoxLayout(self.main_widget)  # layout of Main window
         self.main_widget.setLayout(hbox)
 
-        self.left_panel = QTextEdit('left_panel', self.main_widget)  # settings selector
-        self.center_panel = QTextEdit('center_panel', self.main_widget)  # settings menu
+        self.left_panel = LeftPanel(self.main_widget)  # settings selector
+        self.center_panel = CentralPanel(self.main_widget)  # settings menu
+        self.left_panel.signals.tree_num.connect(self.center_panel.display)
 
         self.right_panel = RightPanel(
             scanner_visualizer=project.scanner_visualizer,

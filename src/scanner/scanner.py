@@ -160,6 +160,13 @@ class ScannerSignals(metaclass=ABCMeta):
         Сигнал с замедлением сканера
         """
 
+    @property
+    @abstractmethod
+    def is_connected(self) -> EmptySignal:
+        """
+        Сигнал с состоянием сканера
+        """
+
 
 class Scanner(metaclass=ABCMeta):
     """
