@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter, QTextEdit
 from PyQt6.QtCore import Qt
 from Panels import LogPanel, RightPanel
+from pyqt_app import project
 # TODO: сделать вывод логов в файл
 # TODO: Изменить таблицу сканнер сеттингс
 # TODO: Реализация таблицы сканнер контрол (добавить пока что хождение по точкам)
@@ -25,8 +26,8 @@ class MainWindow(QMainWindow):
         self.center_panel = QTextEdit('center_panel', self.main_widget)  # settings menu
 
         self.right_panel = RightPanel(
-            scanner_visualizer=QTextEdit('сканер'),
-            analyzer_visualizer=QTextEdit('анализатор'),
+            scanner_visualizer=project.scanner_visualizer,
+            analyzer_visualizer=project.analyzer_visualizer,
             parent=self.main_widget
         )  # graphics
 

@@ -16,24 +16,17 @@ class Settings(QTextEdit):
 
 
 class RohdeSchwarzPAnalyzer(PAnalyzer):
-    def __init__(
-            self,
-            signals: PAnalyzerSignals,
-            instrument: RohdeSchwarzAnalyzator,
-    ):
-        super(RohdeSchwarzPAnalyzer, self).__init__(
-            signals=signals,
-            instrument=instrument
-        )
+    def __init__(self, *args, **kwargs):
+        super(RohdeSchwarzPAnalyzer, self).__init__(*args, **kwargs)
 
         self._control_widgets = [
             PWidget(
                 'Control',
-                Control(signals)
+                Control(self.signals)
             ),
             PWidget(
                 'Settings',
-                Settings(signals)
+                Settings(self.signals)
             )
         ]
 

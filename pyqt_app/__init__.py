@@ -2,7 +2,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 from pathlib import Path
-from app_project import project
+from PyQt6.QtWidgets import QApplication
+import sys
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -16,3 +17,14 @@ logs_path = os.path.join(logs_folder_path, 'logs.txt')
 fh = RotatingFileHandler(logs_path, maxBytes=1048576, backupCount=10, encoding='utf-8')
 fh.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s]: %(message)s'))
 logger.addHandler(fh)
+
+
+def except_hook(cls, exception, traceback):
+    sys.__excepthook__(cls, exception, traceback)
+    logger.error(exception)
+
+
+sys.excepthook = except_hook
+app = QApplication(sys.argv)
+
+from .app_project import project

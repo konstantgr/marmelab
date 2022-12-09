@@ -3,7 +3,7 @@ import pyqtgraph as pg
 import numpy as np
 from stl import mesh
 from src.scanner.scanner import BaseAxes
-from src.project import PScanner, PScannerVisualizer, PWidget
+from src.project import PScanner, PScannerVisualizer, PWidget, PStorage
 import os
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtWidgets import QWidget, QTextEdit
@@ -60,7 +60,13 @@ class TextItem(GLGraphicsItem):
 
 
 class ScannerVisualizer(gl.GLViewWidget):
-    def __init__(self, scanner: PScanner, **kwargs):
+    def __init__(
+            self,
+            scanner: PScanner,
+            objects: PStorage,
+            paths: PStorage,
+            **kwargs
+    ):
         super().__init__(**kwargs)
         self.room_sizeX = 5000  # mm
         self.room_sizeY = 3000  # mm
@@ -451,10 +457,14 @@ class Settings(QTextEdit):
 
 class PScannerVisualizer3D(PScannerVisualizer):
     def __init__(
-            self, *args, **kwargs
+            self, *args, objects: PStorage, paths: PStorage, **kwargs
     ):
         super(PScannerVisualizer3D, self).__init__(*args, **kwargs)
-        self._widget = ScannerVisualizer(scanner=self.instrument)
+        self._widget = ScannerVisualizer(
+            scanner=self.instrument,
+            paths=paths,
+            objects=objects
+        )
         self._control_widgets = [
             PWidget(
                 'Settings',

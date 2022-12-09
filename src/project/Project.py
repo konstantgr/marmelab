@@ -5,7 +5,7 @@ from src.analyzator import AnalyzerSignals, BaseAnalyzator
 from src.scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from PyQt6.QtWidgets import QWidget
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from abc import abstractmethod
 
 
@@ -126,20 +126,46 @@ class PAnalyzerVisualizer(abc.ABC):
         pass
 
 
-class PExperiment:
+class PBase:
     pass
 
 
-class PMeasurand:
+class PExperiment(PBase):
     pass
 
 
-class PObject:
+class PMeasurand(PBase):
     pass
 
 
-class PPath:
+class PObject(PBase):
     pass
+
+
+class PPath(PBase):
+    pass
+
+
+class PStorageSignals(QObject):
+    changed: pyqtBoundSignal = pyqtSignal()
+    add: pyqtBoundSignal = pyqtSignal(PBase)
+    delete: pyqtBoundSignal = pyqtSignal(PBase)
+
+
+class PStorage:
+    def __init__(self):
+        self.signals: PStorageSignals = PStorageSignals()
+        self._data = []
+        self.signals.add.connect(self.append)
+        self.signals.delete.connect(self.delete)
+
+    def append(self, x: PBase):
+        self._data.append(x)
+        self.signals.changed.emit()
+
+    def delete(self, x: PBase):
+        self._data.remove(x)
+        self.signals.changed.emit()
 
 
 class Project:
@@ -149,16 +175,31 @@ class Project:
             analyzer: PAnalyzer,
             scanner_visualizer: PScannerVisualizer,
             analyzer_visualizer: PAnalyzerVisualizer,
-            objects: list[PObject] = None,
-            paths: list[PPath] = None,
-            experiments: list[PExperiment] = None,
+            objects: PStorage = None,
+            paths: PStorage = None,
+            experiments: PStorage = None,
     ):
         self.scanner = scanner
         self.analyzer = analyzer
         self.scanner_visualizer = scanner_visualizer
         self.analyzer_visualizer = analyzer_visualizer
 
-        self.objects = objects if objects is not None else []
-        self.paths = paths if paths is not None else []
-        self.experiments = experiments if experiments is not None else []
+        self.objects = objects if objects is not None else PStorage()
+        self.paths = paths if paths is not None else PStorage()
+        self.experiments = experiments if experiments is not None else PStorage()
+
+    def create_tree(self):
+        tree = []
+
+        scanner_widgets = []
+        for widget in self.scanner.control_widgets:
+            scanner_widgets.append(widget.widget)
+        tree.append(scanner_widgets)
+
+        analyzer_widgets = []
+        for widget in self.analyzer.control_widgets:
+            analyzer_widgets.append(widget.widget)
+        tree.append(analyzer_widgets)
+
+
 

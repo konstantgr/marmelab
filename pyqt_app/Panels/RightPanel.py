@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QSizePolicy, QSplitter
+from PyQt6.QtWidgets import QVBoxLayout, QSizePolicy, QSplitter, QTextEdit
 
 from .BasePanel import BasePanel
 from src.project import PScannerVisualizer, PAnalyzerVisualizer
@@ -20,10 +20,10 @@ class RightPanel(BasePanel):
         self.vbox = QVBoxLayout(self)
         self.setLayout(self.vbox)
 
-        self.scanner_widget = scanner_visualizer
-        self.graph_widget = analyzer_visualizer
+        self.scanner_widget = scanner_visualizer.widget
+        self.graph_widget = analyzer_visualizer.widget
 
-        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
         graphs_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
         graphs_splitter.insertWidget(0, self.scanner_widget)
