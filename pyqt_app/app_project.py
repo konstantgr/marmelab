@@ -3,7 +3,7 @@ from src.project import Project, PScannerSignals, PAnalyzerSignals, PStorage
 from src.analyzator.rohde_schwarz.rohde_schwarz import RohdeSchwarzAnalyzator
 from src.project.PScanners import TRIMPScanner
 from src.project.PAnalyzers import RohdeSchwarzPAnalyzer
-from PVisualizers import PScannerVisualizer3D, PAnalyzerVisualizerRS
+from src.project.PVisualizers import PScannerVisualizer3D, PAnalyzerVisualizerRS
 from PyQt6.QtWidgets import QTextEdit
 from src.project.PObjects import Object3d
 from src.project.PPaths import Path3d
