@@ -141,11 +141,19 @@ class PMeasurand(PBase):
 
 
 class PObject(PBase):
-    pass
+    def __init__(
+            self,
+            widget: PWidget
+    ):
+        self.widget = widget
 
 
 class PPath(PBase):
-    pass
+    def __init__(
+            self,
+            widget: PWidget
+    ):
+        self.widget = widget
 
 
 class PStorageSignals(QObject):
@@ -154,19 +162,21 @@ class PStorageSignals(QObject):
     delete: pyqtBoundSignal = pyqtSignal(PBase)
 
 
+@dataclass
 class PStorage:
-    def __init__(self):
-        self.signals: PStorageSignals = PStorageSignals()
-        self._data = []
+    signals: PStorageSignals = field(default_factory=PStorageSignals)
+    data: list[PBase] = field(default_factory=list)
+
+    def __post_init__(self):
         self.signals.add.connect(self.append)
         self.signals.delete.connect(self.delete)
 
     def append(self, x: PBase):
-        self._data.append(x)
+        self.data.append(x)
         self.signals.changed.emit()
 
     def delete(self, x: PBase):
-        self._data.remove(x)
+        self.data.remove(x)
         self.signals.changed.emit()
 
 
@@ -206,9 +216,9 @@ class Project:
         tree['Scanner graphics'] = self.scanner_visualizer.control_widgets
         tree['Analyzer graphics'] = self.analyzer_visualizer.control_widgets
 
-        tree['Objects'] = []
-        tree['Paths'] = []
-        tree['Experiments'] = []
+        tree['Objects'] = [w.widget for w in self.objects.data]
+        tree['Paths'] = [w.widget for w in self.paths.data]
+        tree['Experiments'] = [w.widget for w in self.experiments.data]
 
         return tree
 

@@ -1,5 +1,4 @@
-from src.project import PAnalyzer, PWidget, PAnalyzerSignals
-from src.analyzator.rohde_schwarz import RohdeSchwarzAnalyzator
+from ..Project import PAnalyzer, PWidget, PAnalyzerSignals
 from PyQt6.QtWidgets import QWidget, QTextEdit
 
 

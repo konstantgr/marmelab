@@ -1,4 +1,4 @@
-from src.project import PScanner, PWidget, PScannerSignals
+from ..Project import PScanner, PWidget, PScannerSignals
 from PyQt6.QtWidgets import QWidget, QTextEdit
 
 

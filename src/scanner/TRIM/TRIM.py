@@ -459,6 +459,7 @@ class TRIMScanner(Scanner):
 
     @_motion_decorator
     def goto(self, position: Position) -> None:
+        self.set_settings(**PTP_MODE_SETTINGS)
         cmds = cmds_from_axes(position, 'AP')
         cmds += cmds_from_axes(position, 'BG', val=False, scale=False)
         action_description = f'the motion to {position}'

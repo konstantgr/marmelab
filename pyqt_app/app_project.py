@@ -1,19 +1,25 @@
-from dataclasses import dataclass
-from abc import ABC, abstractmethod
-from PyQt6.QtCore import pyqtBoundSignal, QObject, pyqtSignal
 from src.scanner.TRIM import TRIMScanner
-from src.scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
-from src.project import Project, PScannerSignals, PScanner, PAnalyzer, PAnalyzerSignals, PStorage
-from src.project import PStorageSignals
+from src.project import Project, PScannerSignals, PAnalyzerSignals, PStorage
 from src.analyzator.rohde_schwarz.rohde_schwarz import RohdeSchwarzAnalyzator
-from pyqt_app.PScanners import TRIMPScanner
-from pyqt_app.PAnalyzers import RohdeSchwarzPAnalyzer
-from pyqt_app.PVisualizers import PScannerVisualizer3D, PAnalyzerVisualizerRS
+from src.project.PScanners import TRIMPScanner
+from src.project.PAnalyzers import RohdeSchwarzPAnalyzer
+from PVisualizers import PScannerVisualizer3D, PAnalyzerVisualizerRS
 from PyQt6.QtWidgets import QTextEdit
+from src.project.PObjects import Object3d
+from src.project.PPaths import Path3d
+import numpy as np
+from src.project.PStorages import ObjectsStorage3d, PathsStorage3d, ExperimentsStorage
 
-objects = PStorage()
-paths = PStorage()
-experiments = PStorage()
+
+objects = ObjectsStorage3d()
+paths = PathsStorage3d()
+experiments = ExperimentsStorage()
+
+objects.append(Object3d(name='Object 1'))
+paths.append(Path3d(
+    name='Path 1',
+    points=np.array([[1000*i, 0, 0] for i in range(5)])
+))
 
 scanner_signals = PScannerSignals()
 scanner = TRIMPScanner(
