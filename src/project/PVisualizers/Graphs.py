@@ -2,7 +2,7 @@ import pandas as pd
 from PyQt6.QtWidgets import QWidget, QFrame, QHBoxLayout, QVBoxLayout, QSplitter, QStackedWidget, QSizePolicy
 from pyqtgraph import plot, PlotWidget
 import pyqtgraph as pg
-from src.project import PAnalyzerVisualizer, PWidget
+from ..Project import PAnalyzerVisualizer, PWidget
 
 
 class GraphWidget(QWidget):

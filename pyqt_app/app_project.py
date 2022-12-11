@@ -16,9 +16,14 @@ paths = PathsStorage3d()
 experiments = ExperimentsStorage()
 
 objects.append(Object3d(name='Object 1'))
+
 paths.append(Path3d(
     name='Path 1',
     points=np.array([[1000*i, 0, 0] for i in range(5)])
+))
+paths.append(Path3d(
+    name='Path 2',
+    points=np.array([[1000*i, 1000, 0] for i in range(5)])
 ))
 
 scanner_signals = PScannerSignals()

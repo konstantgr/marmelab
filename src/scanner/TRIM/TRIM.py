@@ -209,6 +209,45 @@ class FIFOLock(object):
         self.release()
 
 
+def base_axes_to_dict(axes: BaseAxes, var_name: str) -> dict:
+    res = dict()
+    for field in fields(axes):
+        value = axes.__getattribute__(field.name)
+        if value is not None:
+            res[var_name + field.name] = value
+    return res
+
+
+def settings_check(
+        x: float or None,
+        y: float or None,
+        z: float or None,
+        w: float or None,
+        axes: BaseAxes or None,
+) -> None or BaseAxes:
+    """
+    Проверяет, как были переданы настройки: отдельными параметрами или при помощи BaseAxes.
+    В первом случае преобразует отдельные настройки в BaseAxes, во втором случае -- возвращает BaseAxes без изменений.
+    В случае, если не все параметры None, то возвращает None
+
+    :param x:
+    :param y:
+    :param z:
+    :param w:
+    :param axes:
+    :return:
+    """
+    separated = not (x is None and y is None and z is None and w is None)
+    if axes is not None:
+        if not separated:
+            return axes
+        raise RuntimeError("You have to pass either BaseAxes or separated settings, but not both")
+    else:
+        if not separated:
+            return
+        return BaseAxes(x=x, y=y, z=z, w=w)
+
+
 # убейте меня это какой-то прикол
 def _motion_decorator(func):
     """
@@ -320,7 +359,34 @@ class TRIMScanner(Scanner):
             motor_on: BaseAxes = None,
             motion_mode: BaseAxes = None,
             special_motion_mode: BaseAxes = None,
-
+            position_x: float = None,
+            position_y: float = None,
+            position_z: float = None,
+            position_w: float = None,
+            velocity_x: float = None,
+            velocity_y: float = None,
+            velocity_z: float = None,
+            velocity_w: float = None,
+            acceleration_x: float = None,
+            acceleration_y: float = None,
+            acceleration_z: float = None,
+            acceleration_w: float = None,
+            deceleration_x: float = None,
+            deceleration_y: float = None,
+            deceleration_z: float = None,
+            deceleration_w: float = None,
+            motor_on_x: float = None,
+            motor_on_y: float = None,
+            motor_on_z: float = None,
+            motor_on_w: float = None,
+            motion_mode_x: float = None,
+            motion_mode_y: float = None,
+            motion_mode_z: float = None,
+            motion_mode_w: float = None,
+            special_motion_mode_x: float = None,
+            special_motion_mode_y: float = None,
+            special_motion_mode_z: float = None,
+            special_motion_mode_w: float = None,
     ) -> None:
         """
         Применить настройки
@@ -334,35 +400,35 @@ class TRIMScanner(Scanner):
         :param special_motion_mode: подрежим работы двигателей
         """
         cmds = []
-        if position is not None:
-            cmds += cmds_from_axes(position, basecmd='PS')
-        if velocity is not None:
-            cmds += cmds_from_axes(velocity, basecmd='SP')
-        if acceleration is not None:
-            cmds += cmds_from_axes(acceleration, basecmd='AC')
-        if deceleration is not None:
-            cmds += cmds_from_axes(deceleration, basecmd='DC')
-        if motion_mode is not None:
-            cmds += cmds_from_axes(motion_mode, basecmd='MM', scale=False)
-        if special_motion_mode is not None:
-            cmds += cmds_from_axes(special_motion_mode, basecmd='SM', scale=False)
-        if motor_on is not None:
-            cmds += cmds_from_axes(motor_on, basecmd='MO', scale=False)
+        if (position_par := settings_check(position_x, position_y, position_z, position_w, position)) is not None:
+            cmds += cmds_from_axes(position_par, basecmd='PS')
+        if (velocity_par := settings_check(velocity_x, velocity_y, velocity_z, velocity_w, velocity)) is not None:
+            cmds += cmds_from_axes(velocity_par, basecmd='SP')
+        if (acceleration_par := settings_check(acceleration_x, acceleration_y, acceleration_z, acceleration_w, acceleration)) is not None:
+            cmds += cmds_from_axes(acceleration_par, basecmd='AC')
+        if (deceleration_par := settings_check(deceleration_x, deceleration_y, deceleration_z, deceleration_w, deceleration)) is not None:
+            cmds += cmds_from_axes(deceleration_par, basecmd='DC')
+        if (motion_mode_par := settings_check(motion_mode_x, motion_mode_y, motion_mode_z, motion_mode_w, motion_mode)) is not None:
+            cmds += cmds_from_axes(motion_mode_par, basecmd='MM', scale=False)
+        if (special_motion_mode_par := settings_check(special_motion_mode_x, special_motion_mode_y, special_motion_mode_z, special_motion_mode_w, special_motion_mode)) is not None:
+            cmds += cmds_from_axes(special_motion_mode_par, basecmd='SM', scale=False)
+        if (motor_on_par := settings_check(motor_on_x, motor_on_y, motor_on_z, motor_on_w, motor_on)) is not None:
+            cmds += cmds_from_axes(motor_on_par, basecmd='MO', scale=False)
         self._send_cmds(cmds)
-        if position is not None:
-            self.position_signal[type(position)].emit(position)
+        if position_par is not None:
+            self.position_signal[type(position_par)].emit(position_par)
         # Если все прошло успешно, то нужно поменять внутреннюю скорость сканера
         # Это необходимо, так как в самом сканере некорректно реализована команда ASP -- она возвращает нули
-        if velocity is not None:
-            self.velocity_signal[BaseAxes].emit(velocity)
-            for axis in fields(velocity):
-                axis_velocity = velocity.__getattribute__(axis.name)
+        if velocity_par is not None:
+            self.velocity_signal[type(velocity_par)].emit(velocity_par)
+            for axis in fields(velocity_par):
+                axis_velocity = velocity_par.__getattribute__(axis.name)
                 if axis_velocity is not None:
                     self._velocity.__setattr__(axis.name, axis_velocity)
-        if acceleration is not None:
-            self.acceleration_signal[type(acceleration)].emit(acceleration)
-        if deceleration is not None:
-            self.deceleration_signal[type(deceleration)].emit(deceleration)
+        if acceleration_par is not None:
+            self.acceleration_signal[type(acceleration_par)].emit(acceleration_par)
+        if deceleration_par is not None:
+            self.deceleration_signal[type(deceleration_par)].emit(deceleration_par)
 
     def _send_cmd(self, cmd: str) -> str:
         """

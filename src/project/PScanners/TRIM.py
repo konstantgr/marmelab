@@ -1,5 +1,7 @@
 from ..Project import PScanner, PWidget, PScannerSignals
 from PyQt6.QtWidgets import QWidget, QTextEdit
+from ..Widgets import SettingsTableWidget
+from ..Variable import Setting, Unit
 
 
 class Control(QTextEdit):
@@ -8,10 +10,12 @@ class Control(QTextEdit):
         self.setText('Scanner Control')
 
 
-class Settings(QTextEdit):
-    def __init__(self, signals: PScannerSignals):
-        super(Settings, self).__init__('')
-        self.setText('Scanner Settings')
+class Settings(SettingsTableWidget):
+    def __init__(self, signals: PScannerSignals, parent: QWidget = None):
+        settings = [
+            Setting(name='123', unit=Unit(1, -2, 3), description='test', default_value=123)
+        ]
+        super(Settings, self).__init__(settings=settings, parent=parent)
 
 
 class TRIMPScanner(PScanner):
@@ -25,7 +29,7 @@ class TRIMPScanner(PScanner):
             ),
             PWidget(
                 'Settings',
-                Settings(self.signals)
+                Settings(self.signals, None)
             )
         ]
 

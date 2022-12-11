@@ -5,3 +5,4 @@ from .Project import PObject, PPath, PExperiment, PMeasurand
 from .Project import PScannerVisualizer, PAnalyzerVisualizer
 from .Project import PWidget
 from .Project import PStorage, PStorageSignals
+from .Variable import Variable, Unit, Setting

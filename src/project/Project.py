@@ -1,8 +1,8 @@
 import abc
 
-from src.scanner import Scanner, ScannerSignals
-from src.analyzator import AnalyzerSignals, BaseAnalyzator
-from src.scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
+from ..scanner import Scanner, ScannerSignals
+from ..analyzator import AnalyzerSignals, BaseAnalyzator
+from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from PyQt6.QtWidgets import QWidget
 from dataclasses import dataclass, field

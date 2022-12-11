@@ -1,4 +1,4 @@
-from src.project import PStorage, PExperiment
+from ..Project import PStorage, PExperiment
 from ..PObjects import Object3d
 from ..PPaths import Path3d
 from dataclasses import field

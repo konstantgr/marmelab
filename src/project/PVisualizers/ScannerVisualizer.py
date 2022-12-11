@@ -2,15 +2,15 @@ import pyqtgraph.opengl as gl
 import pyqtgraph as pg
 import numpy as np
 from stl import mesh
-from src.scanner.scanner import BaseAxes
-from src.project import PScanner, PScannerVisualizer, PWidget, PStorage
+from ...scanner import BaseAxes
+from ..Project import PScanner, PScannerVisualizer, PWidget, PStorage
 import os
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtWidgets import QWidget, QTextEdit
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
-from src.project.PObjects import Object3d
-from src.project.PPaths import Path3d
-from src.project.PStorages import ObjectsStorage3d, PathsStorage3d
+from ..PObjects import Object3d
+from ..PPaths import Path3d
+from ..PStorages import ObjectsStorage3d, PathsStorage3d
 from OpenGL.GL import GL_BLEND, GL_DEPTH_TEST, GL_ALPHA_TEST, GL_CULL_FACE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
 
 

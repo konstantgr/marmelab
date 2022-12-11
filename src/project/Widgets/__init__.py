@@ -1,0 +1,1 @@
+from .SettingsTable import SettingsTableWidget
