@@ -39,8 +39,8 @@ class PScannerSignals(QObject, ScannerSignals, metaclass=_meta_resolve(ScannerSi
 class PScanner(abc.ABC):
     def __init__(
             self,
-            signals: PScannerSignals,
             instrument: Scanner,
+            signals: PScannerSignals,
     ):
         self.signals = signals
         self.instrument = instrument

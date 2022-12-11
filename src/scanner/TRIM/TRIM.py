@@ -1,14 +1,12 @@
 """
 Реализация управления сканером с контроллером ORBIT/FR AL-4164 и AL-4166
 """
-import collections
-import threading
 import time
 
-from src.scanner import Scanner, BaseAxes, Position, Velocity, Acceleration, Deceleration
-from src.scanner import ScannerConnectionError, ScannerInternalError, ScannerMotionError
-from src.scanner import ScannerSignals
-from src import EmptySignal
+from ..scanner import Scanner, BaseAxes, Position, Velocity, Acceleration, Deceleration
+from ..scanner import ScannerConnectionError, ScannerInternalError, ScannerMotionError
+from ..scanner import ScannerSignals
+from ...utils import EmptySignal, FIFOLock
 import socket
 from typing import Union, List, Iterable
 from dataclasses import fields, astuple
@@ -164,49 +162,6 @@ JOG_MODE_SETTINGS = {
         w=1
     )
 }
-
-
-class FIFOLock(object):
-    """
-    FIFO Lock, который гарантирует поочередное выполнение запросов
-    https://gist.github.com/vitaliyp/6d54dd76ca2c3cdfc1149d33007dc34a
-
-    """
-    def __init__(self):
-        self._lock = threading.Lock()
-        self._inner_lock = threading.Lock()
-        self._pending_threads = collections.deque()
-
-    def acquire(self, blocking=True):
-        with self._inner_lock:
-            lock_acquired = self._lock.acquire(False)
-            if lock_acquired:
-                return True
-            elif not blocking:
-                return False
-
-            release_event = threading.Event()
-            self._pending_threads.append(release_event)
-
-        release_event.wait()
-        return self._lock.acquire()
-
-    def release(self):
-        with self._inner_lock:
-            if self._pending_threads:
-                release_event = self._pending_threads.popleft()
-                release_event.set()
-
-            self._lock.release()
-
-    def locked(self) -> bool:
-        with self._inner_lock:
-            return self._lock.locked()
-
-    __enter__ = acquire
-
-    def __exit__(self, t, v, tb):
-        self.release()
 
 
 def base_axes_to_dict(axes: BaseAxes, var_name: str) -> dict:

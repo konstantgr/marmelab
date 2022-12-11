@@ -6,3 +6,10 @@ from .Project import PScannerVisualizer, PAnalyzerVisualizer
 from .Project import PWidget
 from .Project import PStorage, PStorageSignals
 from .Variable import Variable, Unit, Setting
+from . import PAnalyzers
+from . import PObjects
+from . import PPaths
+from . import PScanners
+from . import PStorages
+from . import PVisualizers
+from . import Widgets

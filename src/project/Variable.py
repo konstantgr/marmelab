@@ -25,7 +25,10 @@ class Unit:
                 up.append(name + "".join(SUPERSCRIPTS[i] for i in map(int, str(power))))
             elif power == 1:
                 up.append(name)
-            elif power < 0:
+            elif power == -1:
+                down.append(name)
+                down_len += 1
+            elif power < -1:
                 down.append(name + "".join(SUPERSCRIPTS[i] for i in map(int, str(-power))))
                 down_len += 1
         if down_len == 0:

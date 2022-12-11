@@ -182,7 +182,8 @@ class SettingsTableWidget(QWidget):
 
         self.table = QSmartTableView(settings=settings, parent=self.splitter)
         self.table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.table.horizontalHeader().setStretchLastSection(True)
         # self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         # self.table.setFixedHeight(340)
         self.table.resizeRowsToContents()

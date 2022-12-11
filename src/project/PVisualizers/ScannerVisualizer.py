@@ -10,24 +10,89 @@ from PyQt6.QtWidgets import QWidget, QTextEdit
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 from ..PObjects import Object3d
 from ..PPaths import Path3d
+from ..Widgets import SettingsTableWidget
+from ..Variable import Setting, Unit
 from ..PStorages import ObjectsStorage3d, PathsStorage3d
 from OpenGL.GL import GL_BLEND, GL_DEPTH_TEST, GL_ALPHA_TEST, GL_CULL_FACE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
 
 
-DEFAULT_SETTINGS = {
-    'room_size_x': 3000,
-    'room_size_y': 3000,
-    'room_size_z': 5000,
-    'scanner_zone_size_x': 2262.92,
-    'scanner_zone_size_y': 2137.09,
-    'scanner_zone_size_z': 531.4,
-    'scanner_offset_x': 368.54,
-    'scanner_offset_y': 300,
-    'scanner_offset_z': 200,
-    'scanner_L_x': 0,
-    'scanner_L_y': 0,
-    'scanner_L_z': 200
-}
+_DEFAULT_SETTINGS = [
+    Setting(
+        name='room_size_x',
+        unit=Unit(m=1),
+        description='',
+        default_value=3000,
+    ),
+    Setting(
+        name='room_size_y',
+        unit=Unit(m=1),
+        description='',
+        default_value=3000,
+    ),
+    Setting(
+        name='room_size_z',
+        unit=Unit(m=1),
+        description='',
+        default_value=5000,
+    ),
+    Setting(
+        name='scanner_zone_size_x',
+        unit=Unit(m=1),
+        description='',
+        default_value=2262.92,
+    ),
+    Setting(
+        name='scanner_zone_size_y',
+        unit=Unit(m=1),
+        description='',
+        default_value=2137.09,
+    ),
+    Setting(
+        name='scanner_zone_size_z',
+        unit=Unit(m=1),
+        description='',
+        default_value=531.4,
+    ),
+    Setting(
+        name='scanner_offset_x',
+        unit=Unit(m=1),
+        description='',
+        default_value=368.54,
+    ),
+    Setting(
+        name='scanner_offset_y',
+        unit=Unit(m=1),
+        description='',
+        default_value=300,
+    ),
+    Setting(
+        name='scanner_offset_z',
+        unit=Unit(m=1),
+        description='',
+        default_value=200,
+    ),
+    Setting(
+        name='scanner_L_x',
+        unit=Unit(m=1),
+        description='',
+        default_value=0,
+    ),
+    Setting(
+        name='scanner_L_y',
+        unit=Unit(m=1),
+        description='',
+        default_value=0,
+    ),
+    Setting(
+        name='scanner_L_z',
+        unit=Unit(m=1),
+        description='',
+        default_value=200,
+    ),
+
+]
+
+DEFAULT_SETTINGS = {setting.name: setting.default_value for setting in _DEFAULT_SETTINGS}
 
 
 def coords_to_GL_coords(func):
@@ -462,15 +527,14 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.paths_items = self.draw_points()
 
 
-class Settings(QTextEdit):
+class Settings(SettingsTableWidget):
     def __init__(self):
-        super(Settings, self).__init__()
-        self.setText('Scanner Visualizer Settings')
+        super(Settings, self).__init__(settings=_DEFAULT_SETTINGS)
 
 
 class PScannerVisualizer3D(PScannerVisualizer):
     def __init__(
-            self, *args, objects: PStorage, paths: PStorage, **kwargs
+            self, *args, objects: ObjectsStorage3d, paths: PathsStorage3d, **kwargs
     ):
         super(PScannerVisualizer3D, self).__init__(*args, **kwargs)
         self._widget = ScannerVisualizer(

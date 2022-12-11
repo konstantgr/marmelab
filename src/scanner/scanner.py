@@ -2,10 +2,10 @@
 Базовые классы для управления сканером
 """
 import dataclasses
-from abc import ABCMeta, abstractmethod, ABC
+from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from numbers import Number
-from src import EmptySignal
+from ..utils import EmptySignal
 
 
 class ScannerConnectionError(Exception):

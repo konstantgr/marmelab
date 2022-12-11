@@ -1,7 +1,7 @@
 import abc
 from typing import List
-from src.analyzator.analyzator_parameters import SParameters, FrequencyParameters, AnalyzatorType, ResultsFormatType
-from src import EmptySignal
+from .analyzator_parameters import SParameters, FrequencyParameters, AnalyzatorType, ResultsFormatType
+from ..utils import EmptySignal
 
 
 class AnalyzatorConnectionError(Exception):
