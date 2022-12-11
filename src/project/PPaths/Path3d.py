@@ -13,4 +13,4 @@ class Settings(QTextEdit):
 @dataclass
 class Path3d(PPath):
     widget: QWidget = field(default_factory=Settings)
-    points: np.ndarray = None
+    points: np.ndarray = np.array([])

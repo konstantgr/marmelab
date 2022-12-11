@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit
 from ..Widgets import SettingsTableWidget
 from ..Variable import Setting, Unit
 from ...scanner.TRIM import TRIMScanner, DEFAULT_SETTINGS
+from ..icons import settings_icon, control_icon
 
 
 class Control(QTextEdit):
@@ -27,11 +28,13 @@ class TRIMPScanner(PScanner):
         self._control_widgets = [
             PWidget(
                 'Control',
-                Control(self.signals)
+                Control(self.signals),
+                icon=control_icon
             ),
             PWidget(
                 'Settings',
-                Settings(self.signals, settings=self._get_settings())
+                Settings(self.signals, settings=self._get_settings()),
+                icon=settings_icon
             )
         ]
 

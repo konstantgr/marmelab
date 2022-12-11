@@ -9,7 +9,7 @@ from PyQt6.QtGui import QIcon
 from dataclasses import dataclass, field
 from abc import abstractmethod
 from typing import Union
-import os
+from .icons import path_icon, object_icon
 
 
 def _meta_resolve(cls):
@@ -151,12 +151,12 @@ class PMeasurand(PBase):
 
 @dataclass
 class PObject(PBase):
-    icon: QIcon = QIcon(os.path.join(os.path.dirname(__file__), 'icons/object.png'))
+    icon: QIcon = object_icon
 
 
 @dataclass
 class PPath(PBase):
-    icon: QIcon = QIcon(os.path.join(os.path.dirname(__file__), 'icons/path.png'))
+    icon: QIcon = path_icon
 
 
 class PStorageSignals(QObject):

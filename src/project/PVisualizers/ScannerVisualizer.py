@@ -14,6 +14,7 @@ from ..Widgets import SettingsTableWidget
 from ..Variable import Setting, Unit
 from ..PStorages import ObjectsStorage3d, PathsStorage3d
 from OpenGL.GL import GL_BLEND, GL_DEPTH_TEST, GL_ALPHA_TEST, GL_CULL_FACE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+from ..icons import settings_icon
 
 
 _DEFAULT_SETTINGS = [
@@ -551,7 +552,8 @@ class PScannerVisualizer3D(PScannerVisualizer):
         self._control_widgets = [
             PWidget(
                 'Settings',
-                Settings(visualizer=self._widget)
+                Settings(visualizer=self._widget),
+                icon=settings_icon
             )
         ]
 
