@@ -14,6 +14,10 @@ class Control(QTextEdit):
 class Settings(SettingsTableWidget):
     def __init__(self, signals: PScannerSignals, settings: list[Setting], parent: QWidget = None):
         super(Settings, self).__init__(settings=settings, parent=parent)
+        self.signals = signals
+
+    def apply(self):
+        self.signals.set_settings.emit(self.table.to_dict())
 
 
 class TRIMPScanner(PScanner):

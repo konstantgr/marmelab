@@ -5,8 +5,11 @@ from ..analyzator import AnalyzerSignals, BaseAnalyzator
 from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from PyQt6.QtWidgets import QWidget
+from PyQt6.QtGui import QIcon
 from dataclasses import dataclass, field
 from abc import abstractmethod
+from typing import Union
+import os
 
 
 def _meta_resolve(cls):
@@ -20,6 +23,7 @@ def _meta_resolve(cls):
 class PWidget:
     name: str
     widget: QWidget
+    icon: QIcon = None
 
 
 class PScannerSignals(QObject, ScannerSignals, metaclass=_meta_resolve(ScannerSignals)):
@@ -128,32 +132,31 @@ class PAnalyzerVisualizer(abc.ABC):
         pass
 
 
+@dataclass
 class PBase:
-    pass
+    name: str
+    widget: QWidget
+    icon: QIcon = None
 
 
+@dataclass
 class PExperiment(PBase):
     pass
 
 
+@dataclass
 class PMeasurand(PBase):
     pass
 
 
+@dataclass
 class PObject(PBase):
-    def __init__(
-            self,
-            widget: PWidget
-    ):
-        self.widget = widget
+    icon: QIcon = QIcon(os.path.join(os.path.dirname(__file__), 'icons/object.png'))
 
 
+@dataclass
 class PPath(PBase):
-    def __init__(
-            self,
-            widget: PWidget
-    ):
-        self.widget = widget
+    icon: QIcon = QIcon(os.path.join(os.path.dirname(__file__), 'icons/path.png'))
 
 
 class PStorageSignals(QObject):
@@ -165,7 +168,7 @@ class PStorageSignals(QObject):
 @dataclass
 class PStorage:
     signals: PStorageSignals = field(default_factory=PStorageSignals)
-    data: list[PBase] = field(default_factory=list)
+    data: list[Union[PBase, PExperiment, PMeasurand, PObject, PPath]] = field(default_factory=list)
 
     def __post_init__(self):
         self.signals.add.connect(self.append)
@@ -216,9 +219,9 @@ class Project:
         tree['Scanner graphics'] = self.scanner_visualizer.control_widgets
         tree['Analyzer graphics'] = self.analyzer_visualizer.control_widgets
 
-        tree['Objects'] = [w.widget for w in self.objects.data]
-        tree['Paths'] = [w.widget for w in self.paths.data]
-        tree['Experiments'] = [w.widget for w in self.experiments.data]
+        tree['Objects'] = [PWidget(name=w.name, widget=w.widget, icon=w.icon) for w in self.objects.data]
+        tree['Paths'] = [PWidget(name=w.name, widget=w.widget, icon=w.icon) for w in self.paths.data]
+        tree['Experiments'] = [PWidget(name=w.name, widget=w.widget, icon=w.icon) for w in self.experiments.data]
 
         return tree
 

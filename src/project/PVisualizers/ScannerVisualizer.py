@@ -171,7 +171,6 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.scanner_items = self.draw_scanner()
         self.object_items = self.draw_objects()
         self.paths_items = self.draw_points()
-        self.draw_text()
 
         self.scanner.signals.position.connect(self.set_scanner_pos)
         self.objects.signals.changed.connect(self.redraw_objects)
@@ -298,7 +297,9 @@ class ScannerVisualizer(gl.GLViewWidget):
         gz.translate(self.room_sizeX / 2, self.room_sizeY / 2, 0)
         self.addItem(gz)
 
-        return gx, gy, gz
+        x, y, z = self.draw_text()
+
+        return gx, gy, gz, x, y, z
 
     def redraw_grid(self):
         for item in self.grid_items:
@@ -489,6 +490,7 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.addItem(y)
         z = gl.GLTextItem(pos=[0, 0, self.room_sizeZ + 0.1], text='y', color=color1)
         self.addItem(z)
+        return x, y, z
 
     @staticmethod
     def _loadSTL(filename):
@@ -528,8 +530,12 @@ class ScannerVisualizer(gl.GLViewWidget):
 
 
 class Settings(SettingsTableWidget):
-    def __init__(self):
+    def __init__(self, visualizer: ScannerVisualizer):
         super(Settings, self).__init__(settings=_DEFAULT_SETTINGS)
+        self.visualizer = visualizer
+
+    def apply(self):
+        self.visualizer.set_settings(**self.table.to_dict())
 
 
 class PScannerVisualizer3D(PScannerVisualizer):
@@ -545,7 +551,7 @@ class PScannerVisualizer3D(PScannerVisualizer):
         self._control_widgets = [
             PWidget(
                 'Settings',
-                Settings()
+                Settings(visualizer=self._widget)
             )
         ]
 

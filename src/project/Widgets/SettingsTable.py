@@ -54,7 +54,7 @@ class QSmartTableModel(QAbstractTableModel):
             elif column == 1:
                 return variable.value
             elif column == 2:
-                if self._validate(variable.value, variable.unit):
+                if self._validate(variable.value, variable):
                     return str(variable.unit)
                 return str(variable.unit)
             elif column == 3:
@@ -63,7 +63,7 @@ class QSmartTableModel(QAbstractTableModel):
             if column == 3:
                 return variable.description
         elif role == Qt.ItemDataRole.BackgroundRole:
-            if self._validate(variable.value, variable.unit):
+            if self._validate(variable.value, variable):
                 return
             return QColor('red')
 
@@ -84,7 +84,7 @@ class QSmartTableModel(QAbstractTableModel):
     #     else:
     #         return text.strip(), variable.unit.default_unit()
 
-    def _validate(self, value: str, unit: Unit):
+    def _validate(self, value: str, variable: ModelVariable):
         """
         Проверяет валидность введенного текста
 
@@ -101,10 +101,10 @@ class QSmartTableModel(QAbstractTableModel):
         # if not variable.unit.validate(unit):
         #     return False
         #
-        # try:
-        #     variable.type(value_str)
-        # except:
-        #     return False
+        try:
+            variable.type(text)
+        except:
+            return False
 
         return True
 

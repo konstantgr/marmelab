@@ -1,6 +1,7 @@
 from ..Project import PWidget, PPath
-from PyQt6.QtWidgets import QTextEdit
+from PyQt6.QtWidgets import QTextEdit, QWidget
 import numpy as np
+from dataclasses import dataclass, field
 
 
 class Settings(QTextEdit):
@@ -9,20 +10,7 @@ class Settings(QTextEdit):
         self.setText('Path Settings')
 
 
+@dataclass
 class Path3d(PPath):
-    def __init__(
-            self,
-            name: str,
-            points: np.ndarray
-    ):
-        super(Path3d, self).__init__(
-            widget=PWidget(
-                name,
-                Settings()
-            )
-        )
-
-        self.points = points
-
-
-
+    widget: QWidget = field(default_factory=Settings)
+    points: np.ndarray = None

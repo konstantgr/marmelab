@@ -31,6 +31,11 @@ scanner = TRIMPScanner(
     instrument=TRIMScanner(ip="127.0.0.1", port=9000, signals=scanner_signals),
     signals=scanner_signals,
 )
+
+from src.scanner.TRIM.TRIM_emulator import run
+run(blocking=False, ip="127.0.0.1", port=9000, motion_time=5)
+scanner.instrument.connect()
+
 scanner_visualizer = PScannerVisualizer3D(
     instrument=scanner,
     paths=paths,

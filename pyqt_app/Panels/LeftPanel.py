@@ -15,7 +15,7 @@ class TreeSignal(QObject):
 
 class TreeItem(QTreeWidgetItem):
     """
-    Сущность из дерева, содержащая необходимые свойства PWidget
+    Сущность из дерева, содержащая PWidget
     """
     def __init__(self, *args, pwidget: PWidget, tree_num: int, **kwargs):
         super(TreeItem, self).__init__(*args, [pwidget.name], **kwargs)
@@ -59,7 +59,9 @@ class LeftPanel(BasePanel):
         for tab in project_tree.keys():
             tab_item = QTreeWidgetItem(self.tree, [tab])
             for pwidget in project_tree[tab]:
-                TreeItem(tab_item, pwidget=pwidget, tree_num=i)
+                item = TreeItem(tab_item, pwidget=pwidget, tree_num=i)
+                if pwidget.icon is not None:
+                    item.setIcon(0, pwidget.icon)
                 i += 1
 
         self.tree.expandAll()

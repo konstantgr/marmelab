@@ -1,5 +1,7 @@
+from dataclasses import dataclass, field
+
 from ..Project import PObject, PWidget
-from PyQt6.QtWidgets import QTextEdit
+from PyQt6.QtWidgets import QTextEdit, QWidget
 import os
 from stl import mesh
 import numpy as np
@@ -11,17 +13,11 @@ class Settings(QTextEdit):
         self.setText('Object Settings')
 
 
+@dataclass
 class Object3d(PObject):
-    def __init__(
-            self,
-            name: str
-    ):
-        super(Object3d, self).__init__(
-            widget=PWidget(
-                name,
-                Settings()
-            )
-        )
+    widget: QWidget = field(default_factory=Settings)
+
+    def __post_init__(self):
         filename = os.path.join(os.path.dirname(__file__), 'assets/cylinder.stl')
         self.mesh = mesh.Mesh.from_file(filename)
 
