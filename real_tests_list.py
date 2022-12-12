@@ -1,10 +1,8 @@
 import threading
 import time
 
-import TRIM
-import src.scanner
-from TRIM import TRIMScanner
-from src.scanner import Position
+from src.scanner.TRIM import TRIMScanner
+from src.scanner import Position, TRIM
 
 # TRIM_emulator.run(blocking=False, ip='127.0.0.1', port=9000, motion_time=5)
 # scanner = TRIMScanner(ip='127.0.0.1', port=9000)

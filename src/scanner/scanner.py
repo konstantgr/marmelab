@@ -5,7 +5,7 @@ import dataclasses
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from numbers import Number
-from PyQt6.QtCore import pyqtBoundSignal
+from ..utils import EmptySignal
 
 
 class ScannerConnectionError(Exception):
@@ -50,22 +50,6 @@ class BaseAxes:
     # e: float = None
     # f: float = None
     # g: float = None
-
-    def to_dict(self) -> dict[str:int]:
-        """
-        Перевод датакласса в словарь
-
-        :return: словарь с названием осей в ключах
-        """
-        return {
-            'x': self.x,
-            'y': self.y,
-            'z': self.z,
-            'w': self.w,
-            # 'e': self.e,
-            # 'f': self.f,
-            # 'g': self.g,
-        }
 
     def __add__(self, other):
         if not isinstance(other, BaseAxes):
@@ -143,6 +127,47 @@ class Deceleration(BaseAxes):
     """
 
 
+class ScannerSignals(metaclass=ABCMeta):
+    """
+    Базовые сигналы сканера
+    """
+
+    @property
+    @abstractmethod
+    def position(self) -> EmptySignal:
+        """
+        Сигнал с позицией сканера
+        """
+
+    @property
+    @abstractmethod
+    def velocity(self) -> EmptySignal:
+        """
+        Сигнал со скоростью сканера
+        """
+
+    @property
+    @abstractmethod
+    def acceleration(self) -> EmptySignal:
+        """
+        Сигнал с ускорением сканера
+        """
+
+    @property
+    @abstractmethod
+    def deceleration(self) -> EmptySignal:
+        """
+        Сигнал с замедлением сканера
+        """
+
+    @property
+    @abstractmethod
+    def is_connected(self) -> EmptySignal:
+        """
+        Сигнал с состоянием сканера
+        """
+
+
 class Scanner(metaclass=ABCMeta):
     """
     Базовый класс сканера
@@ -152,8 +177,7 @@ class Scanner(metaclass=ABCMeta):
     def goto(self, position: Position) -> None:
         """
         Переместиться в точку point.
-        Является thread safe!
-        Однако, команда stop будет действовать только на первый из потоков в очереди.
+        Обязан быть thread safe!
 
         :param position: то, куда необходимо переместиться
         :type position: Position
@@ -244,38 +268,12 @@ class Scanner(metaclass=ABCMeta):
 
         """
 
-    @property
     @abstractmethod
-    def position_signal(self) -> pyqtBoundSignal:
+    def set_settings(self, *args, **kwargs) -> None:
         """
-        Сигнал, в который передается положение сканера
+        Применение настроек
 
-        :return: pyqtSignal(Position)
-        """
-
-    @property
-    @abstractmethod
-    def velocity_signal(self) -> pyqtBoundSignal:
-        """
-        Сигнал, в который передается скорость сканера
-
-        :return: pyqtSignal(Velocity)
-        """
-
-    @property
-    @abstractmethod
-    def acceleration_signal(self) -> pyqtBoundSignal:
-        """
-        Сигнал, в который передается ускорение сканера
-
-        :return: pyqtSignal(Acceleration)
-        """
-
-    @property
-    @abstractmethod
-    def deceleration_signal(self) -> pyqtBoundSignal:
-        """
-        Сигнал, в который передается замедление сканера
-
-        :return: pyqtSignal(Deceleration)
+        :param args:
+        :param kwargs:
+        :return:
         """

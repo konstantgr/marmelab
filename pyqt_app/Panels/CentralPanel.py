@@ -1,19 +1,6 @@
-from enum import IntEnum, auto
-from PyQt6.QtWidgets import QScrollArea, QStackedWidget
+from PyQt6.QtWidgets import QScrollArea, QWidget, QStackedWidget
 from .BasePanel import BasePanel
-from . import RightWidgets
-from . import CentralWidgets
-
-
-class CentralPanelTypes(IntEnum):
-    """
-    замена цифр на названия
-    """
-    Initial: int = auto()
-    RoomSettings = auto()
-    ScannerSettings: int = auto()
-    Scanner: int = auto()
-    Test: int = auto()
+from pyqt_app import project
 
 
 class CentralPanel(QScrollArea, BasePanel):
@@ -25,20 +12,34 @@ class CentralPanel(QScrollArea, BasePanel):
         создание виджетов в центр. панели. В слои они добавляются в классе централ виджет
         """
         super(CentralPanel, self).__init__(*args, **kwargs)
-        self.pages = {
-            CentralPanelTypes.Initial: CentralWidgets.Init(),
-            CentralPanelTypes.RoomSettings: CentralWidgets.RoomSettings(default_settings=RightWidgets.DEFAULT_SETTINGS),
-            CentralPanelTypes.ScannerSettings: CentralWidgets.ScannerSettings(),
-            CentralPanelTypes.Scanner: CentralWidgets.ScannerControl(),
-            CentralPanelTypes.Test: CentralWidgets.Test(),
-        }
+
         self.stacked_widget = QStackedWidget(self)
-        for key in self.pages.keys():
-            self.stacked_widget.insertWidget(key, self.pages[key])  # добавление виджетов в центральную панель
+
+        self.draw()
 
         self.setWidget(self.stacked_widget)
         self.setWidgetResizable(True)
-        self.room_settings: CentralWidgets.RoomSettings = self.pages[CentralPanelTypes.RoomSettings]
 
-    def display(self, i):
-        self.stacked_widget.setCurrentIndex(i)
+    def draw(self) -> None:
+        """
+        Отрисовка всех возможныйх центральных виджетов
+        """
+        for i in range(self.stacked_widget.count()):
+            w = self.stacked_widget.widget(i)
+            self.stacked_widget.removeWidget(w)
+
+        project_tree = project.tree()
+        i = 0
+        for tab in project_tree.keys():
+            for pwidget in project_tree[tab]:
+                self.stacked_widget.insertWidget(i, pwidget.widget)
+                i += 1
+
+    def display(self, tree_num: int) -> None:
+        """
+        Принимает номер виджета в дереве и выводит его
+
+        :param tree_num:
+        :return:
+        """
+        self.stacked_widget.setCurrentIndex(tree_num)

@@ -1,7 +1,7 @@
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter, QTextEdit
 from PyQt6.QtCore import Qt
-from Panels import *
-
+from Panels import LogPanel, RightPanel, LeftPanel, CentralPanel
+from pyqt_app import project
 # TODO: сделать вывод логов в файл
 # TODO: Изменить таблицу сканнер сеттингс
 # TODO: Реализация таблицы сканнер контрол (добавить пока что хождение по точкам)
@@ -15,7 +15,6 @@ from Panels import *
 # TODO: аналогично во вкладке тест
 
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -25,12 +24,22 @@ class MainWindow(QMainWindow):
 
         self.left_panel = LeftPanel(self.main_widget)  # settings selector
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
-        self.right_panel = RightPanel(self.main_widget)  # graphics
-        self.log_panel = LogPanel(self.main_widget)  # log window
+        self.left_panel.signals.tree_num.connect(self.center_panel.display)
 
-        self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
-        room_settings = self.center_panel.room_settings
-        room_settings.settings_signal.connect(self.right_panel.scanner_widget.set_settings_from_dict)
+        self.right_panel = RightPanel(
+            scanner_visualizer=project.scanner_visualizer,
+            analyzer_visualizer=project.analyzer_visualizer,
+            parent=self.main_widget
+        )  # graphics
+
+        self.log_panel = LogPanel(
+            parent=self.main_widget
+        )  # log window
+
+        # self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
+        # room_settings = self.center_panel.room_settings
+        # room_settings.settings_signal.connect(self.right_panel.scanner_widget.set_settings_from_dict)
+
         left_center_splitter = QSplitter(orientation=Qt.Orientation.Horizontal)
         left_center_splitter.insertWidget(0, self.left_panel)
         left_center_splitter.insertWidget(1, self.center_panel)

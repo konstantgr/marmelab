@@ -1,11 +1,32 @@
 import abc
 from typing import List
-from src.analyzator.analyzator_parameters import SParameters, FrequencyParameters, AnalyzatorType, ResultsFormatType
+from .analyzator_parameters import SParameters, FrequencyParameters, AnalyzatorType, ResultsFormatType
+from ..utils import EmptySignal
 
 
 class AnalyzatorConnectionError(Exception):
     def __init__(self):
         super().__init__("Error in analyzator connection")
+
+
+class AnalyzerSignals(metaclass=abc.ABCMeta):
+    """
+    Базовые сигналы анализатора
+    """
+
+    @property
+    @abc.abstractmethod
+    def data(self) -> EmptySignal:
+        """
+        Сигнал с данными анализатора
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_connected(self) -> EmptySignal:
+        """
+        Сигнал с состоянием анализатора
+        """
 
 
 class BaseAnalyzator(abc.ABC):
