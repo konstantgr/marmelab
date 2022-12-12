@@ -22,6 +22,8 @@ class FrequencyParameters:
 @unique
 class AnalyzatorType(Enum):
     ROHDE_SCHWARZ = 'ROHDE_SCHWARZ'
+    CEYEAR = 'CEYEAR'
+    PLANAR = 'PLANAR'
 
 
 @unique
