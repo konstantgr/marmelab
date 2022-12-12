@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QListWidget, QHBoxLayout, QSizePolicy, QTreeView, QWidget, QTreeWidget, QTreeWidgetItem
-from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from .BasePanel import BasePanel
 from .CentralPanel import CentralPanelTypes
+
 
 class LeftPanel(BasePanel):
     """
@@ -13,24 +13,32 @@ class LeftPanel(BasePanel):
         """
         super().__init__(*args, **kwargs)
 
-        """"
-        попытка сделать ветвление 
-        # tree_view = QTreeView()
-        # tree_model = QStandardItemModel()
-        # tree_view.setModel(tree_model)
+
+        # self.tree_widget = QTreeWidget()
+        # self.tree_widget.setColumnCount(2)
+        # self.panels = ["Analyser", "Scanner", "Test"]
+        # self.pgs = {"Analyser": [CentralPanelTypes.RoomSettings, CentralPanelTypes.Initial],
+        #             "Scanner": [CentralPanelTypes.ScannerSettings, CentralPanelTypes.Scanner],
+        #             "Test": ["CentralPanelTypes.Test"]}
         #
-        # # root_node = tree_model.invisibleRootItem()
-        # 
-
-        # root_node.appendRow()
-
-        # tw = QTreeWidget()
-        # cg = QStandardItem(tw, "Scanner", "Analysator", "Experiment")
-        # c1 = QTreeWidgetItem(cg, "Control")
-        """
-
-        self.left_widget = QWidget()
-        self.leftlist = QListWidget(self)
+        # for i in self.panels:
+        #     panels_item = QTreeWidgetItem(self.tree_widget)
+        #     panels_item.setText(0, i)
+        #
+        #     for j in self.pgs[i]:
+        #         pages_item = QTreeWidgetItem(self.tree_widget)
+        #
+        #         #pages_item.setText(0, j)
+        #         panels_item.addChild(pages_item)
+        #
+        #
+        #
+        #
+        # hbox = QHBoxLayout(self)
+        # hbox.addWidget(self.tree_widget)
+        #
+        # self.setLayout(hbox)
+        # self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
         self.leftlist.insertItem(CentralPanelTypes.Initial, 'Initial')
         self.leftlist.insertItem(CentralPanelTypes.RoomSettings, 'RoomSettings')

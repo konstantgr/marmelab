@@ -19,7 +19,8 @@ class MainWindow(QMainWindow):
         self.bar_panel = BarPanel(self.main_widget)  # bar window
         #self.bar_panel.bar.messageChanged("dsfds")  # не работает
 
-        self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
+
+        #self.left_panel.tree_widget.currentRowChanged.connect(self.center_panel.display)
         room_settings = self.center_panel.room_settings
         room_settings.settings_signal.connect(self.right_panel.scanner_widget.set_settings_from_dict)
         left_center_splitter = QSplitter(orientation=Qt.Orientation.Horizontal)
