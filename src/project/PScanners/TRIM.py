@@ -1,15 +1,60 @@
 from ..Project import PScanner, PWidget, PScannerSignals
-from PyQt6.QtWidgets import QWidget, QTextEdit
+from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QSizePolicy
 from ..Widgets import SettingsTableWidget
 from ..Variable import Setting, Unit
 from ...scanner.TRIM import TRIMScanner, DEFAULT_SETTINGS
 from ..icons import settings_icon, control_icon
+from PyQt6.QtCore import Qt
+from pyqt_app import logger
+from src.scanner.TRIM.TRIM_emulator import run  # use it only for emulating
 
 
-class Control(QTextEdit):
-    def __init__(self, signals: PScannerSignals):
+class Control(QWidget):
+    def __init__(self, signals: PScannerSignals, scanner: TRIMScanner):
         super().__init__()
-        self.setText('Scanner Control')
+        self.scanner = scanner
+        vbox = QVBoxLayout(self)
+        self.connect_button = QPushButton("Connect")
+        self.home_button = QPushButton("Home")
+        self.abort_button = QPushButton("Abort")
+        self.upd_position_button = QPushButton("Update \n current position")
+        self.connect_button.setFixedSize(100, 50)
+        self.home_button.setFixedSize(100, 50)
+        self.abort_button.setFixedSize(100, 50)
+        self.upd_position_button.setFixedSize(100, 75)
+
+        self.connect_button.clicked.connect(self.f_connection)
+        self.home_button.clicked.connect(self.f_home)
+
+        self.abort_button.setStyleSheet("background-color: red")
+        vbox.addWidget(self.connect_button)
+        vbox.addWidget(self.home_button)
+        vbox.addWidget(self.abort_button)
+        vbox.addWidget(self.upd_position_button)
+        vbox.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.setLayout(vbox)
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+
+    def f_connection(self):
+        """
+        This function makes connection to the scanner
+        """
+        run(blocking=False, motion_time=2)  # use it only for emulating
+        self.scanner.connect()
+        logger.info('Scanner is connected')
+
+    def f_home(self):
+        """
+        This function sets "home" current cords.
+        """
+        from src.scanner import Position
+        self.scanner.home()
+        self.scanner.set_settings(position=Position(0, 0, 0, 0))
+        logger.debug("Scanner at home. Scanner position is:")
+        current_position = self.scanner.position()
+        logger.debug('x: ', current_position.x)
+        logger.debug('y: ', current_position.y)
+        logger.debug('z: ', current_position.z)
 
 
 class Settings(SettingsTableWidget):
@@ -28,7 +73,7 @@ class TRIMPScanner(PScanner):
         self._control_widgets = [
             PWidget(
                 'Control',
-                Control(self.signals),
+                Control(self.signals, instrument),
                 icon=control_icon
             ),
             PWidget(

@@ -1,12 +1,23 @@
 from ..Project import PAnalyzer, PWidget, PAnalyzerSignals
-from PyQt6.QtWidgets import QWidget, QTextEdit
+from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QSizePolicy
 from ..icons import control_icon
+from PyQt6.QtCore import Qt
+from src.scanner.TRIM.TRIM_emulator import run  # use it only for emulating
+from ...scanner.TRIM import TRIMScanner
 
 
-class Control(QTextEdit):
+class Control(QWidget):
     def __init__(self, signals: PAnalyzerSignals):
         super(Control, self).__init__()
-        self.setText('Analyzer Control')
+        super().__init__()
+        vbox = QVBoxLayout(self)
+        self.connect_button = QPushButton("Connect")
+        self.connect_button.setFixedSize(100, 50)
+
+        vbox.addWidget(self.connect_button)
+        vbox.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.setLayout(vbox)
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
 
 class Settings(QTextEdit):
