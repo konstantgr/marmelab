@@ -33,6 +33,12 @@ paths.append(
         points=np.array([[1000*i, 1000, 0] for i in range(5)])
     )
 )
+paths.append(
+    Path3d(
+        name='Path 3',
+        points=np.array([[1000*i, 1000, 0] for i in range(5)])
+    )
+)
 
 scanner_signals = PScannerSignals()
 scanner = TRIMPScanner(
@@ -40,9 +46,6 @@ scanner = TRIMPScanner(
     signals=scanner_signals,
 )
 
-from src.scanner.TRIM.TRIM_emulator import run
-run(blocking=False, ip="127.0.0.1", port=9000, motion_time=5)
-scanner.instrument.connect()
 
 scanner_visualizer = PScannerVisualizer3D(
     instrument=scanner,
