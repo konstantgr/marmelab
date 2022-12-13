@@ -91,83 +91,84 @@ def update_ms_em(scanner, tmp, motion_time):
 
 
 def emulator(ip="127.0.0.1", port=9000, motion_time: int = 5):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((ip, port))
-        s.listen()
-        conn, addr = s.accept()
-        scanner = ScannerStorage()
-        with conn:
-            while True:
-                data = conn.recv(1024)
-                if not data:
-                    break
+    while True:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind((ip, port))
+            s.listen()
+            conn, addr = s.accept()
+            scanner = ScannerStorage()
+            with conn:
+                while True:
+                    data = conn.recv(1024)
+                    if not data:
+                        break
 
-                if not data.endswith(b';'):
-                    raise RuntimeError
-                new_data = data
+                    if not data.endswith(b';'):
+                        raise RuntimeError
+                    new_data = data
 
-                axis = None
-                done = False
-                if data[1:3] == b'PS':
-                    update_ms_em(scanner, time.time(), motion_time)
-                    axis = scanner.position
-                elif data[1:3] == b'AP':
-                    axis = scanner.absolute_position
-                elif data[1:3] == b'SP':
-                    axis = scanner.velocity
-                elif data[1:3] == b'AC':
-                    axis = scanner.acceleration
-                elif data[1:3] == b'DC':
-                    axis = scanner.deceleration
-                elif data[1:3] == b'MO':
-                    axis = scanner.motor_on
-                elif data[1:3] == b'MM':
-                    axis = scanner.motion_mode
-                elif data[1:3] == b'SM':
-                    axis = scanner.special_motion_mode
-                elif data[1:3] == b'HL':
-                    axis = scanner.high_limit
-                elif data[1:3] == b'LL':
-                    axis = scanner.low_limit
+                    axis = None
+                    done = False
+                    if data[1:3] == b'PS':
+                        update_ms_em(scanner, time.time(), motion_time)
+                        axis = scanner.position
+                    elif data[1:3] == b'AP':
+                        axis = scanner.absolute_position
+                    elif data[1:3] == b'SP':
+                        axis = scanner.velocity
+                    elif data[1:3] == b'AC':
+                        axis = scanner.acceleration
+                    elif data[1:3] == b'DC':
+                        axis = scanner.deceleration
+                    elif data[1:3] == b'MO':
+                        axis = scanner.motor_on
+                    elif data[1:3] == b'MM':
+                        axis = scanner.motion_mode
+                    elif data[1:3] == b'SM':
+                        axis = scanner.special_motion_mode
+                    elif data[1:3] == b'HL':
+                        axis = scanner.high_limit
+                    elif data[1:3] == b'LL':
+                        axis = scanner.low_limit
 
-                elif data[1:3] == b'BG':
-                    scanner.in_motion = True
-                    axis = scanner.motion_start_time
-                    letter = data[0:1]
-                    tmp = time.time()
-                    set_by_value(axis, letter, tmp)
-                    update_ms_em(scanner, time.time(), motion_time)
-                    new_data += b'>'
-                    done = True
+                    elif data[1:3] == b'BG':
+                        scanner.in_motion = True
+                        axis = scanner.motion_start_time
+                        letter = data[0:1]
+                        tmp = time.time()
+                        set_by_value(axis, letter, tmp)
+                        update_ms_em(scanner, time.time(), motion_time)
+                        new_data += b'>'
+                        done = True
 
-                elif data[1:3] == b'ST' or data[1:3] == b'AB':
-                    update_ms_em(scanner, time.time(), motion_time)
-                    scanner.in_motion = False
-                    letter = data[0:1]
-                    axis = scanner.motor_status
-                    set_by_value(axis, letter, 0)
-                    axis = scanner.error_motion
-                    set_by_value(axis, letter, 1)
-                    new_data += b'>'
-                    done = True
+                    elif data[1:3] == b'ST' or data[1:3] == b'AB':
+                        update_ms_em(scanner, time.time(), motion_time)
+                        scanner.in_motion = False
+                        letter = data[0:1]
+                        axis = scanner.motor_status
+                        set_by_value(axis, letter, 0)
+                        axis = scanner.error_motion
+                        set_by_value(axis, letter, 1)
+                        new_data += b'>'
+                        done = True
 
-                elif data[1:3] == b'MS':
-                    update_ms_em(scanner, time.time(), motion_time)
-                    axis = scanner.motor_status
-                elif data[1:3] == b'EM':
-                    update_ms_em(scanner, time.time(), motion_time)
-                    axis = scanner.error_motion
+                    elif data[1:3] == b'MS':
+                        update_ms_em(scanner, time.time(), motion_time)
+                        axis = scanner.motor_status
+                    elif data[1:3] == b'EM':
+                        update_ms_em(scanner, time.time(), motion_time)
+                        axis = scanner.error_motion
 
-                if axis is None and not done:
-                    new_data += b'?>'
-                elif not done:
-                    if data.count(b'=') == 0:
-                        new_data += return_by_cmd(axis, data[0:1])
-                    elif data[3:4] == b'=':
-                        new_data += set_by_cmd(axis, data[0:1], data[4:-1])
-                    else:
+                    if axis is None and not done:
                         new_data += b'?>'
-                conn.sendall(new_data)
+                    elif not done:
+                        if data.count(b'=') == 0:
+                            new_data += return_by_cmd(axis, data[0:1])
+                        elif data[3:4] == b'=':
+                            new_data += set_by_cmd(axis, data[0:1], data[4:-1])
+                        else:
+                            new_data += b'?>'
+                    conn.sendall(new_data)
 
 
 def run(blocking=True, ip="127.0.0.1", port=9000, motion_time=5):

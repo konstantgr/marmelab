@@ -7,6 +7,8 @@ from typing import Union, Any
 import re
 from PyQt6.QtCore import QObject
 from dataclasses import dataclass
+from .StatedependentButton import StateDepPushButton
+from ..Project import PState
 
 
 @dataclass
@@ -170,6 +172,7 @@ class SettingsTableWidget(QWidget):
     def __init__(
             self,
             settings: list[Setting],
+            apply_state: PState = None,
             **kwargs
     ):
         super(SettingsTableWidget, self).__init__(**kwargs)
@@ -198,7 +201,17 @@ class SettingsTableWidget(QWidget):
         set_default_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         buttons_widget.layout().addWidget(set_default_button)
 
-        apply_button = QPushButton("Apply", parent=buttons_widget)
+        if apply_state is None:
+            apply_button = QPushButton(
+                text="Apply",
+                parent=buttons_widget
+            )
+        else:
+            apply_button = StateDepPushButton(
+                state=apply_state,
+                text="Apply",
+                parent=buttons_widget
+            )
         apply_button.clicked.connect(self.apply)
         apply_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         buttons_widget.layout().addWidget(apply_button)

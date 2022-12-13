@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
         self.left_panel.signals.tree_num.connect(self.center_panel.display)
 
         project.scanner.signals.is_connected.connect(self.bar_panel.sc_status_msg)
-        project.scanner.signals.is_connected.emit(project.scanner.instrument.is_available)
+        project.scanner.signals.is_connected.emit(project.scanner.instrument.is_connected)
 
         project.analyzer.signals.is_connected.connect(self.bar_panel.an_status_msg)
         project.analyzer.signals.is_connected.emit(False)

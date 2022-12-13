@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QIcon
 from dataclasses import dataclass, field
 from abc import abstractmethod
-from typing import Union
+from typing import Union, Callable
 from .icons import path_icon, object_icon
 
 
@@ -26,18 +26,80 @@ class PWidget:
     icon: QIcon = None
 
 
+class PState(QObject):
+    changed_signal: pyqtBoundSignal = pyqtSignal()
+
+    def __init__(self, value: bool, signal: pyqtBoundSignal = None):
+        super(PState, self).__init__()
+        self._value = value
+        if signal is not None:
+            signal.connect(self.update)
+
+    def update(self, state: bool):
+        if self._value != state:
+            self._value = state
+            # print(state)
+            self.changed_signal.emit()
+
+    def __bool__(self) -> bool:
+        return self._value
+
+    def __and__(self, other):
+        new_state = PState(value=bool(self) and bool(other))
+
+        def update():
+            """Вспомогательный апдейтер"""
+            state = bool(self) and bool(other)
+            new_state.update(state)
+
+        self.changed_signal.connect(update)
+        other.changed_signal.connect(update)
+        return new_state
+
+    def __or__(self, other):
+        new_state = PState(value=bool(self) and bool(other))
+
+        def update():
+            """Вспомогательный апдейтер"""
+            state = bool(self) or bool(other)
+            new_state.update(state)
+
+        self.changed_signal.connect(update)
+        other.changed_signal.connect(update)
+        return new_state
+
+    def __invert__(self):
+        new_state = PState(value=not bool(self))
+
+        def update():
+            """Вспомогательный апдейтер"""
+            state = not bool(self)
+            new_state.update(state)
+
+        self.changed_signal.connect(update)
+        return new_state
+
+
 class PScannerSignals(QObject, ScannerSignals, metaclass=_meta_resolve(ScannerSignals)):
     position: pyqtBoundSignal = pyqtSignal([BaseAxes], [Position])
     velocity: pyqtBoundSignal = pyqtSignal([BaseAxes], [Velocity])
     acceleration: pyqtBoundSignal = pyqtSignal([BaseAxes], [Acceleration])
     deceleration: pyqtBoundSignal = pyqtSignal([BaseAxes], [Deceleration])
     is_connected: pyqtBoundSignal = pyqtSignal(bool)
+    is_moving: pyqtBoundSignal = pyqtSignal(bool)
     set_settings: pyqtBoundSignal = pyqtSignal(dict)
     stop: pyqtBoundSignal = pyqtSignal()
     abort: pyqtBoundSignal = pyqtSignal()
     connect: pyqtBoundSignal = pyqtSignal()
     disconnect: pyqtBoundSignal = pyqtSignal()
     home: pyqtBoundSignal = pyqtSignal()
+
+
+@dataclass
+class PScannerStates:
+    is_connected: PState
+    is_moving: PState
+    is_in_use: PState  # используется в эксперименте прямо сейчас
 
 
 class PScanner(abc.ABC):
@@ -48,6 +110,11 @@ class PScanner(abc.ABC):
     ):
         self.signals = signals
         self.instrument = instrument
+        self.states = PScannerStates(
+            is_connected=PState(False, self.signals.is_connected),
+            is_moving=PState(False, self.signals.is_moving),
+            is_in_use=PState(False),
+        )
 
         self.signals.stop.connect(self.instrument.stop)
         self.signals.abort.connect(self.instrument.abort)

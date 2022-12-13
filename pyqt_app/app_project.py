@@ -9,7 +9,7 @@ from src.project.PObjects import Object3d
 from src.project.PPaths import Path3d
 import numpy as np
 from src.project.PStorages import ObjectsStorage3d, PathsStorage3d, ExperimentsStorage
-
+from src.scanner.TRIM import TRIM_emulator
 
 objects = ObjectsStorage3d()
 paths = PathsStorage3d()
@@ -45,7 +45,7 @@ scanner = TRIMPScanner(
     instrument=TRIMScanner(ip="127.0.0.1", port=9000, signals=scanner_signals),
     signals=scanner_signals,
 )
-
+TRIM_emulator.run(blocking=False, motion_time=2)  # use it only for emulating
 
 scanner_visualizer = PScannerVisualizer3D(
     instrument=scanner,

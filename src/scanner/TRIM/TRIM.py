@@ -203,45 +203,13 @@ def settings_check(
         return BaseAxes(x=x, y=y, z=z, w=w)
 
 
-# убейте меня это какой-то прикол
-def _motion_decorator(func):
-    """
-    Декоратор, который контролирует флаг остановки, потому что это не реализовано в контроллере.
-    По документации MS=7 должен об этом сигнализировать, но это не работает.
-    Декоратор реализует тред сейф сканера.
-
-    Если в очереди стоят, например goto или home, из разных потоков, то при поднятии _stop_flag, все стоящие в очереди
-    команды завершатся.
-    После остановки тред с новым движением поменяет _stop_released и _stop_flag.
-
-    :param func:
-    """
-    def wrapper(self, *args, **kwargs):
-        scanner = self  # type: TRIMScanner
-        scanner._inner_motion_lock.acquire()
-        if scanner._stop_flag and not scanner._stop_released:
-            scanner._stop_released = True
-            scanner._inner_motion_lock.release()
-            with scanner._motion_lock:
-                scanner._stop_flag = False
-                func(self, *args, **kwargs)
-        else:
-            scanner._inner_motion_lock.release()
-            with scanner._motion_lock:
-                if scanner._stop_flag:
-                    raise ScannerMotionError(f'During the motion STOP or ABORT was executed')
-                func(self, *args, **kwargs)
-        if scanner._stop_flag:
-            raise ScannerMotionError(f'During the motion STOP or ABORT was executed')
-    return wrapper
-
-
 class TRIMScannerSignals(ScannerSignals):
     position = EmptySignal()
     velocity = EmptySignal()
     acceleration = EmptySignal()
     deceleration = EmptySignal()
     is_connected = EmptySignal()
+    is_moving = EmptySignal()
 
 
 class TRIMScanner(Scanner):
@@ -269,11 +237,14 @@ class TRIMScanner(Scanner):
         self.bufsize = bufsize
         self.maxbufs = maxbufs
         self._tcp_lock = FIFOLock()
+
         self._motion_lock = FIFOLock()
         self._inner_motion_lock = FIFOLock()
         self._stop_flag = False
         self._stop_released = True
-        self.is_connected = False
+
+        self._is_moving = False
+        self._is_connected = False
         self._velocity = Velocity()
 
         if signals is not None:
@@ -281,15 +252,18 @@ class TRIMScanner(Scanner):
         else:
             self._signals = TRIMScannerSignals()
 
+    def _set_is_connected(self, state: bool):
+        self._is_connected = state
+        self._signals.is_connected.emit(state)
+        
     def connect(self) -> None:
-        if self.is_connected:
+        if self._is_connected:
             return
         try:
             self.conn.close()
             self.conn = socket.socket()
             self.conn.connect((self.ip, self.port))
-            self.is_connected = True
-            self._signals.is_connected.emit(True)
+            self._set_is_connected(True)
         except socket.error as e:
             raise ScannerConnectionError from e
 
@@ -299,11 +273,9 @@ class TRIMScanner(Scanner):
         try:
             self.conn.shutdown(socket.SHUT_RDWR)
             self.conn.close()
-            self.is_connected = False
-            self._signals.is_connected.emit(False)
+            self._set_is_connected(False)
         except socket.error:
-            self.is_connected = False
-            self._signals.is_connected.emit(False)
+            self._set_is_connected(False)
 
     def set_settings(
             self,
@@ -419,8 +391,7 @@ class TRIMScanner(Scanner):
                 answer = response.decode().removeprefix(command).removesuffix('>')
                 return answer
             except socket.error as e:
-                self.is_connected = False
-                self._signals.is_connected.emit(False)
+                self._set_is_connected(False)
                 raise ScannerConnectionError from e
 
     def _send_cmds(self, cmds: List[str]) -> List[str]:
@@ -478,8 +449,43 @@ class TRIMScanner(Scanner):
         while not self._is_stopped():
             time.sleep(0.1)
 
-    @_motion_decorator
-    def goto(self, position: Position) -> None:
+    def _set_is_moving(self, state: bool):
+        self._is_moving = state
+        self._signals.is_moving.emit(state)
+
+    def _motion_decorator(self, func, *args, **kwargs):
+        """
+        Декоратор, который контролирует флаг остановки, потому что это не реализовано в контроллере.
+        По документации MS=7 должен об этом сигнализировать, но это не работает.
+        Декоратор реализует тред сейф сканера.
+
+        Если в очереди стоят, например goto или home, из разных потоков, то при поднятии _stop_flag, все стоящие в очереди
+        команды завершатся.
+        После остановки тред с новым движением поменяет _stop_released и _stop_flag.
+
+        :param func:
+        """
+        self._inner_motion_lock.acquire()
+        self._set_is_moving(True)
+        if self._stop_flag and not self._stop_released:
+            self._stop_released = True
+            self._inner_motion_lock.release()
+            with self._motion_lock:
+                self._stop_flag = False
+                func(*args, **kwargs)
+        else:
+            self._inner_motion_lock.release()
+            with self._motion_lock:
+                if self._stop_flag:
+                    self._set_is_moving(False)
+                    raise ScannerMotionError(f'During the motion STOP or ABORT was executed')
+                func(*args, **kwargs)
+        if self._stop_flag:
+            self._set_is_moving(False)
+            raise ScannerMotionError(f'During the motion STOP or ABORT was executed')
+        self._set_is_moving(False)
+
+    def _goto(self, position: Position) -> None:
         self.set_settings(**PTP_MODE_SETTINGS)
         cmds = cmds_from_axes(position, 'AP')
         cmds += cmds_from_axes(position, 'BG', val=False, scale=False)
@@ -497,6 +503,9 @@ class TRIMScanner(Scanner):
             raise scanner_motion_error(action_description, stop_reasons)
 
         self.position()
+
+    def goto(self, position: Position) -> None:
+        self._motion_decorator(self._goto, position)
 
     def stop(self) -> None:
         self._stop_flag = True
@@ -589,11 +598,10 @@ class TRIMScanner(Scanner):
         return "\n".join([f'{c}: {r}' for c, r in zip(cmds, res)])
 
     @property
-    def is_available(self) -> bool:
-        return self.is_connected
+    def is_connected(self) -> bool:
+        return self._is_connected
 
-    @_motion_decorator
-    def home(self) -> None:
+    def _home(self) -> None:
         # уменьшение скорости в два раза
         old_velocity = self.velocity()
         new_velocity = old_velocity / 2
@@ -615,6 +623,9 @@ class TRIMScanner(Scanner):
         if not (stop_reasons[0] == stop_reasons[1] == stop_reasons[2] == 2):
             raise scanner_motion_error(action_description, stop_reasons)
 
+    def home(self) -> None:
+        self._motion_decorator(self._home)
+
     @property
     def position_signal(self):
         return self._signals.position
@@ -630,3 +641,7 @@ class TRIMScanner(Scanner):
     @property
     def deceleration_signal(self):
         return self._signals.deceleration
+
+    @property
+    def is_moving(self) -> bool:
+        return self._is_moving
