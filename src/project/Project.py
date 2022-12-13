@@ -21,12 +21,26 @@ def _meta_resolve(cls):
 
 @dataclass
 class PWidget:
+    """
+    Класс виджетов управления
+    """
     name: str
     widget: QWidget
     icon: QIcon = None
 
 
 class PState(QObject):
+    """
+    Класс состояния.
+    PState хранит только bool.
+    У PState существует сигнал changed_signal, в который делается emit
+    при изменении значения состояния на противоположное.
+
+    Работают логические операции с состояниями, например is_connected & is_moving является PState,
+    значение которого положительно, если оба PState положительны.
+    При этом новый PState имеет changed_signal и сам отслеживает изменения каждого из состояний
+    в произведении.
+    """
     changed_signal: pyqtBoundSignal = pyqtSignal()
 
     def __init__(self, value: bool, signal: pyqtBoundSignal = None):
@@ -81,6 +95,9 @@ class PState(QObject):
 
 
 class PScannerSignals(QObject, ScannerSignals, metaclass=_meta_resolve(ScannerSignals)):
+    """
+    Сигналы сканера, возможно, некоторые из них бесполезны
+    """
     position: pyqtBoundSignal = pyqtSignal([BaseAxes], [Position])
     velocity: pyqtBoundSignal = pyqtSignal([BaseAxes], [Velocity])
     acceleration: pyqtBoundSignal = pyqtSignal([BaseAxes], [Acceleration])
@@ -97,12 +114,18 @@ class PScannerSignals(QObject, ScannerSignals, metaclass=_meta_resolve(ScannerSi
 
 @dataclass
 class PScannerStates:
+    """
+    Все возможные состояния сканера
+    """
     is_connected: PState
     is_moving: PState
     is_in_use: PState  # используется в эксперименте прямо сейчас
 
 
 class PScanner(abc.ABC):
+    """
+    Класс сканера, объединяющего состояния и сигналы
+    """
     def __init__(
             self,
             instrument: Scanner,
@@ -129,6 +152,9 @@ class PScanner(abc.ABC):
     @property
     @abstractmethod
     def control_widgets(self) -> list[PWidget]:
+        """
+        Виджеты, управляющие сканером
+        """
         pass
 
 
@@ -142,15 +168,24 @@ class PScannerVisualizer(abc.ABC):
     @property
     @abstractmethod
     def widget(self) -> QWidget:
+        """
+        Виджет, отвечающий за визуализацию
+        """
         pass
 
     @property
     @abstractmethod
     def control_widgets(self) -> list[PWidget]:
+        """
+        Виджеты, управляющие визуализацией
+        """
         pass
 
 
 class PAnalyzerSignals(QObject, AnalyzerSignals, metaclass=_meta_resolve(AnalyzerSignals)):
+    """
+    Сигналы анализатора
+    """
     data: pyqtBoundSignal = pyqtSignal(dict)
     connect: pyqtBoundSignal = pyqtSignal()
     disconnect: pyqtBoundSignal = pyqtSignal()
@@ -159,6 +194,9 @@ class PAnalyzerSignals(QObject, AnalyzerSignals, metaclass=_meta_resolve(Analyze
 
 
 class PAnalyzer(abc.ABC):
+    """
+    Класс анализатора, объединяющий сигналы и статусы анализатора
+    """
     def __init__(
             self,
             signals: PAnalyzerSignals,
@@ -178,10 +216,15 @@ class PAnalyzer(abc.ABC):
     @property
     @abstractmethod
     def control_widgets(self) -> list[PWidget]:
-        pass
+        """
+        Виджеты, управляющие анализатором
+        """
 
 
 class PAnalyzerVisualizer(abc.ABC):
+    """
+    Класс визуализатора анализатора
+    """
     def __init__(
             self,
             instrument: PAnalyzer
@@ -191,16 +234,23 @@ class PAnalyzerVisualizer(abc.ABC):
     @property
     @abstractmethod
     def widget(self) -> QWidget:
-        pass
+        """
+        Виджет визуализации
+        """
 
     @property
     @abstractmethod
     def control_widgets(self) -> list[PWidget]:
-        pass
+        """
+        Виджеты, управляющие визуализацией
+        """
 
 
 @dataclass
 class PBase:
+    """
+    Базовый класс всех объектов в проекте
+    """
     name: str
     widget: QWidget
     icon: QIcon = None
@@ -208,25 +258,37 @@ class PBase:
 
 @dataclass
 class PExperiment(PBase):
-    pass
+    """
+    Класс эксперимента
+    """
 
 
 @dataclass
 class PMeasurand(PBase):
-    pass
-
+    """
+    Класс измеряемой величины
+    """
 
 @dataclass
 class PObject(PBase):
+    """
+    Класс объекта исследования
+    """
     icon: QIcon = object_icon
 
 
 @dataclass
 class PPath(PBase):
+    """
+    Класс пути перемещения сканера
+    """
     icon: QIcon = path_icon
 
 
 class PStorageSignals(QObject):
+    """
+    Сигналы хранилища
+    """
     changed: pyqtBoundSignal = pyqtSignal()
     add: pyqtBoundSignal = pyqtSignal(PBase)
     delete: pyqtBoundSignal = pyqtSignal(PBase)
@@ -234,6 +296,9 @@ class PStorageSignals(QObject):
 
 @dataclass
 class PStorage:
+    """
+    Базовое хранилище объектов проекта
+    """
     signals: PStorageSignals = field(default_factory=PStorageSignals)
     data: list[Union[PBase, PExperiment, PMeasurand, PObject, PPath]] = field(default_factory=list)
 
@@ -242,15 +307,24 @@ class PStorage:
         self.signals.delete.connect(self.delete)
 
     def append(self, x: PBase):
+        """
+        Добавить элемент в хранилище
+        """
         self.data.append(x)
         self.signals.changed.emit()
 
     def delete(self, x: PBase):
+        """
+        Удалить элемент из хранилища
+        """
         self.data.remove(x)
         self.signals.changed.emit()
 
 
 class Project:
+    """
+    Класс всего проекта
+    """
     def __init__(
             self,
             scanner: PScanner,
@@ -271,6 +345,9 @@ class Project:
         self.experiments = experiments if experiments is not None else PStorage()
 
     def tree(self) -> dict[str: list[PWidget]]:
+        """
+        Дерево проекта
+        """
         tree = dict()
 
         scanner_widgets = []

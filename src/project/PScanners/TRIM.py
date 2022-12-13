@@ -1,12 +1,13 @@
 from ..Project import PScanner, PWidget, PScannerSignals, PScannerStates
-from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QSizePolicy
+from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QSizePolicy, QGroupBox
 from ..Widgets import SettingsTableWidget, StateDepPushButton
 from ..Variable import Setting, Unit
 from ...scanner.TRIM import TRIMScanner, DEFAULT_SETTINGS
 from ...scanner.scanner import Position
 from ..icons import settings_icon, control_icon
-from PyQt6.QtCore import Qt
-from src.scanner.TRIM.TRIM_emulator import run  # use it only for emulating
+from ..Worker import Worker
+from PyQt6.QtCore import Qt, QThreadPool
+
 import logging
 logger = logging.getLogger()
 
@@ -16,6 +17,16 @@ class Control(QWidget):
         super().__init__()
         self.scanner = scanner
         vbox = QVBoxLayout(self)
+        vbox.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.setLayout(vbox)
+
+        self._thread_pool = QThreadPool()
+
+        group = QGroupBox(self)
+        group_layout = QVBoxLayout(group)
+        group_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        vbox.addWidget(group)
+
         self.connect_button = StateDepPushButton(
             state=~states.is_connected & ~states.is_in_use,
             text="Connect",
@@ -38,28 +49,22 @@ class Control(QWidget):
         )
         self.upd_position_button = StateDepPushButton(
             state=states.is_connected & ~states.is_moving & ~states.is_in_use,
-            text="Update \n current position",
+            text="Update current position",
             parent=self
         )
-
-        self.connect_button.setFixedSize(100, 50)
-        self.home_button.setFixedSize(100, 50)
-        self.abort_button.setFixedSize(100, 50)
-        self.upd_position_button.setFixedSize(100, 75)
 
         self.connect_button.clicked.connect(scanner.connect)
         self.disconnect_button.clicked.connect(scanner.disconnect)
         self.home_button.clicked.connect(self.f_home)
         self.abort_button.clicked.connect(scanner.abort)
 
-        self.abort_button.setStyleSheet("background-color: #E04343")
-        vbox.addWidget(self.connect_button)
-        vbox.addWidget(self.disconnect_button)
-        vbox.addWidget(self.home_button)
-        vbox.addWidget(self.abort_button)
-        vbox.addWidget(self.upd_position_button)
-        vbox.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.setLayout(vbox)
+        self.abort_button.setProperty('color', 'red')
+        group_layout.addWidget(self.connect_button)
+        group_layout.addWidget(self.disconnect_button)
+        group_layout.addWidget(self.home_button)
+        group_layout.addWidget(self.abort_button)
+        group_layout.addWidget(self.upd_position_button)
+
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
     # def f_connection(self):
@@ -76,17 +81,21 @@ class Control(QWidget):
     #     self.scanner.disconnect()
     #     logger.info('Scanner is disconnected')
     #
-    def f_home(self):
-        """
-        This function sets "home" current cords.
-        """
+    def _home(self):
         self.scanner.home()
         self.scanner.set_settings(position=Position(2262.92, 2137.09, 0, 0))
         logger.debug("Scanner at home. Scanner position is:")
         current_position = self.scanner.position()
-        logger.debug('x: ', current_position.x)
-        logger.debug('y: ', current_position.y)
-        logger.debug('z: ', current_position.z)
+        logger.debug(f'x: {current_position.x}')
+        logger.debug(f'y: {current_position.y}')
+        logger.debug(f'z: {current_position.z}')
+        logger.debug(f'w: {current_position.z}')
+
+    def f_home(self):
+        """
+        This function sets "home" current cords.
+        """
+        self._thread_pool.start(Worker(self._home))
 
 
 class Settings(SettingsTableWidget):
