@@ -28,3 +28,5 @@ sys.excepthook = except_hook
 app = QApplication(sys.argv)
 
 from .app_project import project
+
+
