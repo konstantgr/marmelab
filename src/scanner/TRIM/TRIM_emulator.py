@@ -91,12 +91,12 @@ def update_ms_em(scanner, tmp, motion_time):
 
 
 def emulator(ip="127.0.0.1", port=9000, motion_time: int = 5):
+    scanner = ScannerStorage()
     while True:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind((ip, port))
             s.listen()
             conn, addr = s.accept()
-            scanner = ScannerStorage()
             with conn:
                 while True:
                     data = conn.recv(1024)
