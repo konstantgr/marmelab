@@ -51,8 +51,7 @@ class BaseAnalyzer(abc.ABC):
     @abc.abstractmethod
     def get_scattering_parameters(
             self,
-            parameters: List[SParameters],
-            results_formats: List[ResultsFormatType]
+            parameters: List[str],
     ) -> dict[str: List[float]]:
         """
         Получить S параметры

@@ -47,9 +47,12 @@ class PState(QObject):
         super(PState, self).__init__()
         self._value = value
         if signal is not None:
-            signal.connect(self.update)
+            signal.connect(self.set)
 
-    def update(self, state: bool):
+    def set(self, state: bool):
+        """
+        Выставить новое значение состояния
+        """
         if self._value != state:
             self._value = state
             # print(state)
@@ -64,7 +67,7 @@ class PState(QObject):
         def update():
             """Вспомогательный апдейтер"""
             state = bool(self) and bool(other)
-            new_state.update(state)
+            new_state.set(state)
 
         self.changed_signal.connect(update)
         other.changed_signal.connect(update)
@@ -76,7 +79,7 @@ class PState(QObject):
         def update():
             """Вспомогательный апдейтер"""
             state = bool(self) or bool(other)
-            new_state.update(state)
+            new_state.set(state)
 
         self.changed_signal.connect(update)
         other.changed_signal.connect(update)
@@ -88,7 +91,7 @@ class PState(QObject):
         def update():
             """Вспомогательный апдейтер"""
             state = not bool(self)
-            new_state.update(state)
+            new_state.set(state)
 
         self.changed_signal.connect(update)
         return new_state
@@ -193,6 +196,15 @@ class PAnalyzerSignals(QObject, AnalyzerSignals, metaclass=_meta_resolve(Analyze
     is_connected: pyqtBoundSignal = pyqtSignal(bool)
 
 
+@dataclass
+class PAnalyzerStates:
+    """
+    Все возможные состояния сканера
+    """
+    is_connected: PState
+    is_in_use: PState  # используется в эксперименте прямо сейчас
+
+
 class PAnalyzer(abc.ABC):
     """
     Класс анализатора, объединяющий сигналы и статусы анализатора
@@ -204,6 +216,10 @@ class PAnalyzer(abc.ABC):
     ):
         self.signals = signals
         self.instrument = instrument
+        self.states = PAnalyzerStates(
+            is_connected=PState(False, self.signals.is_connected),
+            is_in_use=PState(False),
+        )
 
         self.signals.connect.connect(self.instrument.connect)
         self.signals.disconnect.connect(self.instrument.disconnect)

@@ -14,4 +14,5 @@ from . import PStorages
 from . import PVisualizers
 from . import Widgets
 from .Project import PState, PScannerStates
+from .Project import PAnalyzerStates
 from .Worker import Worker

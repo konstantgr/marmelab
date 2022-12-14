@@ -1,9 +1,6 @@
 import socket
 
 from typing import List, Union
-from ..analyzator_parameters import (
-    ResultsFormatType, FrequencyParameters, SParameters, FrequencyTypes
-)
 from ..base_analyzator import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
 from ...utils import EmptySignal
 import RsInstrument
@@ -35,6 +32,7 @@ class RohdeSchwarzAnalyzer(BaseAnalyzer):
         self.bufsize, self.maxbufs = bufsize, maxbufs
         self._is_connected = False
         self.instrument = None
+        self.channel = 1
 
         if signals is None:
             self._signals = RohdeSchwarzAnalyzatorSignals()
@@ -54,12 +52,14 @@ class RohdeSchwarzAnalyzer(BaseAnalyzer):
             freq_stop: float = None,
             freq_num: int = None
     ) -> None:
+        if channel is not None:
+            self.channel = channel
         if freq_start is not None:
-            self._send_cmd(f'SENSe{channel}:FREQuency:STARt {freq_start}Hz')
+            self._send_cmd(f'SENSe{self.channel}:FREQuency:STARt {freq_start}Hz')
         if freq_stop is not None:
-            self._send_cmd(f'SENSe{channel}:FREQuency:STOP {freq_stop}Hz')
+            self._send_cmd(f'SENSe{self.channel}:FREQuency:STOP {freq_stop}Hz')
         if freq_num is not None:
-            self._send_cmd(f'SENSe{channel}:SWEep:POINts {freq_num}')
+            self._send_cmd(f'SENSe{self.channel}:SWEep:POINts {freq_num}')
 
     def _set_is_connected(self, state: bool):
         self._is_connected = state
@@ -83,8 +83,7 @@ class RohdeSchwarzAnalyzer(BaseAnalyzer):
 
     def get_scattering_parameters(
             self,
-            parameters: List[str],
-            results_formats: List[ResultsFormatType]
+            parameters: List[str]
     ) -> dict[str: List[float]]:
 
         res = {}
@@ -118,18 +117,18 @@ class RohdeSchwarzAnalyzer(BaseAnalyzer):
         pass
 
 
-if __name__ == "__main__":
-    analyzator = RohdeSchwarzAnalyzer(
-        ip="172.16.22.182",
-        port="5025"
-    )
-    analyzator.connect()
-
-    sp = ['S11', 'S23']
-    fp = FrequencyParameters(
-        1000, 5000, FrequencyTypes.MHZ, 200
-    )
-    results = analyzator.get_scattering_parameters(
-        sp, [ResultsFormatType.DB, ResultsFormatType.REAL]
-    )
-    print(results['f'], results['S11'])
+# if __name__ == "__main__":
+#     analyzator = RohdeSchwarzAnalyzer(
+#         ip="172.16.22.182",
+#         port="5025"
+#     )
+#     analyzator.connect()
+#
+#     sp = ['S11', 'S23']
+#     fp = FrequencyParameters(
+#         1000, 5000, FrequencyTypes.MHZ, 200
+#     )
+#     results = analyzator.get_scattering_parameters(
+#         sp, [ResultsFormatType.DB, ResultsFormatType.REAL]
+#     )
+#     print(results['f'], results['S11'])

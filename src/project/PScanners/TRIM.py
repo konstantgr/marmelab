@@ -69,20 +69,6 @@ class Control(QWidget):
 
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
-    # def f_connection(self):
-    #     """
-    #     This function makes connection to the scanner
-    #     """
-    #     self.scanner.connect()
-    #     logger.info('Scanner is connected')
-    #
-    # def f_disconnection(self):
-    #     """
-    #     This function disconnects the scanner
-    #     """
-    #     self.scanner.disconnect()
-    #     logger.info('Scanner is disconnected')
-    #
     def _home(self):
         self.scanner.home()
         self.scanner.set_settings(position=Position(2262.92, 2137.09, 0, 0))
@@ -101,7 +87,12 @@ class Control(QWidget):
 
 
 class Settings(SettingsTableWidget):
-    def __init__(self, signals: PScannerSignals, states: PScannerStates,  settings: list[Setting], parent: QWidget = None):
+    def __init__(
+            self,
+            signals: PScannerSignals,
+            states: PScannerStates,
+            settings: list[Setting], parent: QWidget = None
+    ):
         super(Settings, self).__init__(
             settings=settings,
             parent=parent,
@@ -137,7 +128,8 @@ class TRIMPScanner(PScanner):
     def control_widgets(self) -> list[PWidget]:
         return self._control_widgets
 
-    def _get_settings(self) -> list[Setting]:
+    @staticmethod
+    def _get_settings() -> list[Setting]:
         res = []
         UNITS = {
             'acceleration': Unit(m=1, s=-2),
