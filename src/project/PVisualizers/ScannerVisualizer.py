@@ -176,6 +176,8 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.scanner.signals.position.connect(self.set_scanner_pos)
         self.objects.signals.changed.connect(self.redraw_objects)
         self.paths.signals.changed.connect(self.redraw_paths)
+        self.objects.signals.element_changed.connect(self.redraw_objects)
+        self.paths.signals.element_changed.connect(self.redraw_paths)
 
     @coords_to_GL_coords
     def set_room_size(self, x: float, y: float, z: float):

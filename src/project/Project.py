@@ -262,6 +262,10 @@ class PAnalyzerVisualizer(abc.ABC):
         """
 
 
+class PBaseSignals(QObject):
+    changed: pyqtBoundSignal = pyqtSignal()
+
+
 @dataclass
 class PBase:
     """
@@ -270,6 +274,7 @@ class PBase:
     name: str
     widget: QWidget
     icon: QIcon = None
+    signals: PBaseSignals = field(default_factory=PBaseSignals)
 
 
 @dataclass
@@ -306,6 +311,7 @@ class PStorageSignals(QObject):
     Сигналы хранилища
     """
     changed: pyqtBoundSignal = pyqtSignal()
+    element_changed: pyqtBoundSignal = pyqtSignal()
     add: pyqtBoundSignal = pyqtSignal(PBase)
     delete: pyqtBoundSignal = pyqtSignal(PBase)
 
@@ -327,14 +333,19 @@ class PStorage:
         Добавить элемент в хранилище
         """
         self.data.append(x)
+        x.signals.changed.connect(self._element_changed_emit)
         self.signals.changed.emit()
 
     def delete(self, x: PBase):
         """
         Удалить элемент из хранилища
         """
+        x.signals.changed.disconnect()
         self.data.remove(x)
         self.signals.changed.emit()
+
+    def _element_changed_emit(self):
+        self.signals.element_changed.emit()
 
 
 class Project:

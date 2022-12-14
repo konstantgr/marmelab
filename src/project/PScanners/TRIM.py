@@ -60,7 +60,6 @@ class Control(QWidget):
         group_layout.addWidget(self.disconnect_button)
         group_layout.addWidget(self.home_button)
         group_layout.addWidget(self.abort_button)
-        group_layout.addWidget(self.upd_position_button)
 
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
