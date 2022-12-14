@@ -48,17 +48,12 @@ class Control(QWidget):
             text="Abort",
             parent=self
         )
-        self.upd_position_button = StateDepPushButton(
-            state=m_state,
-            text="Update current position",
-            parent=self
-        )
 
         self.connect_button.clicked.connect(scanner.connect)
         self.disconnect_button.clicked.connect(scanner.disconnect)
         self.home_button.clicked.connect(self.f_home)
         self.abort_button.clicked.connect(scanner.abort)
-        self.upd_position_button.clicked.connect(scanner.position)
+        #self.upd_position_button.clicked.connect(scanner.position)
 
         self.abort_button.setProperty('color', 'red')
         group_layout.addWidget(self.connect_button)
@@ -85,12 +80,7 @@ class Control(QWidget):
         """
         self._thread_pool.start(Worker(self._home))
 
-    def f_upd_cur_pos(self):
-        logger.debug("Scanner position is:")
-        current_position = self.scanner.position()
-        logger.debug('x: ', current_position.x)
-        logger.debug('y: ', current_position.y)
-        logger.debug('z: ', current_position.z)
+
 
 
 class Settings(SettingsTableWidget):
