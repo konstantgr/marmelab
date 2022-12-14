@@ -16,8 +16,8 @@ class Control(QWidget):
         vbox = QVBoxLayout(self)
         self.connect_button = QPushButton("Connect")
         self.home_button = QPushButton("Home")
-        self.abort_button = QPushButton("Abort")
         self.upd_position_button = QPushButton("Update \n current position")
+        self.abort_button = QPushButton("Abort")
         self.connect_button.setFixedSize(100, 50)
         self.home_button.setFixedSize(100, 50)
         self.abort_button.setFixedSize(100, 50)
@@ -25,12 +25,13 @@ class Control(QWidget):
 
         self.connect_button.clicked.connect(self.f_connection)
         self.home_button.clicked.connect(self.f_home)
+        self.upd_position_button.clicked.connect(self.f_upd_cur_pos)
 
         self.abort_button.setStyleSheet("background-color: red")
         vbox.addWidget(self.connect_button)
         vbox.addWidget(self.home_button)
-        vbox.addWidget(self.abort_button)
         vbox.addWidget(self.upd_position_button)
+        vbox.addWidget(self.abort_button)
         vbox.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(vbox)
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
@@ -51,6 +52,13 @@ class Control(QWidget):
         self.scanner.home()
         self.scanner.set_settings(position=Position(0, 0, 0, 0))
         logger.debug("Scanner at home. Scanner position is:")
+        current_position = self.scanner.position()
+        logger.debug('x: ', current_position.x)
+        logger.debug('y: ', current_position.y)
+        logger.debug('z: ', current_position.z)
+
+    def f_upd_cur_pos(self):
+        logger.debug("Scanner position is:")
         current_position = self.scanner.position()
         logger.debug('x: ', current_position.x)
         logger.debug('y: ', current_position.y)
