@@ -4,7 +4,7 @@ from typing import List, Union
 from ..analyzator_parameters import (
     ResultsFormatType, FrequencyParameters, SParameters, FrequencyTypes
 )
-from ..base_analyzator import BaseAnalyzator, AnalyzerSignals, AnalyzerConnectionError
+from ..base_analyzator import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
 from ...utils import EmptySignal
 import RsInstrument
 import numpy as np
@@ -15,7 +15,7 @@ class RohdeSchwarzAnalyzatorSignals(AnalyzerSignals):
     is_connected = EmptySignal()
 
 
-class RohdeSchwarzAnalyzator(BaseAnalyzator):
+class RohdeSchwarzAnalyzer(BaseAnalyzer):
     def __init__(
             self,
             ip: str,
@@ -35,7 +35,6 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
         self.bufsize, self.maxbufs = bufsize, maxbufs
         self._is_connected = False
         self.instrument = None
-        self.settings = None
 
         if signals is None:
             self._signals = RohdeSchwarzAnalyzatorSignals()
@@ -50,13 +49,17 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
 
     def set_settings(
             self,
-            channel: int,
-            settings: FrequencyParameters
+            channel: int = None,
+            freq_start: float = None,
+            freq_stop: float = None,
+            freq_num: int = None
     ) -> None:
-        self._send_cmd(f'SENSe{channel}:FREQuency:STARt {settings.start}{settings.frequency_type}')
-        self._send_cmd(f'SENSe{channel}:FREQuency:STOP {settings.stop}{settings.frequency_type}')
-        self._send_cmd(f'SENSe{channel}:SWEep:POINts {settings.num_points}')
-        self.settings = settings
+        if freq_start is not None:
+            self._send_cmd(f'SENSe{channel}:FREQuency:STARt {freq_start}Hz')
+        if freq_stop is not None:
+            self._send_cmd(f'SENSe{channel}:FREQuency:STOP {freq_stop}Hz')
+        if freq_num is not None:
+            self._send_cmd(f'SENSe{channel}:SWEep:POINts {freq_num}')
 
     def _set_is_connected(self, state: bool):
         self._is_connected = state
@@ -80,8 +83,7 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
 
     def get_scattering_parameters(
             self,
-            parameters: List[SParameters],
-            frequency_parameters: FrequencyParameters,
+            parameters: List[str],
             results_formats: List[ResultsFormatType]
     ) -> dict[str: List[float]]:
 
@@ -91,7 +93,6 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
             raise AnalyzerConnectionError
 
         channel = 1
-        self.set_settings(channel=channel, settings=frequency_parameters)
 
         for num, S_param in enumerate(parameters):
             num += 1
@@ -118,7 +119,7 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
 
 
 if __name__ == "__main__":
-    analyzator = RohdeSchwarzAnalyzator(
+    analyzator = RohdeSchwarzAnalyzer(
         ip="172.16.22.182",
         port="5025"
     )
@@ -129,6 +130,6 @@ if __name__ == "__main__":
         1000, 5000, FrequencyTypes.MHZ, 200
     )
     results = analyzator.get_scattering_parameters(
-        sp, fp, [ResultsFormatType.DB, ResultsFormatType.REAL]
+        sp, [ResultsFormatType.DB, ResultsFormatType.REAL]
     )
     print(results['f'], results['S11'])

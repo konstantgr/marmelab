@@ -5,12 +5,12 @@ from typing import List, Union
 from src.analyzator.analyzator_parameters import (
     AnalyzatorType, ResultsFormatType, FrequencyParameters, SParameters, FrequencyTypes
 )
-from src.analyzator.base_analyzator import BaseAnalyzator
+from src.analyzator.base_analyzator import BaseAnalyzer
 import win32com.client
 import numpy as np
 
 
-class PlanarAnalyzator(BaseAnalyzator):
+class PlanarAnalyzer(BaseAnalyzer):
     analyzator_type = AnalyzatorType.PLANAR
 
     def __init__(
@@ -92,7 +92,7 @@ class PlanarAnalyzator(BaseAnalyzator):
 
 
 if __name__ == "__main__":
-    analyzator = PlanarAnalyzator(
+    analyzator = PlanarAnalyzer(
         ip="172.16.22.182",
         port="5025"
     )

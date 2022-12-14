@@ -1,2 +1,2 @@
-from .rohde_schwarz import RohdeSchwarzAnalyzator
+from .rohde_schwarz import RohdeSchwarzAnalyzer
 from .RS_emulator import RohdeSchwarzEmulator

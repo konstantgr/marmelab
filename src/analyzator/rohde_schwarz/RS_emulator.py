@@ -5,11 +5,11 @@ from typing import List, Union
 from src.analyzator.analyzator_parameters import (
     AnalyzatorType, ResultsFormatType, FrequencyParameters, SParameters, FrequencyTypes
 )
-from src.analyzator.base_analyzator import BaseAnalyzator
+from src.analyzator.base_analyzator import BaseAnalyzer
 import numpy as np
 
 
-class RohdeSchwarzEmulator(BaseAnalyzator):
+class RohdeSchwarzEmulator(BaseAnalyzer):
     analyzator_type = AnalyzatorType.ROHDE_SCHWARZ
 
     def __init__(

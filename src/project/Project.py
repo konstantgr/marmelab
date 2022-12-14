@@ -1,7 +1,7 @@
 import abc
 
 from ..scanner import Scanner, ScannerSignals
-from ..analyzator import AnalyzerSignals, BaseAnalyzator
+from ..analyzator import AnalyzerSignals, BaseAnalyzer
 from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from PyQt6.QtWidgets import QWidget
@@ -200,7 +200,7 @@ class PAnalyzer(abc.ABC):
     def __init__(
             self,
             signals: PAnalyzerSignals,
-            instrument: BaseAnalyzator,
+            instrument: BaseAnalyzer,
     ):
         self.signals = signals
         self.instrument = instrument

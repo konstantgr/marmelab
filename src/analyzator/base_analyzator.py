@@ -32,7 +32,7 @@ class AnalyzerSignals(metaclass=abc.ABCMeta):
         """
 
 
-class BaseAnalyzator(abc.ABC):
+class BaseAnalyzer(abc.ABC):
     """
     Базовый класс анализатора
     """
@@ -52,7 +52,6 @@ class BaseAnalyzator(abc.ABC):
     def get_scattering_parameters(
             self,
             parameters: List[SParameters],
-            frequency_parameters: FrequencyParameters,
             results_formats: List[ResultsFormatType]
     ) -> dict[str: List[float]]:
         """
