@@ -53,14 +53,13 @@ class Control(QWidget):
         self.disconnect_button.clicked.connect(scanner.disconnect)
         self.home_button.clicked.connect(self.f_home)
         self.abort_button.clicked.connect(scanner.abort)
-        #self.upd_position_button.clicked.connect(scanner.position)
 
         self.abort_button.setProperty('color', 'red')
         group_layout.addWidget(self.connect_button)
         group_layout.addWidget(self.disconnect_button)
         group_layout.addWidget(self.home_button)
         group_layout.addWidget(self.abort_button)
-        group_layout.addWidget(self.upd_position_button)
+
 
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
