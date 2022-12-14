@@ -85,6 +85,13 @@ class Control(QWidget):
         """
         self._thread_pool.start(Worker(self._home))
 
+    def f_upd_cur_pos(self):
+        logger.debug("Scanner position is:")
+        current_position = self.scanner.position()
+        logger.debug('x: ', current_position.x)
+        logger.debug('y: ', current_position.y)
+        logger.debug('z: ', current_position.z)
+
 
 class Settings(SettingsTableWidget):
     def __init__(
