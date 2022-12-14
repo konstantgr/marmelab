@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QAbstractItemView, QWidget, QTableView, QSplitter, QGroupBox, QHBoxLayout, QSizePolicy, QHeaderView, QPushButton, QVBoxLayout
+from PyQt6.QtWidgets import QAbstractItemView, QFrame, QWidget, QTableView, QSplitter, QGroupBox, QHBoxLayout, QSizePolicy, QHeaderView, QPushButton, QVBoxLayout
 from PyQt6.QtCore import Qt, QAbstractTableModel
 from PyQt6 import QtCore
 from PyQt6.QtGui import QColor
@@ -176,17 +176,18 @@ class SettingsTableWidget(QWidget):
             **kwargs
     ):
         super(SettingsTableWidget, self).__init__(**kwargs)
+        self.default_settings = settings
 
-        self.splitter = QSplitter(orientation=Qt.Orientation.Vertical, parent=self)
-        # self.splitter.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self.setLayout(QVBoxLayout())
         group = QGroupBox(self)
         group.setLayout(QVBoxLayout())
-        group.layout().addWidget(self.splitter)
         group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+
+        self.setLayout(QVBoxLayout())
         self.layout().addWidget(group)
-        self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.default_settings = settings
+
+        self.splitter = QSplitter(orientation=Qt.Orientation.Vertical, parent=group)
+        group.layout().addWidget(self.splitter)
+        # self.splitter.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 
         self.table = QSmartTableView(settings=settings, parent=self.splitter)
         self.table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
@@ -195,17 +196,16 @@ class SettingsTableWidget(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.verticalHeader().setVisible(False)
-        # self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        # self.table.setFixedHeight(340)
         self.table.resizeRowsToContents()
 
-        buttons_widget = QWidget(parent=self.splitter)
-        buttons_widget.setLayout(QHBoxLayout())
+        buttons_widget = QFrame(self.splitter)
+        buttons_layout = QHBoxLayout(buttons_widget)
+        buttons_layout.setContentsMargins(0, 0, 0,0 )
+        buttons_widget.setLayout(buttons_layout)
         buttons_widget.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
         # buttons_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        # buttons_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
 
-        set_default_button = QPushButton("Set default", parent=buttons_widget)
+        set_default_button = QPushButton("Set default")
         set_default_button.clicked.connect(self.table.set_default)
         set_default_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         buttons_widget.layout().addWidget(set_default_button)

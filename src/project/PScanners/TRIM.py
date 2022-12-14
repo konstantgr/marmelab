@@ -32,13 +32,14 @@ class Control(QWidget):
             text="Connect",
             parent=self
         )
+        m_state = states.is_connected & ~states.is_moving & ~states.is_in_use
         self.disconnect_button = StateDepPushButton(
-            state=states.is_connected & ~states.is_in_use,
+            state=m_state,
             text="Disconnect",
             parent=self
         )
         self.home_button = StateDepPushButton(
-            state=states.is_connected & ~states.is_moving & ~states.is_in_use,
+            state=m_state,
             text="Home",
             parent=self
         )
@@ -48,7 +49,7 @@ class Control(QWidget):
             parent=self
         )
         self.upd_position_button = StateDepPushButton(
-            state=states.is_connected & ~states.is_moving & ~states.is_in_use,
+            state=m_state,
             text="Update current position",
             parent=self
         )
@@ -57,6 +58,7 @@ class Control(QWidget):
         self.disconnect_button.clicked.connect(scanner.disconnect)
         self.home_button.clicked.connect(self.f_home)
         self.abort_button.clicked.connect(scanner.abort)
+        self.upd_position_button.clicked.connect(scanner.position)
 
         self.abort_button.setProperty('color', 'red')
         group_layout.addWidget(self.connect_button)

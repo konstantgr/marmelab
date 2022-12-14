@@ -2,8 +2,6 @@ from ..Project import PAnalyzer, PWidget, PAnalyzerSignals
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QSizePolicy
 from ..icons import control_icon
 from PyQt6.QtCore import Qt
-from src.scanner.TRIM.TRIM_emulator import run  # use it only for emulating
-from ...scanner.TRIM import TRIMScanner
 
 
 class Control(QWidget):
