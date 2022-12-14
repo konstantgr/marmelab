@@ -6,12 +6,12 @@ from src.analyzator.analyzator_parameters import (
     AnalyzatorType, ResultsFormatType, FrequencyParameters, SParameters, FrequencyTypes
 )
 from src.analyzator.base_analyzator import BaseAnalyzator
-import RsInstrument
+import pyvisa
 import numpy as np
 
 
-class RohdeSchwarzAnalyzator(BaseAnalyzator):
-    analyzator_type = AnalyzatorType.ROHDE_SCHWARZ
+class CeyearAnalyzator(BaseAnalyzator):
+    analyzator_type = AnalyzatorType.CEYEAR
 
     def __init__(
             self,
@@ -36,11 +36,12 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
 
     def _send_cmd(self, cmd: str):
         if '?' in cmd:
-            return self.instrument.queue_str_with_opc(cmd)
+            return self.instrument.write(cmd)
         else:
-            self.instrument.write_str_with_opc(cmd)
+            self.instrument.query_ascii_values(cmd)
 
     def set_settings(self, channel: int, settings: FrequencyParameters) -> None:
+        self._send_cmd("*RST")
         self._send_cmd(f'SENSe{channel}:FREQuency:STARt {settings.start}{settings.frequency_type}')
         self._send_cmd(f'SENSe{channel}:FREQuency:STOP {settings.stop}{settings.frequency_type}')
         self._send_cmd(f'SENSe{channel}:SWEep:POINts {settings.num_points}')
@@ -48,7 +49,8 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
 
     def connect(self) -> None:
         resource = f'TCPIP::{self.ip}::{self.port}::SOCKET'  # VISA resource string for the device
-        self.instrument = RsInstrument.RsInstrument(resource, True, True, "SelectVisa='socket'")
+        rm = pyvisa.ResourceManager()
+        self.instrument = rm.open_resource(resource)
         self.is_connected = True
 
     def disconnect(self) -> None:
@@ -77,15 +79,15 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
 
         for num, S_param in enumerate(parameters):
             num += 1
-            self._send_cmd(f'CALC{channel}:PAR:SDEF "Trc{num}", "{S_param}"')
-            trace_data = self._send_cmd(f'CALC{channel}:DATA? FDAT')
+            self._send_cmd(f'CALC{channel}:PAR:DEF "Trc{num}", "{S_param}"')
+            self._send_cmd(f'CALC{1}:PAR:SEL "Trc{num}"')
+            trace_data = self._send_cmd(f'CALC{channel}:DATA? FDATA')
             trace_tup = tuple(map(str, trace_data.split(',')))
             res[f'{S_param}'] = np.array(trace_tup).astype(float)
 
         freq_list = self._send_cmd(f'CALC{channel}:DATA:STIM?')
         freq_tup = tuple(map(str, freq_list.split(',')))
         res[f'f'] = np.array(freq_tup).astype(float)
-
         return res
 
     def __enter__(self):
@@ -96,7 +98,7 @@ class RohdeSchwarzAnalyzator(BaseAnalyzator):
 
 
 if __name__ == "__main__":
-    analyzator = RohdeSchwarzAnalyzator(
+    analyzator = CeyearAnalyzator(
         ip="172.16.22.182",
         port="5025"
     )
