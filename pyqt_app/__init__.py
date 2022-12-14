@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QApplication
 import sys
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 # in-file logging
 logs_folder_path = os.path.join(Path(__file__).parents[1], 'logs')
@@ -15,7 +15,7 @@ if not os.path.exists(logs_folder_path):
 logs_path = os.path.join(logs_folder_path, 'logs.txt')
 
 fh = RotatingFileHandler(logs_path, maxBytes=1048576, backupCount=10, encoding='utf-8')
-fh.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s]: %(message)s'))
+fh.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s'))
 logger.addHandler(fh)
 
 

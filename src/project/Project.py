@@ -1,14 +1,14 @@
 import abc
 
 from ..scanner import Scanner, ScannerSignals
-from ..analyzator import AnalyzerSignals, BaseAnalyzator
+from ..analyzator import AnalyzerSignals, BaseAnalyzer
 from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QIcon
 from dataclasses import dataclass, field
 from abc import abstractmethod
-from typing import Union
+from typing import Union, Callable
 from .icons import path_icon, object_icon
 
 
@@ -21,17 +21,92 @@ def _meta_resolve(cls):
 
 @dataclass
 class PWidget:
+    """
+    Класс виджетов управления
+    """
     name: str
     widget: QWidget
     icon: QIcon = None
 
 
+class PState(QObject):
+    """
+    Класс состояния.
+    PState хранит только bool.
+    У PState существует сигнал changed_signal, в который делается emit
+    при изменении значения состояния на противоположное.
+
+    Работают логические операции с состояниями, например is_connected & is_moving является PState,
+    значение которого положительно, если оба PState положительны.
+    При этом новый PState имеет changed_signal и сам отслеживает изменения каждого из состояний
+    в произведении.
+    """
+    changed_signal: pyqtBoundSignal = pyqtSignal()
+
+    def __init__(self, value: bool, signal: pyqtBoundSignal = None):
+        super(PState, self).__init__()
+        self._value = value
+        if signal is not None:
+            signal.connect(self.set)
+
+    def set(self, state: bool):
+        """
+        Выставить новое значение состояния
+        """
+        if self._value != state:
+            self._value = state
+            # print(state)
+            self.changed_signal.emit()
+
+    def __bool__(self) -> bool:
+        return self._value
+
+    def __and__(self, other):
+        new_state = PState(value=bool(self) and bool(other))
+
+        def update():
+            """Вспомогательный апдейтер"""
+            state = bool(self) and bool(other)
+            new_state.set(state)
+
+        self.changed_signal.connect(update)
+        other.changed_signal.connect(update)
+        return new_state
+
+    def __or__(self, other):
+        new_state = PState(value=bool(self) and bool(other))
+
+        def update():
+            """Вспомогательный апдейтер"""
+            state = bool(self) or bool(other)
+            new_state.set(state)
+
+        self.changed_signal.connect(update)
+        other.changed_signal.connect(update)
+        return new_state
+
+    def __invert__(self):
+        new_state = PState(value=not bool(self))
+
+        def update():
+            """Вспомогательный апдейтер"""
+            state = not bool(self)
+            new_state.set(state)
+
+        self.changed_signal.connect(update)
+        return new_state
+
+
 class PScannerSignals(QObject, ScannerSignals, metaclass=_meta_resolve(ScannerSignals)):
+    """
+    Сигналы сканера, возможно, некоторые из них бесполезны
+    """
     position: pyqtBoundSignal = pyqtSignal([BaseAxes], [Position])
     velocity: pyqtBoundSignal = pyqtSignal([BaseAxes], [Velocity])
     acceleration: pyqtBoundSignal = pyqtSignal([BaseAxes], [Acceleration])
     deceleration: pyqtBoundSignal = pyqtSignal([BaseAxes], [Deceleration])
     is_connected: pyqtBoundSignal = pyqtSignal(bool)
+    is_moving: pyqtBoundSignal = pyqtSignal(bool)
     set_settings: pyqtBoundSignal = pyqtSignal(dict)
     stop: pyqtBoundSignal = pyqtSignal()
     abort: pyqtBoundSignal = pyqtSignal()
@@ -40,7 +115,20 @@ class PScannerSignals(QObject, ScannerSignals, metaclass=_meta_resolve(ScannerSi
     home: pyqtBoundSignal = pyqtSignal()
 
 
+@dataclass
+class PScannerStates:
+    """
+    Все возможные состояния сканера
+    """
+    is_connected: PState
+    is_moving: PState
+    is_in_use: PState  # используется в эксперименте прямо сейчас
+
+
 class PScanner(abc.ABC):
+    """
+    Класс сканера, объединяющего состояния и сигналы
+    """
     def __init__(
             self,
             instrument: Scanner,
@@ -48,6 +136,11 @@ class PScanner(abc.ABC):
     ):
         self.signals = signals
         self.instrument = instrument
+        self.states = PScannerStates(
+            is_connected=PState(False, self.signals.is_connected),
+            is_moving=PState(False, self.signals.is_moving),
+            is_in_use=PState(False),
+        )
 
         self.signals.stop.connect(self.instrument.stop)
         self.signals.abort.connect(self.instrument.abort)
@@ -62,6 +155,9 @@ class PScanner(abc.ABC):
     @property
     @abstractmethod
     def control_widgets(self) -> list[PWidget]:
+        """
+        Виджеты, управляющие сканером
+        """
         pass
 
 
@@ -75,15 +171,24 @@ class PScannerVisualizer(abc.ABC):
     @property
     @abstractmethod
     def widget(self) -> QWidget:
+        """
+        Виджет, отвечающий за визуализацию
+        """
         pass
 
     @property
     @abstractmethod
     def control_widgets(self) -> list[PWidget]:
+        """
+        Виджеты, управляющие визуализацией
+        """
         pass
 
 
 class PAnalyzerSignals(QObject, AnalyzerSignals, metaclass=_meta_resolve(AnalyzerSignals)):
+    """
+    Сигналы анализатора
+    """
     data: pyqtBoundSignal = pyqtSignal(dict)
     connect: pyqtBoundSignal = pyqtSignal()
     disconnect: pyqtBoundSignal = pyqtSignal()
@@ -91,14 +196,30 @@ class PAnalyzerSignals(QObject, AnalyzerSignals, metaclass=_meta_resolve(Analyze
     is_connected: pyqtBoundSignal = pyqtSignal(bool)
 
 
+@dataclass
+class PAnalyzerStates:
+    """
+    Все возможные состояния сканера
+    """
+    is_connected: PState
+    is_in_use: PState  # используется в эксперименте прямо сейчас
+
+
 class PAnalyzer(abc.ABC):
+    """
+    Класс анализатора, объединяющий сигналы и статусы анализатора
+    """
     def __init__(
             self,
             signals: PAnalyzerSignals,
-            instrument: BaseAnalyzator,
+            instrument: BaseAnalyzer,
     ):
         self.signals = signals
         self.instrument = instrument
+        self.states = PAnalyzerStates(
+            is_connected=PState(False, self.signals.is_connected),
+            is_in_use=PState(False),
+        )
 
         self.signals.connect.connect(self.instrument.connect)
         self.signals.disconnect.connect(self.instrument.disconnect)
@@ -111,10 +232,15 @@ class PAnalyzer(abc.ABC):
     @property
     @abstractmethod
     def control_widgets(self) -> list[PWidget]:
-        pass
+        """
+        Виджеты, управляющие анализатором
+        """
 
 
 class PAnalyzerVisualizer(abc.ABC):
+    """
+    Класс визуализатора анализатора
+    """
     def __init__(
             self,
             instrument: PAnalyzer
@@ -124,16 +250,23 @@ class PAnalyzerVisualizer(abc.ABC):
     @property
     @abstractmethod
     def widget(self) -> QWidget:
-        pass
+        """
+        Виджет визуализации
+        """
 
     @property
     @abstractmethod
     def control_widgets(self) -> list[PWidget]:
-        pass
+        """
+        Виджеты, управляющие визуализацией
+        """
 
 
 @dataclass
 class PBase:
+    """
+    Базовый класс всех объектов в проекте
+    """
     name: str
     widget: QWidget
     icon: QIcon = None
@@ -141,25 +274,37 @@ class PBase:
 
 @dataclass
 class PExperiment(PBase):
-    pass
+    """
+    Класс эксперимента
+    """
 
 
 @dataclass
 class PMeasurand(PBase):
-    pass
-
+    """
+    Класс измеряемой величины
+    """
 
 @dataclass
 class PObject(PBase):
+    """
+    Класс объекта исследования
+    """
     icon: QIcon = object_icon
 
 
 @dataclass
 class PPath(PBase):
+    """
+    Класс пути перемещения сканера
+    """
     icon: QIcon = path_icon
 
 
 class PStorageSignals(QObject):
+    """
+    Сигналы хранилища
+    """
     changed: pyqtBoundSignal = pyqtSignal()
     add: pyqtBoundSignal = pyqtSignal(PBase)
     delete: pyqtBoundSignal = pyqtSignal(PBase)
@@ -167,6 +312,9 @@ class PStorageSignals(QObject):
 
 @dataclass
 class PStorage:
+    """
+    Базовое хранилище объектов проекта
+    """
     signals: PStorageSignals = field(default_factory=PStorageSignals)
     data: list[Union[PBase, PExperiment, PMeasurand, PObject, PPath]] = field(default_factory=list)
 
@@ -175,15 +323,24 @@ class PStorage:
         self.signals.delete.connect(self.delete)
 
     def append(self, x: PBase):
+        """
+        Добавить элемент в хранилище
+        """
         self.data.append(x)
         self.signals.changed.emit()
 
     def delete(self, x: PBase):
+        """
+        Удалить элемент из хранилища
+        """
         self.data.remove(x)
         self.signals.changed.emit()
 
 
 class Project:
+    """
+    Класс всего проекта
+    """
     def __init__(
             self,
             scanner: PScanner,
@@ -204,6 +361,9 @@ class Project:
         self.experiments = experiments if experiments is not None else PStorage()
 
     def tree(self) -> dict[str: list[PWidget]]:
+        """
+        Дерево проекта
+        """
         tree = dict()
 
         scanner_widgets = []
