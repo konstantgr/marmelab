@@ -1,6 +1,6 @@
 from src.scanner.TRIM import TRIMScanner
 from src.project import Project, PScannerSignals, PAnalyzerSignals, PStorage
-from src.analyzator.rohde_schwarz.rohde_schwarz import RohdeSchwarzAnalyzer
+from src.analyzator.rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulator
 from src.project.PScanners import TRIMPScanner
 from src.project.PAnalyzers import RohdeSchwarzPAnalyzer
 from src.project.PVisualizers import PScannerVisualizer3D, PAnalyzerVisualizerRS
@@ -56,7 +56,8 @@ scanner_visualizer = PScannerVisualizer3D(
 analyzer_signals = PAnalyzerSignals()
 
 analyzer = RohdeSchwarzPAnalyzer(
-    instrument=RohdeSchwarzAnalyzer(ip="192.168.5.168", port="9000"),
+    # instrument=RohdeSchwarzAnalyzer(ip="192.168.5.168", port="9000"),
+    instrument=RohdeSchwarzEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
     signals=analyzer_signals
 )
 

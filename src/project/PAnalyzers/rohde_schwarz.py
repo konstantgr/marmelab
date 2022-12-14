@@ -31,9 +31,8 @@ class Control(QWidget):
             text="Connect",
             parent=self
         )
-        m_state = states.is_connected & ~states.is_in_use
         self.disconnect_button = StateDepPushButton(
-            state=m_state,
+            state=states.is_connected & ~states.is_in_use,
             text="Disconnect",
             parent=self
         )

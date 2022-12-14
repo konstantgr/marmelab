@@ -196,7 +196,7 @@ class SettingsTableWidget(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.verticalHeader().setVisible(False)
-        self.table.resizeRowsToContents()
+        # self.table.resizeRowsToContents()
 
         buttons_widget = QFrame(self.splitter)
         buttons_layout = QHBoxLayout(buttons_widget)

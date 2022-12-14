@@ -63,6 +63,7 @@ class RohdeSchwarzAnalyzer(BaseAnalyzer):
 
     def _set_is_connected(self, state: bool):
         self._is_connected = state
+        self._signals.is_connected.emit(state)
 
     def connect(self) -> None:
         if self._is_connected:
