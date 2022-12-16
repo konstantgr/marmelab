@@ -1,21 +1,21 @@
-from ..Project import PWidget, PPath
-from PyQt6.QtWidgets import QTextEdit, QWidget, QHBoxLayout, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout
+from ..Project import PPath
+from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QPushButton, QSizePolicy
 import numpy as np
 from dataclasses import dataclass, field
 from typing import List
 from ..Widgets.SettingsTable import QSmartTableModel, Variable
-from PyQt6.QtCore import Qt, QObject, QModelIndex
+from PyQt6.QtCore import Qt, QModelIndex, QObject, QModelIndex
 from PyQt6.QtGui import QColor
 from typing import Any
-from pyqt_app import project
-from src.project.Widgets import StateDepPushButton
+from ..Widgets import StateDepPushButton
+from ...scanner.TRIM import TRIMScanner
+from ..Project import PScannerStates
+
 import re
-
-
-class Settings(QWidget):
-    def __init__(self):
-        super(Settings, self).__init__('')
-        #добавить экземпляр класса таблицы
+# TODO: менять в таблице координату конца, или расстояние, на которую надо переместиться
+# TODO: менять количесвто измеряемых точек на шаг измерния
+# TODO: итого: 4 таблицы, которые надо связать Qstacked Widget, signal (по аналогии с тем, что было с панелями раньше)
+# TODO: иконки в тул бар Qaction, "добавить путь", "добавить объект", "Аборт"
 
 
 class MeshTableModel(QSmartTableModel):
@@ -24,7 +24,7 @@ class MeshTableModel(QSmartTableModel):
     """
     def __init__(self, headers, v_headers, parent: QObject = None, ):
         super(QSmartTableModel, self).__init__()
-        self.variable = Variable(name="", default_value=0, type=float, description="")
+        #self.variable = Variable(name="", default_value=0, type=float, description="")
         #self.variable = Variable(name="", default_value=0, type=float, unit=Length, description="")  реализовать валидацию
         self._data = [["" for _ in range(len(headers))] for _ in range(4)]  # добавить None в валидные значения
         self.headers = headers
@@ -38,6 +38,12 @@ class MeshTableModel(QSmartTableModel):
             else:
                 return self.v_headers[section]
 
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        return len(self._data)
+
+    def columnCount(self, parent: QModelIndex = ...) -> int:
+        return len(self._data[0])
+
     def data(self, index: QModelIndex, role: int = ...) -> Any:
         row = index.row()
         column = index.column()
@@ -46,8 +52,8 @@ class MeshTableModel(QSmartTableModel):
         elif role == Qt.ItemDataRole.BackgroundRole:
             if self._data[row][column] == "":
                 return QColor('lightgrey')
-            elif self._valid(self._data[row][column], self.variable):
-                return
+            #elif self._valid(self._data[row][column], self.variable):
+                #return
             return QColor('red')
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
@@ -80,42 +86,25 @@ class MeshTable(QTableView):
         header.setStretchLastSection(True)
 
 
-class ScannerControlTable(QWidget):
+class Path3dWidget(QWidget):
     """
+    Класс талбицы
     """
 
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
         self.setLayout(layout)
-        self.button_go = StateDepPushButton(
-            state=project.scanner.states.is_connected,
-            text="Go",
-            parent=self
-        )
-
         self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
         self.control_keys_H = ["x", "y", "z", "w"]
-
-        # создание горизонтального слоя внутри вертикального для окна с выбором значения координаты и
-        # кнопки перемещения по оси х по заданной координате
-
-        # создание горизонтального слоя внутри вертикального для помещения туда таблицы и кнопок пуск и аборт
-        layout_table = QHBoxLayout()
-        widget_table = QWidget()
-
-        widget_table.setLayout(layout_table)
-        layout_table.setAlignment(Qt.AlignmentFlag.AlignTop)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         # формирование таблицы, в которой задаются значения координат, скоростей и шага для трех осей
         self.tableWidget = MeshTable(self.control_keys_H, self.control_keys_V, self)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.tableWidget.setFixedHeight(200)
-
-        layout.addWidget(widget_table)  # добавление горизонтального виджета в вертикальный слой
-        self.button_go.clicked.connect(self.go_table)
-
-
+        #self.tableWidget.setFixedHeight(200)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        layout.addWidget(self.tableWidget)  # добавление горизонтального виджета в вертикальный слой
 
     def params_to_linspace(self):
         lst_x = []
@@ -185,10 +174,10 @@ class ScannerControlTable(QWidget):
         }
 
         #self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
-                                                                                        # по координатам в соответствии с
-                                                                                        # порядком
+                                                                                        # по координатам в соответствии с                                                                                        # порядком
+
 
 @dataclass
 class Path3d(PPath):
-    widget: QWidget = field(default_factory=Settings)
+    widget: QWidget = field(default_factory=Path3dWidget)
     points: np.ndarray = np.array([])

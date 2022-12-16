@@ -1,5 +1,5 @@
 from ..Project import PScanner, PWidget, PScannerSignals, PScannerStates
-from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QSizePolicy, QGroupBox
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QGroupBox
 from ..Widgets import SettingsTableWidget, StateDepPushButton
 from ..Variable import Setting, Unit
 from ...scanner.TRIM import TRIMScanner, DEFAULT_SETTINGS
