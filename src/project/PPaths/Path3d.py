@@ -1,5 +1,6 @@
 from ..Project import PPath
-from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QPushButton, QSizePolicy
+from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QPushButton,\
+    QSizePolicy, QMenuBar, QTabWidget
 import numpy as np
 from dataclasses import dataclass, field
 from typing import List
@@ -14,8 +15,30 @@ from ..Project import PScannerStates
 import re
 # TODO: менять в таблице координату конца, или расстояние, на которую надо переместиться
 # TODO: менять количесвто измеряемых точек на шаг измерния
-# TODO: итого: 4 таблицы, которые надо связать Qstacked Widget, signal (по аналогии с тем, что было с панелями раньше)
-# TODO: иконки в тул бар Qaction, "добавить путь", "добавить объект", "Аборт"
+# TODO: итого: 4 таблицы, которые надо связать QStacked Widget, signal (по аналогии с тем, что было с панелями раньше)
+# TODO: иконки в тул бар QAction, "добавить путь", "добавить объект", "Аборт"
+
+
+class Path3dWidget(QWidget):
+    """
+    Класс талбицы
+    """
+    def __init__(self):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        # self.bar_button = QMenuBar()
+        # self.type1 = self.bar_button.addMenu("Step")
+        # self.type2 = self.bar_button.addMenu("Split")
+        # self.type1
+        self.widget2 = Table1Widget()
+        self.widget1 = Table1Widget()
+        self.stackWidget = QTabWidget()
+        self.stackWidget.addTab(self.widget1, "Step")
+        self.stackWidget.addTab(self.widget2, "Split")
+        self.layout.addWidget(self.stackWidget)
+        # self.layout.addWidget(self.bar_button)
+        # self.layout.addWidget(self.widget1)
 
 
 class MeshTableModel(QSmartTableModel):
@@ -86,25 +109,25 @@ class MeshTable(QTableView):
         header.setStretchLastSection(True)
 
 
-class Path3dWidget(QWidget):
-    """
-    Класс талбицы
-    """
-
+class Table1Widget(QWidget):
     def __init__(self):
         super().__init__()
-        layout = QVBoxLayout()
-        self.setLayout(layout)
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        self.button = QPushButton("Test button")
+        self.button.clicked.connect(self.go_table)
+        self.layout.addWidget(self.button)
         self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
         self.control_keys_H = ["x", "y", "z", "w"]
-        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         # формирование таблицы, в которой задаются значения координат, скоростей и шага для трех осей
         self.tableWidget = MeshTable(self.control_keys_H, self.control_keys_V, self)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        #self.tableWidget.setFixedHeight(200)
+        self.tableWidget.setFixedHeight(200)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        layout.addWidget(self.tableWidget)  # добавление горизонтального виджета в вертикальный слой
+        self.layout.addWidget(self.tableWidget)  # добавление горизонтального виджета в вертикальный слой
+
 
     def params_to_linspace(self):
         lst_x = []
@@ -172,7 +195,7 @@ class Path3dWidget(QWidget):
             3: z,
             4: w,
         }
-
+        print(f"x={x}, y={y}, z={z}, w={w}")
         #self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
                                                                                         # по координатам в соответствии с                                                                                        # порядком
 
