@@ -1,10 +1,17 @@
-from ..Project import PAnalyzer, PWidget, PAnalyzerSignals, PAnalyzerStates
+import time
+from typing import Any
+
+from ..Project import PAnalyzer, PWidget, PAnalyzerSignals, PAnalyzerStates, PMeasurand
+from ..Project import PMeasurable
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QSizePolicy, QGroupBox
 from ..icons import control_icon, settings_icon
 from PyQt6.QtCore import Qt, QThreadPool
+from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from ..Variable import Unit, Setting
 from ..Widgets import SettingsTableWidget, StateDepPushButton
 from ...analyzator.rohde_schwarz import RohdeSchwarzAnalyzer
+from pyqtgraph import PlotWidget, PlotItem, PlotDataItem
+import numpy as np
 
 
 class Control(QWidget):
@@ -65,6 +72,72 @@ class Settings(SettingsTableWidget):
         self.signals.set_settings.emit(self.table.to_dict())
 
 
+class TestMeasurandSignals(QObject):
+    measure_signal: pyqtBoundSignal = pyqtSignal()
+
+
+class TestMeasurand(PMeasurand):
+    def __init__(self):
+        super(TestMeasurand, self).__init__(name='test')
+        self._plot_widget = PlotWidget()
+        self._widget = QTextEdit('test')
+        self._plot_item = PlotDataItem()
+        self.measure_signals = TestMeasurandSignals()
+        self.measure_signals.measure_signal.connect(self.redraw)
+
+    @property
+    def widget(self) -> QWidget:
+        return self._widget
+
+    @property
+    def plot_widget(self):
+        return self._plot_widget
+
+    def redraw(self):
+        x = np.linspace(0, 10, 100)
+        self._plot_item.setData(x, np.sin(x) + np.random.normal(0, 0.1, 100))
+
+    def measure(self) -> Any:
+        time.sleep(1)
+        self.measure_signals.measure_signal.emit()
+
+    def pre_measure(self) -> None:
+        plot = self._plot_widget.getPlotItem()  # type: PlotItem
+        plot.clearPlots()
+        self._plot_item = PlotDataItem()
+        plot.addItem(self._plot_item)
+
+
+class SParamasWidget(QGroupBox):
+    def __init__(self):
+        super(SParamasWidget, self).__init__()
+        self.setLayout(QVBoxLayout())
+
+        self.s_params_widget = QWidget(self)
+
+
+class SParams(PMeasurand):
+    def __init__(self, instrument: RohdeSchwarzAnalyzer):
+        super(SParams, self).__init__(name='S-parameters')
+        self._plot_widget = PlotWidget()
+        self.instrument = instrument
+        self._widget = SParamasWidget()
+
+    @property
+    def widget(self) -> QWidget:
+        return self._widget
+
+    @property
+    def plot_widget(self):
+        return self._plot_widget
+
+    def measure(self) -> Any:
+        time.sleep(1)
+
+    def pre_measure(self) -> None:
+        pass
+
+
 class RohdeSchwarzPAnalyzer(PAnalyzer):
     def __init__(self, signals: PAnalyzerSignals, instrument: RohdeSchwarzAnalyzer,):
         super(RohdeSchwarzPAnalyzer, self).__init__(signals=signals, instrument=instrument)
@@ -91,7 +164,7 @@ class RohdeSchwarzPAnalyzer(PAnalyzer):
         res = [
             Setting(
                 name='freq_start',
-                unit= Unit(Hz=1),
+                unit=Unit(Hz=1),
                 description='Start frequency',
                 type=float,
                 default_value=1000000,
@@ -119,3 +192,9 @@ class RohdeSchwarzPAnalyzer(PAnalyzer):
             )
         ]
         return res
+
+    def get_measurands(self) -> list[PMeasurand]:
+        return [
+            SParams(instrument=self.instrument),
+            TestMeasurand()
+        ]

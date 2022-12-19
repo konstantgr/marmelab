@@ -1,5 +1,6 @@
 from ..Project import PScanner, PWidget, PScannerSignals, PScannerStates
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QGroupBox
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QGroupBox, QSplitter
+from PyQt6.QtCore import Qt
 from ..Widgets import SettingsTableWidget, StateDepPushButton
 from ..Variable import Setting, Unit
 from ...scanner.TRIM import TRIMScanner, DEFAULT_SETTINGS
@@ -87,24 +88,33 @@ class Control(QWidget):
         logger.debug('z: ', current_position.z)
 
 
-
-
-class Settings(SettingsTableWidget):
+class Settings(QSplitter):
     def __init__(
             self,
             signals: PScannerSignals,
             states: PScannerStates,
-            settings: list[Setting], parent: QWidget = None
+            settings: list[Setting],
+            parent: QWidget = None
     ):
         super(Settings, self).__init__(
-            settings=settings,
             parent=parent,
-            apply_state=states.is_connected & ~states.is_moving & ~states.is_in_use
+            orientation=Qt.Orientation.Vertical,
         )
         self.signals = signals
 
+        self.settings_table = SettingsTableWidget(
+            settings=settings,
+            parent=self,
+            apply_state=states.is_connected & ~states.is_moving & ~states.is_in_use
+        )
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        self.addWidget(self.settings_table)
+        self.addWidget(QWidget())
+        self.setChildrenCollapsible(False)
+        self.setProperty('type', 'inner')
+
     def apply(self):
-        self.signals.set_settings.emit(self.table.to_dict())
+        self.signals.set_settings.emit(self.settings_table.table.to_dict())
 
 
 class TRIMPScanner(PScanner):

@@ -1,6 +1,7 @@
 from typing import List, Union
 from .rohde_schwarz import RohdeSchwarzAnalyzer
 import numpy as np
+from time import sleep
 
 
 class RohdeSchwarzEmulator(RohdeSchwarzAnalyzer):
@@ -51,4 +52,5 @@ class RohdeSchwarzEmulator(RohdeSchwarzAnalyzer):
             res[f'{S_param}'] = np.array(trace_tup).astype(float)
 
         self._signals.data.emit((res['f'], *(res[f'{S_param}'] for S_param in parameters)), )
+        sleep(0.2)
         return res

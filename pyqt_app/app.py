@@ -22,6 +22,9 @@ QPushButton:disabled {
 QPushButton[color='red'] {
     background-color: #FF3232;
 }
+QSplitter[type='inner']::handle {
+    image: url(assets/Untitled.png);
+}
 """
 
 

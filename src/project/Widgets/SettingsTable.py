@@ -173,6 +173,8 @@ class SettingsTableWidget(QWidget):
             self,
             settings: list[Setting],
             apply_state: PState = None,
+            apply_button: bool = True,
+            default_settings_button: bool = True,
             **kwargs
     ):
         super(SettingsTableWidget, self).__init__(**kwargs)
@@ -180,55 +182,52 @@ class SettingsTableWidget(QWidget):
 
         group = QGroupBox(self)
         group.setLayout(QVBoxLayout())
-        group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        # group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
 
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(group)
 
-        self.splitter = QSplitter(orientation=Qt.Orientation.Vertical, parent=group)
-        group.layout().addWidget(self.splitter)
-        # self.splitter.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-
-        self.table = QSmartTableView(settings=settings, parent=self.splitter)
+        self.table = QSmartTableView(settings=settings, parent=group)
         self.table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.verticalHeader().setVisible(False)
+        group.layout().addWidget(self.table)
         # self.table.resizeRowsToContents()
 
-        buttons_widget = QFrame(self.splitter)
+        if not default_settings_button and not apply_button:
+            return
+        buttons_widget = QFrame(group)
         buttons_layout = QHBoxLayout(buttons_widget)
-        buttons_layout.setContentsMargins(0, 0, 0,0 )
+        buttons_layout.setContentsMargins(0, 0, 0, 0)
         buttons_widget.setLayout(buttons_layout)
         buttons_widget.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
-        # buttons_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        buttons_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+        group.layout().addWidget(buttons_widget)
 
-        set_default_button = QPushButton("Set default")
-        set_default_button.clicked.connect(self.table.set_default)
-        set_default_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        buttons_widget.layout().addWidget(set_default_button)
+        if default_settings_button:
+            set_default_button = QPushButton("Set default")
+            set_default_button.clicked.connect(self.table.set_default)
+            set_default_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+            buttons_widget.layout().addWidget(set_default_button)
 
-        if apply_state is None:
-            apply_button = QPushButton(
-                text="Apply",
-                parent=buttons_widget
-            )
-        else:
-            apply_button = StateDepPushButton(
-                state=apply_state,
-                text="Apply",
-                parent=buttons_widget
-            )
-        apply_button.clicked.connect(self.apply)
-        apply_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        buttons_widget.layout().addWidget(apply_button)
-
-        self.splitter.addWidget(self.table)
-        self.splitter.addWidget(buttons_widget)
-        self.splitter.setCollapsible(0, False)
-        self.splitter.setCollapsible(1, False)
+        if apply_button:
+            if apply_state is None:
+                apply_button = QPushButton(
+                    text="Apply",
+                    parent=buttons_widget
+                )
+            else:
+                apply_button = StateDepPushButton(
+                    state=apply_state,
+                    text="Apply",
+                    parent=buttons_widget
+                )
+            apply_button.clicked.connect(self.apply)
+            apply_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+            buttons_widget.layout().addWidget(apply_button)
 
     def apply(self):
         """

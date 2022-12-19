@@ -17,6 +17,9 @@ class Unit:
     B: int = 0
 
     def __str__(self):
+        """
+        Красиво выводит единицы измерения
+        """
         up = []
         down = []
         down_len = 0
@@ -39,6 +42,7 @@ class Unit:
             return f"{'⋅'.join(up)}/({'⋅'.join(down)})"
 
 
+# TODO: использовать kw_only=True, чтобы избежать =None в дочерних классах
 @dataclass
 class _Variable:
     """
