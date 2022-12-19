@@ -45,8 +45,9 @@ poetry run uvicorn web_app:app
 ## Scanner
 
 Пример подключения сканера:
+
 ```python
-from TRIM import TRIMScanner
+from src.scanner.TRIM import TRIMScanner
 
 sc = TRIMScanner(ip="127.0.0.1", port=9000)
 sc.connect()
@@ -72,7 +73,7 @@ sc.goto(new_position)
 Передать дефолтные настройки
 
 ```python
-from TRIM import DEFAULT_SETTINGS
+from src.scanner.TRIM import DEFAULT_SETTINGS
 
 sc.set_settings(DEFAULT_SETTINGS, )
 ```

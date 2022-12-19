@@ -1,5 +1,5 @@
 import socket
-from src.scanner import Position, Velocity, Acceleration, Deceleration, BaseAxes
+from ..scanner import Position, Velocity, Acceleration, Deceleration, BaseAxes
 import threading
 import time
 from dataclasses import dataclass

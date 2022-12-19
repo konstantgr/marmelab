@@ -7,7 +7,7 @@ import pytest
 def test_axes_to_dict():
     for cl in [BaseAxes, Position, Velocity, Deceleration, Acceleration]:
         el = cl(*[randint(0, 10) for _ in range(len(dataclasses.fields(cl)))])
-        dct = el.to_dict()
+        dct = dataclasses.asdict(el)
         for field in dataclasses.fields(cl):
             name = field.name
             assert dct[name] == el.__getattribute__(name)

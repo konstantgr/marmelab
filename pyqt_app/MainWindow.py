@@ -1,19 +1,8 @@
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter, QTextEdit
 from PyQt6.QtCore import Qt
-from Panels import *
-
-# TODO: сделать вывод логов в файл
-# TODO: Изменить таблицу сканнер сеттингс
-# TODO: Реализация таблицы сканнер контрол (добавить пока что хождение по точкам)
-# TODO: ТАблица с настройками объекта и комнаты в рум сеттингс
-# TODO: добавить вкладку с настройками комнаты (таблица/поля, размер комнаты в метрах (x, y ,z),
-#  область сканирования (x, y, z) и ее пространственная ориенатция (x, y, z), кнопка apply(pass) )
-# TODO: убрать лямбда функции
-# TODO: вкладка Next --> Test. реализация кнопки Go, которая измеряет и выдает данные
-# TODO: ПОСЛЕ ЧЕТВЕРГА
-# TODO: добавить в таблицу ск. контролл измерение и запись данных
-# TODO: аналогично во вкладке тест
-
+from Panels import LogPanel, RightPanel, LeftPanel, CentralPanel
+from Panels.BarPanel import BarPanel
+from pyqt_app import project
 
 
 class MainWindow(QMainWindow):
@@ -25,12 +14,28 @@ class MainWindow(QMainWindow):
 
         self.left_panel = LeftPanel(self.main_widget)  # settings selector
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
-        self.right_panel = RightPanel(self.main_widget)  # graphics
-        self.log_panel = LogPanel(self.main_widget)  # log window
+        self.bar_panel = BarPanel(self.main_widget)  # status bar window
 
-        self.left_panel.leftlist.currentRowChanged.connect(self.center_panel.display)
-        room_settings = self.center_panel.room_settings
-        room_settings.settings_signal.connect(self.right_panel.scanner_widget.set_settings_from_dict)
+        # self.bar_panel.bar_status_signal.emit("Status scanner")  # отправка в стек сигналов строки "Status scanner"
+        #  висит для примера
+        self.left_panel.signals.tree_num.connect(self.center_panel.display)
+
+        project.scanner.signals.is_connected.connect(self.bar_panel.sc_status_msg)
+        project.scanner.signals.is_connected.emit(project.scanner.instrument.is_available)
+
+        project.analyzer.signals.is_connected.connect(self.bar_panel.an_status_msg)
+        project.analyzer.signals.is_connected.emit(False)
+
+        self.right_panel = RightPanel(
+            scanner_visualizer=project.scanner_visualizer,
+            analyzer_visualizer=project.analyzer_visualizer,
+            parent=self.main_widget
+        )  # graphics
+
+        self.log_panel = LogPanel(
+            parent=self.main_widget
+        )  # log window
+
         left_center_splitter = QSplitter(orientation=Qt.Orientation.Horizontal)
         left_center_splitter.insertWidget(0, self.left_panel)
         left_center_splitter.insertWidget(1, self.center_panel)
@@ -42,6 +47,7 @@ class MainWindow(QMainWindow):
         log_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
         log_splitter.insertWidget(0, left_center_splitter)
         log_splitter.insertWidget(1, self.log_panel)
+        self.setStatusBar(self.bar_panel)
         log_splitter.setStretchFactor(0, 4)
         log_splitter.setStretchFactor(1, 1)
         log_splitter.setCollapsible(0, False)
@@ -61,3 +67,5 @@ class MainWindow(QMainWindow):
         self.setGeometry(300, 300, 450, 400)
         self.setWindowTitle('Scanner control')
         self.setCentralWidget(self.main_widget)
+
+
