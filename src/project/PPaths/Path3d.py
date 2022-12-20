@@ -1,6 +1,6 @@
 from ..Project import PPath
 from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QPushButton,\
-    QSizePolicy, QMenuBar, QTabWidget, QCheckBox, QGroupBox
+    QSizePolicy, QMenuBar, QTabWidget, QCheckBox, QGroupBox, QComboBox
 import numpy as np
 from dataclasses import dataclass, field
 from typing import List
@@ -28,6 +28,8 @@ class Path3dWidget(QWidget):
         super().__init__()
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
+        group = QGroupBox(self)
+        group_layout = QVBoxLayout(group)
         """
         несколько листов в таблице
         self.coord_box = QCheckBox("Relative coordinates")
@@ -40,10 +42,11 @@ class Path3dWidget(QWidget):
         self.layout.addWidget(self.stackWidget)
         
         """
-
         self.widget1 = Table1Widget()
-        self.layout.addWidget(self.widget1)
+        group_layout.addWidget(self.widget1)
+        self.layout.addWidget(group)
 
+# написиать функцию, меняющую split на step, и функцию, меняющую сами данные (relative) и функцию (set current pos)
 class MeshTableModel(QSmartTableModel):
     """
     класс, обеспечивающий проверку значений в таблице
@@ -93,6 +96,7 @@ class MeshTableModel(QSmartTableModel):
             column = index.column()
             self._data[row][column] = value
             self.dataChanged.emit(index, index)
+            #self.headerDataChange  использовать в другой функции
         return True
 
 
@@ -118,27 +122,44 @@ class Table1Widget(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.hbox = QHBoxLayout()
-        self.add_widget = QWidget()
-        self.add_widget.setLayout(self.hbox)
-        self.group = QGroupBox(self)
-        self.group_layout = QVBoxLayout(self.group)
+        self.vbox = QWidget()
+        self.vboxlayout = QVBoxLayout(self.vbox)
 
+        self.hbox = QWidget()
+        self.hboxlayout = QHBoxLayout(self.hbox)
+        #self.hboxlayout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self.group = QGroupBox()
+        self.group_layout = QVBoxLayout(self.group)
+        #self.group_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self.set_button = QPushButton("Set current coordinates")
+        self.hboxlayout.addWidget(self.set_button)
+
+        self.split_step_box = QComboBox()
+        self.items = ["Step", "Split"]
+        self.split_step_box.addItem("Step")
+        self.split_step_box.addItem("Split")
+        self.split_step_box.currentTextChanged.connect(self.set_splits)
+        self.vboxlayout.addWidget(self.split_step_box)
+
+        self.check_relative = QCheckBox("Relatives coordinates")
+        self.vboxlayout.addWidget(self.check_relative)
+        self.hboxlayout.addWidget(self.vbox)
 
         self.temp_button = QPushButton("Print test button")
         self.temp_button.clicked.connect(self.go_table)  # временная кнопка. Необходимо, чтобы go_table была доступна
                                                     # вне класса - в эксперименте.
         self.temp_button.setProperty('color', 'red')
-        self.set_button = QPushButton("Set current coordinates")
+        self.layout.addWidget(self.temp_button)
 
+        self.group_layout.addWidget(self.hbox)
+        self.group_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-
-
-        self.hbox.addWidget(self.set_button)
-        self.hbox.addWidget(self.temp_button)
         self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
         self.control_keys_H = ["x", "y", "z", "w"]
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+
         # формирование таблицы, в которой задаются значения координат, скоростей и шага для трех осей
         self.tableWidget = MeshTable(self.control_keys_H, self.control_keys_V, self)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -146,13 +167,9 @@ class Table1Widget(QWidget):
         self.tableWidget.setFixedHeight(200)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-        self.hbox.addWidget(self.temp_button)
-        self.hbox.addWidget(self.set_button)
-        self.hbox.addWidget(self.group)
-        self.layout.addWidget(self.add_widget)
+        self.layout.addWidget(self.group)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.layout.addWidget(self.tableWidget)
-
-        self.hbox.setAlignment(Qt.AlignmentFlag.AlignTop)
 
     def params_to_linspace(self):
         lst_x = []
@@ -222,8 +239,11 @@ class Table1Widget(QWidget):
         }
         print(f"x={x}, y={y}, z={z}, w={w}")
         #self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
-                                                                                        # по координатам в соответствии с                                                                                        # порядком
 
+    def set_splits(self, i: str):                                                                                    # по координатам в соответствии с                                                                                        # порядком
+        self.control_keys_V[2] = i
+        self.tableWidget.setVerticalHeader(self.control_keys_V)
+        print(i)
 
 
 @dataclass
