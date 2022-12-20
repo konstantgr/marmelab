@@ -4,9 +4,12 @@ from .analyzator_parameters import SParameters, FrequencyParameters, AnalyzatorT
 from ..utils import EmptySignal
 
 
-class AnalyzatorConnectionError(Exception):
+class AnalyzerConnectionError(Exception):
+    """
+    Исключение при ошибке в соединении
+    """
     def __init__(self):
-        super().__init__("Error in analyzator connection")
+        super().__init__("Error in analyzer connection")
 
 
 class AnalyzerSignals(metaclass=abc.ABCMeta):
@@ -29,28 +32,49 @@ class AnalyzerSignals(metaclass=abc.ABCMeta):
         """
 
 
-class BaseAnalyzator(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def analyzator_type(self) -> AnalyzatorType:
-        raise NotImplementedError('analyzator_type property not implemented yet')
-
+class BaseAnalyzer(abc.ABC):
+    """
+    Базовый класс анализатора
+    """
     @abc.abstractmethod
     def connect(self) -> bool:
-        raise NotImplementedError('connect method not implemented yet')
+        """
+        Подключение к анализатору
+        """
 
     @abc.abstractmethod
     def disconnect(self) -> bool:
-        raise NotImplementedError('disconnect method not implemented yet')
+        """
+        Отключение от анализатора
+        """
 
     @abc.abstractmethod
     def get_scattering_parameters(
             self,
-            parameters: List[SParameters],
-            frequency_parameters: FrequencyParameters,
-            results_formats: List[ResultsFormatType]
+            parameters: List[str],
     ) -> dict[str: List[float]]:
-        raise NotImplementedError('get_scattering_parameters method not implemented yet')
+        """
+        Получить S параметры
+        """
+
+    @abc.abstractmethod
+    def set_settings(self, *args, **kwargs) -> None:
+        """
+        Применение настроек
+
+        :param args:
+        :param kwargs:
+        :return:
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_connected(self) -> bool:
+        """
+        Доступность анализатора для управления
+
+        :return: доступность
+        """
 
     @abc.abstractmethod
     def __enter__(self):

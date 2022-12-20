@@ -5,12 +5,12 @@ from typing import List, Union
 from src.analyzator.analyzator_parameters import (
     AnalyzatorType, ResultsFormatType, FrequencyParameters, SParameters, FrequencyTypes
 )
-from src.analyzator.base_analyzator import BaseAnalyzator
+from src.analyzator.base_analyzator import BaseAnalyzer
 import pyvisa
 import numpy as np
 
 
-class CeyearAnalyzator(BaseAnalyzator):
+class CeyearAnalyzer(BaseAnalyzer):
     analyzator_type = AnalyzatorType.CEYEAR
 
     def __init__(
@@ -98,7 +98,7 @@ class CeyearAnalyzator(BaseAnalyzator):
 
 
 if __name__ == "__main__":
-    analyzator = CeyearAnalyzator(
+    analyzator = CeyearAnalyzer(
         ip="172.16.22.182",
         port="5025"
     )

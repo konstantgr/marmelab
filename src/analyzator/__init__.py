@@ -1,2 +1,2 @@
-from .base_analyzator import AnalyzerSignals, BaseAnalyzator
-from . import rohde_schwarz
+from .base_analyzator import AnalyzerSignals, BaseAnalyzer
+from .rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulator
