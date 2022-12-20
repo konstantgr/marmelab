@@ -1,6 +1,7 @@
 from ..Project import PScanner, PWidget, PScannerSignals, PScannerStates
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QGroupBox, QSplitter
 from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QGroupBox
 from ..Widgets import SettingsTableWidget, StateDepPushButton
 from ..Variable import Setting, Unit
 from ...scanner.TRIM import TRIMScanner, DEFAULT_SETTINGS
@@ -54,7 +55,6 @@ class Control(QWidget):
         self.disconnect_button.clicked.connect(scanner.disconnect)
         self.home_button.clicked.connect(self.f_home)
         self.abort_button.clicked.connect(scanner.abort)
-        #self.upd_position_button.clicked.connect(scanner.position)
 
         self.abort_button.setProperty('color', 'red')
         group_layout.addWidget(self.connect_button)
@@ -62,7 +62,7 @@ class Control(QWidget):
         group_layout.addWidget(self.home_button)
         group_layout.addWidget(self.abort_button)
 
-        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        #self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
     def _home(self):
         self.scanner.home()

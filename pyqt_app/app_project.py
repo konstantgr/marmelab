@@ -11,6 +11,7 @@ from src.project.PPaths import Path3d
 import numpy as np
 from src.project.PStorages import ObjectsStorage3d, PathsStorage3d, ExperimentsStorage
 from src.scanner.TRIM import TRIM_emulator
+from src.project.Project import PScannerStates
 
 scanner_signals = PScannerSignals()
 scanner = TRIMPScanner(
