@@ -1,6 +1,6 @@
 from ..Project import PPath
 from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QPushButton,\
-    QSizePolicy, QMenuBar, QTabWidget
+    QSizePolicy, QMenuBar, QTabWidget, QCheckBox, QGroupBox
 import numpy as np
 from dataclasses import dataclass, field
 from typing import List
@@ -27,19 +27,21 @@ class Path3dWidget(QWidget):
         super().__init__()
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        # self.bar_button = QMenuBar()
-        # self.type1 = self.bar_button.addMenu("Step")
-        # self.type2 = self.bar_button.addMenu("Split")
-        # self.type1
+        """
+        несколько листов в таблице
+        self.coord_box = QCheckBox("Relative coordinates")
         self.widget2 = Table1Widget()
         self.widget1 = Table1Widget()
         self.stackWidget = QTabWidget()
         self.stackWidget.addTab(self.widget1, "Step")
         self.stackWidget.addTab(self.widget2, "Split")
+        self.layout.addWidget(self.coord_box)
         self.layout.addWidget(self.stackWidget)
-        # self.layout.addWidget(self.bar_button)
-        # self.layout.addWidget(self.widget1)
+        
+        """
 
+        self.widget1 = Table1Widget()
+        self.layout.addWidget(self.widget1)
 
 class MeshTableModel(QSmartTableModel):
     """
@@ -114,9 +116,25 @@ class Table1Widget(QWidget):
         super().__init__()
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        self.button = QPushButton("Test button")
-        self.button.clicked.connect(self.go_table)
-        self.layout.addWidget(self.button)
+
+        self.hbox = QHBoxLayout()
+        self.add_widget = QWidget()
+        self.add_widget.setLayout(self.hbox)
+        self.group = QGroupBox(self)
+        self.group_layout = QVBoxLayout(self.group)
+
+
+        self.temp_button = QPushButton("Print test button")
+        self.temp_button.clicked.connect(self.go_table)  # временная кнопка. Необходимо, чтобы go_table была доступна
+                                                    # вне класса - в эксперименте.
+        self.temp_button.setProperty('color', 'red')
+        self.set_button = QPushButton("Set current coordinates")
+
+
+
+
+        self.hbox.addWidget(self.set_button)
+        self.hbox.addWidget(self.temp_button)
         self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
         self.control_keys_H = ["x", "y", "z", "w"]
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -126,8 +144,14 @@ class Table1Widget(QWidget):
         self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.setFixedHeight(200)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        self.layout.addWidget(self.tableWidget)  # добавление горизонтального виджета в вертикальный слой
 
+        self.hbox.addWidget(self.temp_button)
+        self.hbox.addWidget(self.set_button)
+        self.hbox.addWidget(self.group)
+        self.layout.addWidget(self.add_widget)
+        self.layout.addWidget(self.tableWidget)
+
+        self.hbox.setAlignment(Qt.AlignmentFlag.AlignTop)
 
     def params_to_linspace(self):
         lst_x = []

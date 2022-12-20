@@ -60,8 +60,7 @@ class Control(QWidget):
         group_layout.addWidget(self.home_button)
         group_layout.addWidget(self.abort_button)
 
-
-        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        #self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
     def _home(self):
         self.scanner.home()
