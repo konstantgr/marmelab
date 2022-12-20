@@ -176,6 +176,8 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.scanner.signals.position.connect(self.set_scanner_pos)
         self.objects.signals.changed.connect(self.redraw_objects)
         self.paths.signals.changed.connect(self.redraw_paths)
+        self.objects.signals.element_changed.connect(self.redraw_objects)
+        self.paths.signals.element_changed.connect(self.redraw_paths)
 
     @coords_to_GL_coords
     def set_room_size(self, x: float, y: float, z: float):
@@ -508,8 +510,14 @@ class ScannerVisualizer(gl.GLViewWidget):
                     meshdata=self.point_meshdata,
                     smooth=True,
                     drawFaces=True,
-                    color=pg.mkColor((100, 100, 255, 100)),
-                    glOptions='opaque',  # translucent, opaque, additive
+                    color=pg.mkColor((100, 100, 255, 150)),
+                    glOptions={
+                        GL_DEPTH_TEST: True,
+                        GL_BLEND: True,
+                        GL_ALPHA_TEST: True,
+                        GL_CULL_FACE: True,
+                        'glBlendFunc': (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA),
+                    },  # or use one of str: translucent, opaque, additive
                 )
                 tt = np.eye(4)
                 tt[0, 0] = 1000 / 30

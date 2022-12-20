@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QTableView, QSplitter, QHBoxLayout, QSizePolicy, QHeaderView, QPushButton, QVBoxLayout
+from PyQt6.QtWidgets import QAbstractItemView, QFrame, QWidget, QTableView, QSplitter, QGroupBox, QHBoxLayout, QSizePolicy, QHeaderView, QPushButton, QVBoxLayout
 from PyQt6.QtCore import Qt, QAbstractTableModel
 from PyQt6 import QtCore
 from PyQt6.QtGui import QColor
@@ -7,6 +7,8 @@ from typing import Union, Any
 import re
 from PyQt6.QtCore import QObject
 from dataclasses import dataclass
+from .StatedependentButton import StateDepPushButton
+from ..Project import PState
 
 
 @dataclass
@@ -170,45 +172,62 @@ class SettingsTableWidget(QWidget):
     def __init__(
             self,
             settings: list[Setting],
+            apply_state: PState = None,
+            apply_button: bool = True,
+            default_settings_button: bool = True,
             **kwargs
     ):
         super(SettingsTableWidget, self).__init__(**kwargs)
-
-        self.splitter = QSplitter(orientation=Qt.Orientation.Vertical, parent=self)
-        self.setLayout(QVBoxLayout())
-        self.layout().addWidget(self.splitter)
-        self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
         self.default_settings = settings
 
-        self.table = QSmartTableView(settings=settings, parent=self.splitter)
+        group = QGroupBox(self)
+        group.setLayout(QVBoxLayout())
+        # group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+
+        self.setLayout(QVBoxLayout())
+        self.layout().addWidget(group)
+
+        self.table = QSmartTableView(settings=settings, parent=group)
+        self.table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         self.table.horizontalHeader().setStretchLastSection(True)
-        # self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        # self.table.setFixedHeight(340)
-        self.table.resizeRowsToContents()
+        self.table.verticalHeader().setVisible(False)
+        group.layout().addWidget(self.table)
+        # self.table.resizeRowsToContents()
 
-        buttons_widget = QWidget(parent=self.splitter)
-        buttons_widget.setLayout(QHBoxLayout())
+        if not default_settings_button and not apply_button:
+            return
+        buttons_widget = QFrame(group)
+        buttons_layout = QHBoxLayout(buttons_widget)
+        buttons_layout.setContentsMargins(0, 0, 0, 0)
+        buttons_widget.setLayout(buttons_layout)
         buttons_widget.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
-        # buttons_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        buttons_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+        group.layout().addWidget(buttons_widget)
 
-        set_default_button = QPushButton("Set default", parent=buttons_widget)
-        set_default_button.clicked.connect(self.table.set_default)
-        set_default_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        buttons_widget.layout().addWidget(set_default_button)
+        if default_settings_button:
+            set_default_button = QPushButton("Set default")
+            set_default_button.clicked.connect(self.table.set_default)
+            set_default_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+            buttons_widget.layout().addWidget(set_default_button)
 
-        apply_button = QPushButton("Apply", parent=buttons_widget)
-        apply_button.clicked.connect(self.apply)
-        apply_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        buttons_widget.layout().addWidget(apply_button)
-        buttons_widget.layout().setStretch(0, 1)
-        buttons_widget.layout().setStretch(1, 1)
-
-        self.splitter.addWidget(self.table)
-        self.splitter.addWidget(buttons_widget)
-        self.splitter.setCollapsible(0, False)
-        self.splitter.setCollapsible(1, False)
+        if apply_button:
+            if apply_state is None:
+                apply_button = QPushButton(
+                    text="Apply",
+                    parent=buttons_widget
+                )
+            else:
+                apply_button = StateDepPushButton(
+                    state=apply_state,
+                    text="Apply",
+                    parent=buttons_widget
+                )
+            apply_button.clicked.connect(self.apply)
+            apply_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+            buttons_widget.layout().addWidget(apply_button)
 
     def apply(self):
         """

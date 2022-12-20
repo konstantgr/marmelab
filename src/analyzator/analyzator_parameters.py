@@ -22,6 +22,8 @@ class FrequencyParameters:
 @unique
 class AnalyzatorType(Enum):
     ROHDE_SCHWARZ = 'ROHDE_SCHWARZ'
+    CEYEAR = 'CEYEAR'
+    PLANAR = 'PLANAR'
 
 
 @unique
@@ -56,4 +58,4 @@ class SParameters:
 
 if __name__ == "__main__":
     params = SParameters().enum
-    print(params.S11.value)
+    print(params.S11._value)
