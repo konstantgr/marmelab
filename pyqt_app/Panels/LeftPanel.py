@@ -46,6 +46,11 @@ class LeftPanel(BasePanel):
         self.setLayout(hbox)
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
+        project.objects.signals.changed.connect(self.draw)
+        project.paths.signals.changed.connect(self.draw)
+        project.measurables.signals.changed.connect(self.draw)
+        project.experiments.signals.changed.connect(self.draw)
+
     def draw(self) -> None:
         """
         Отрисовка дерева
