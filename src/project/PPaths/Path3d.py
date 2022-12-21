@@ -31,6 +31,7 @@ class Path3dWidget(QWidget):
         group = QGroupBox(self)
         group_layout = QVBoxLayout(group)
         """
+        может, проще сделать так, чем сигналы настраивать
         несколько листов в таблице
         self.coord_box = QCheckBox("Relative coordinates")
         self.widget2 = Table1Widget()
@@ -121,17 +122,15 @@ class Table1Widget(QWidget):
         super().__init__()
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-
         self.vbox = QWidget()
-        self.vboxlayout = QVBoxLayout(self.vbox)
+
+        self.vboxlayout = QVBoxLayout(self.vbox)  # вертикальный слой, содержащий комбобокс и чекбокс
 
         self.hbox = QWidget()
-        self.hboxlayout = QHBoxLayout(self.hbox)
-        #self.hboxlayout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.hboxlayout = QHBoxLayout(self.hbox)  # горизонтальный слой с кнопкой сет коорд и вертик слой
 
         self.group = QGroupBox()
         self.group_layout = QVBoxLayout(self.group)
-        #self.group_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.set_button = QPushButton("Set current coordinates")
         self.hboxlayout.addWidget(self.set_button)
@@ -152,24 +151,22 @@ class Table1Widget(QWidget):
                                                     # вне класса - в эксперименте.
         self.temp_button.setProperty('color', 'red')
         self.layout.addWidget(self.temp_button)
-
         self.group_layout.addWidget(self.hbox)
-        self.group_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
         self.control_keys_H = ["x", "y", "z", "w"]
-
 
         # формирование таблицы, в которой задаются значения координат, скоростей и шага для трех осей
         self.tableWidget = MeshTable(self.control_keys_H, self.control_keys_V, self)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.setFixedHeight(200)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 
-        self.layout.addWidget(self.group)
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout.addWidget(self.group)
         self.layout.addWidget(self.tableWidget)
+
 
     def params_to_linspace(self):
         lst_x = []
