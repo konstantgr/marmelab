@@ -2,22 +2,24 @@ import socket
 import threading
 
 from typing import List, Union
-from src.analyzator.analyzator_parameters import (
-    AnalyzatorType, ResultsFormatType, FrequencyParameters, SParameters, FrequencyTypes
-)
-from src.analyzator.base_analyzator import BaseAnalyzator
+from src.analyzator.base_analyzator import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
+from ...utils import EmptySignal
 import numpy as np
 
 
-class SocketAnalyzator(BaseAnalyzator):
-    analyzator_type = AnalyzatorType.SOCKET
+class SocketAnalyzerSignals(AnalyzerSignals):
+    data = EmptySignal()
+    is_connected = EmptySignal()
 
+
+class SocketAnalyzer(BaseAnalyzer):
     def __init__(
             self,
             ip: str,
             port: Union[str, int],
             bufsize: int = 1024,
             maxbufs: int = 1024,
+            signals: AnalyzerSignals = None
     ):
         """
 
@@ -29,63 +31,105 @@ class SocketAnalyzator(BaseAnalyzator):
         self.ip, self.port, self.conn = ip, port, socket.socket()
         self.bufsize, self.maxbufs = bufsize, maxbufs
         self.tcp_lock = threading.Lock()
-        self.is_connected = False
+        self._is_connected = False
         self.instrument = None
-        self.settings = None
+        self.channel = 1
+
+        if signals is None:
+            self._signals = SocketAnalyzerSignals()
+        else:
+            self._signals = signals
 
     def _send_cmd(self, cmd: str):
         self.instrument.send(str.encode(cmd))
         if '?' in cmd:
-            return self.instrument.recv(1024).decode()
+            # return self.instrument.recv(1024).decode()
+            response = bytearray()
+            while True:
+                chunk = self.instrument.recv(self.bufsize)
+                if not chunk:
+                    break
+                response += chunk
+            return response.decode()
 
-    def set_settings(self, channel: int, settings: FrequencyParameters) -> None:
+    def set_settings(self,
+                     channel: int = 1,
+                     sweep_type: str = None,
+                     freq_start: float = None,
+                     freq_stop: float = None,
+                     freq_num: int = None,
+                     bandwidth: float = None,
+                     aver_fact: int = None,
+                     smooth_aper: int = None
+                     ) -> None:
         self._send_cmd("*RST")
-        self._send_cmd(f'SENSe{channel}:FREQuency:STARt {settings.start}{settings.frequency_type}')
-        self._send_cmd(f'SENSe{channel}:FREQuency:STOP {settings.stop}{settings.frequency_type}')
-        self._send_cmd(f'SENSe{channel}:SWEep:POINts {settings.num_points}')
-        self.settings = settings
+        self.channel = channel
+        if sweep_type is not None:
+            self._send_cmd(f'SENS{channel}:SWE:TYPE {sweep_type}')
+        if bandwidth is not None:
+            self._send_cmd(f'SENS{channel}:BAND {bandwidth}')
+        if freq_start is not None:
+            self._send_cmd(f'SENS{channel}:FREQ:STAR {freq_start}Hz')
+        if freq_stop is not None:
+            self._send_cmd(f'SENS{channel}:FREQ:STOP {freq_stop}Hz')
+        if freq_num is not None:
+            self._send_cmd(f'SENS{channel}:SWE:POIN {freq_num}')
+        if aver_fact is not None:
+            self._send_cmd(f'SENS{channel}:AVER:STAT ON')
+            self._send_cmd(f'SENS{channel}:AVER:C {aver_fact}')
+        if smooth_aper is not None:
+            self._send_cmd(f'CALC{channel}:SMO:STAT ON')
+            self._send_cmd(f'CALC{channel}:SMO:APER {smooth_aper}')
+
+    def _set_is_connected(self, state: bool):
+        self._is_connected = state
+        self._signals.is_connected.emit(state)
 
     def connect(self) -> None:
+        if self._is_connected:
+            return
         self.instrument = self.conn
         self.instrument.connect((self.ip, self.port))
-        self.is_connected = True
+        self._set_is_connected(True)
 
     def disconnect(self) -> None:
-        if not self.is_connected:
+        if not self._is_connected:
             return
         try:
             self.instrument.close()
-            self.is_connected = False
         except Exception as e:
-            return
+            raise e
+        finally:
+            self._set_is_connected(False)
 
     def get_scattering_parameters(
             self,
-            parameters: List[SParameters],
-            frequency_parameters: FrequencyParameters,
-            results_formats: List[ResultsFormatType]
-    ) -> dict[str: List[float]]:
+            parameters: List[str],
+    ) -> dict[str: List[complex]]:
 
         res = {}
 
         if not self.is_connected:
-            return
+            raise AnalyzerConnectionError
 
-        channel = 1
-        self.set_settings(channel=channel, settings=frequency_parameters)
-
-        for num, S_param in enumerate(parameters):
+        for num, s_param in enumerate(parameters):
             num += 1
-            self._send_cmd(f'CALC{channel}:PAR:DEF "Trc{num}", "{S_param}"')
-            self._send_cmd(f'CALC{1}:PAR:SEL "Trc{num}"')
-            trace_data = self._send_cmd(f'CALC{channel}:DATA? FDATA')
+            self._send_cmd(f'CALC{self.channel}:PAR:DEF "Trc{num}", "{s_param}"')
+            self._send_cmd(f'CALC{self.channel}:PAR:SEL "Trc{num}"')
+            trace_data = self._send_cmd(f'CALC{self.channel}:DATA? SDATA')
             trace_tup = tuple(map(str, trace_data.split(',')))
-            res[f'{S_param}'] = np.array(trace_tup).astype(float)
+            trace_array = np.array(trace_tup).astype(float)
+            res[f'{s_param}'] = trace_array[:-1:2] + 1j * trace_array[1::2]
 
-        freq_list = self._send_cmd(f'CALC{channel}:DATA:STIM?')
-        freq_tup = tuple(map(str, freq_list.split(',')))
+        freq_data = self._send_cmd(f'CALC:DATA:STIM?')  # rsinstrument examples csv
+        freq_tup = tuple(map(str, freq_data.split(',')))
         res[f'f'] = np.array(freq_tup).astype(float)
+
+        self._signals.data.emit((res['f'], *(res[f'{s_param}'] for s_param in parameters)), )
         return res
+
+    def is_connected(self) -> bool:
+        return self._is_connected
 
     def __enter__(self):
         pass
@@ -95,17 +139,9 @@ class SocketAnalyzator(BaseAnalyzator):
 
 
 if __name__ == "__main__":
-    analyzator = SocketAnalyzator(
-        ip="192.168.5.168",
-        port=9000
-    )
-    analyzator.connect()
-
-    sp = ['S11', 'S23']
-    fp = FrequencyParameters(
-        1000, 5000, FrequencyTypes.MHZ, 200
-    )
-    results = analyzator.get_scattering_parameters(
-        sp, fp, [ResultsFormatType.DB, ResultsFormatType.REAL]
-    )
+    analyzer = SocketAnalyzer(ip="192.168.5.168", port=9000)
+    analyzer.connect()
+    analyzer.set_settings(sweep_type='LIN', freq_start=1000000000, freq_stop=3000000000,
+                          freq_num=200, bandwidth=3000, aver_fact=5, smooth_aper=20)
+    results = analyzer.get_scattering_parameters(['S11', 'S23'])
     print(results['f'], results['S11'])
