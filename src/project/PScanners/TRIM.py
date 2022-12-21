@@ -10,6 +10,7 @@ from ..icons import settings_icon, control_icon
 from ..Worker import Worker
 from PyQt6.QtCore import Qt, QThreadPool
 
+
 import logging
 logger = logging.getLogger()
 

@@ -1,4 +1,4 @@
-from ..Project import PPath
+from ..Project import PPath, PScanner
 from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QPushButton,\
     QSizePolicy, QMenuBar, QTabWidget, QCheckBox, QGroupBox, QComboBox
 import numpy as np
@@ -8,24 +8,22 @@ from ..Widgets.SettingsTable import QSmartTableModel, Variable
 from PyQt6.QtCore import Qt, QModelIndex, QObject, QModelIndex
 from PyQt6.QtGui import QColor
 from typing import Any
-from ..Widgets import StateDepPushButton
-from ...scanner.TRIM import TRIMScanner
-from ..Project import PScannerStates
+from src.project.Widgets import StateDepPushButton
 
 import re
 # TODO: менять в таблице координату конца, или расстояние, на которую надо переместиться
 # TODO: менять количесвто измеряемых точек на шаг измерния
 # TODO: итого: 4 таблицы, которые надо связать QStacked Widget, signal (по аналогии с тем, что было с панелями раньше)
-# TODO: иконки в тул бар QAction, "добавить путь", "добавить объект", "Аборт"
+# TODO:
 
 
 class Path3dWidget(QWidget):
     """
     Класс талбицы
     """
-    def __init__(self):
-
+    def __init__(self, scanner: PScanner):
         super().__init__()
+        self.scanner = scanner
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         group = QGroupBox(self)
@@ -43,11 +41,13 @@ class Path3dWidget(QWidget):
         self.layout.addWidget(self.stackWidget)
         
         """
-        self.widget1 = Table1Widget()
+        self.widget1 = Table1Widget(self.scanner)
         group_layout.addWidget(self.widget1)
         self.layout.addWidget(group)
 
 # написиать функцию, меняющую split на step, и функцию, меняющую сами данные (relative) и функцию (set current pos)
+
+
 class MeshTableModel(QSmartTableModel):
     """
     класс, обеспечивающий проверку значений в таблице
@@ -100,6 +100,10 @@ class MeshTableModel(QSmartTableModel):
             #self.headerDataChange  использовать в другой функции
         return True
 
+    def setCoords(self, x: float = None, y: float = None, z: float = None, w: float = None):
+        if x is not None:
+            self._data[0][0] = x
+        print(x)
 
 class MeshTable(QTableView):
     """
@@ -118,8 +122,9 @@ class MeshTable(QTableView):
 
 
 class Table1Widget(QWidget):
-    def __init__(self):
+    def __init__(self, scanner: PScanner):
         super().__init__()
+        self.scanner = scanner
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.vbox = QWidget()
@@ -132,7 +137,14 @@ class Table1Widget(QWidget):
         self.group = QGroupBox()
         self.group_layout = QVBoxLayout(self.group)
 
-        self.set_button = QPushButton("Set current coordinates")
+        #self.set_button = QPushButton("Set current coordinates")
+        self.set_button = StateDepPushButton(
+            state=self.scanner.states.is_connected,
+            text="Set current coordinates",
+            parent=self
+        )
+        self.set_button.clicked.connect(self.setCoords)
+
         self.hboxlayout.addWidget(self.set_button)
 
         self.split_step_box = QComboBox()
@@ -166,7 +178,6 @@ class Table1Widget(QWidget):
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.layout.addWidget(self.group)
         self.layout.addWidget(self.tableWidget)
-
 
     def params_to_linspace(self):
         lst_x = []
@@ -237,14 +248,19 @@ class Table1Widget(QWidget):
         print(f"x={x}, y={y}, z={z}, w={w}")
         #self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
 
-    def set_splits(self, i: str):                                                                                    # по координатам в соответствии с                                                                                        # порядком
+    def set_splits(self, i: str):                                          # по координатам в соответствии с  порядком
         self.control_keys_V[2] = i
         self.tableWidget.setVerticalHeader(self.control_keys_V)
         print(i)
 
+    def setCoords(self):
+        pos = self.scanner.instrument.position()
+        self.tableWidget.model().setCoords(x = pos.x)
 
 @dataclass
 class Path3d(PPath):
-    widget: QWidget = field(default_factory=Path3dWidget)
+    widget: QWidget = None
     points: np.ndarray = np.array([])
-
+    scanner: PScanner = None
+    def __post_init__(self):
+        self.widget = Path3dWidget(self.scanner)

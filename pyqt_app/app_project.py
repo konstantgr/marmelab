@@ -38,22 +38,11 @@ objects.append(
     )
 )
 
-
-def path_adder():
-    i = 1
-    paths.append(
-        Path3d(
-            name=f'Path {i}',
-            points=np.array([[1000*i, 0, 0] for i in range(5)])
-        )
-    )
-    i += 1
-
-
 paths.append(
     Path3d(
         name=f'Path 1',
-        points=np.array([[1000*i, 0, 0] for i in range(5)])
+        points=np.array([[1000*i, 0, 0] for i in range(5)]),
+        scanner=scanner
     )
 )
 
