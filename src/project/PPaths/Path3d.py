@@ -8,13 +8,14 @@ from ..Widgets.SettingsTable import QSmartTableModel, Variable
 from PyQt6.QtCore import Qt, QModelIndex, QObject, QModelIndex
 from PyQt6.QtGui import QColor
 from typing import Any
-from src.project.Widgets import StateDepPushButton
+from src.project.Widgets import StateDepPushButton, StateDepCheckBox
 
 import re
 # TODO: менять в таблице координату конца, или расстояние, на которую надо переместиться
 # TODO: менять количесвто измеряемых точек на шаг измерния
 # TODO: итого: 4 таблицы, которые надо связать QStacked Widget, signal (по аналогии с тем, что было с панелями раньше)
-# TODO:
+# TODO: во вкладке эксперимент добавить связь с таблицей и с функцией do_table в частности
+# TODO: прописать реализацию  StateDepCheckButton
 
 
 class Path3dWidget(QWidget):
@@ -54,8 +55,8 @@ class MeshTableModel(QSmartTableModel):
     """
     def __init__(self, headers, v_headers, parent: QObject = None, ):
         super(QSmartTableModel, self).__init__()
-        #self.variable = Variable(name="", default_value=0, type=float, description="")
-        #self.variable = Variable(name="", default_value=0, type=float, unit=Length, description="")  реализовать валидацию
+        # self.variable = Variable(name="", default_value=0, type=float, description="")
+        # self.variable = Variable(name="", default_value=0, type=float, unit=Length, description="")  реализовать валидацию
         self._data = [["" for _ in range(len(headers))] for _ in range(4)]  # добавить None в валидные значения
         self.headers = headers
         self.v_headers = v_headers
@@ -82,8 +83,8 @@ class MeshTableModel(QSmartTableModel):
         elif role == Qt.ItemDataRole.BackgroundRole:
             if self._data[row][column] == "":
                 return QColor('lightgrey')
-            #elif self._valid(self._data[row][column], self.variable):
-                #return
+            # elif self._valid(self._data[row][column], self.variable):
+                # return
             return QColor('red')
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
@@ -97,13 +98,28 @@ class MeshTableModel(QSmartTableModel):
             column = index.column()
             self._data[row][column] = value
             self.dataChanged.emit(index, index)
-            #self.headerDataChange  использовать в другой функции
+            # self.headerDataChange  использовать в другой функции
         return True
 
     def setCoords(self, x: float = None, y: float = None, z: float = None, w: float = None):
         if x is not None:
             self._data[0][0] = x
-        print(x)
+            index = self.index(0, 0)
+            self.dataChanged.emit(index, index)
+        if y is not None:
+            self._data[0][1] = y
+            index = self.index(0, 1)
+            self.dataChanged.emit(index, index)
+        if z is not None:
+            self._data[0][2] = z
+            index = self.index(0, 2)
+            self.dataChanged.emit(index, index)
+        if w is not None:
+            self._data[0][3] = w
+            index = self.index(0, 3)
+            self.dataChanged.emit(index, index)
+        print(x, y, z, w)
+
 
 class MeshTable(QTableView):
     """
@@ -137,14 +153,12 @@ class Table1Widget(QWidget):
         self.group = QGroupBox()
         self.group_layout = QVBoxLayout(self.group)
 
-        #self.set_button = QPushButton("Set current coordinates")
         self.set_button = StateDepPushButton(
             state=self.scanner.states.is_connected,
             text="Set current coordinates",
             parent=self
         )
-        self.set_button.clicked.connect(self.setCoords)
-
+        self.set_button.clicked.connect(self.set_coords)
         self.hboxlayout.addWidget(self.set_button)
 
         self.split_step_box = QComboBox()
@@ -154,15 +168,17 @@ class Table1Widget(QWidget):
         self.split_step_box.currentTextChanged.connect(self.set_splits)
         self.vboxlayout.addWidget(self.split_step_box)
 
-        self.check_relative = QCheckBox("Relatives coordinates")
+        self.check_relative = StateDepCheckBox(
+            state=self.scanner.states.is_connected,
+            text="Relatives coordinates",
+            parent=self
+        )
+
+        # self.check_relative = QCheckBox("Relatives coordinates")
+        self.check_relative.pressed.connect(self.set_relate_coords)
         self.vboxlayout.addWidget(self.check_relative)
         self.hboxlayout.addWidget(self.vbox)
 
-        self.temp_button = QPushButton("Print test button")
-        self.temp_button.clicked.connect(self.go_table)  # временная кнопка. Необходимо, чтобы go_table была доступна
-                                                    # вне класса - в эксперименте.
-        self.temp_button.setProperty('color', 'red')
-        self.layout.addWidget(self.temp_button)
         self.group_layout.addWidget(self.hbox)
 
         self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
@@ -206,21 +222,24 @@ class Table1Widget(QWidget):
         lst_z = [int(float(i)) for i in lst_z if i.isdigit()]
         lst_w = [int(float(i)) for i in lst_w if i.isdigit()]
 
-        if len(lst_x) != 0:
-            arr_x = int(abs(lst_x[0] - lst_x[1] - 1) / lst_x[2])  # шаг сетки x
-            x = np.linspace(lst_x[0], lst_x[1], arr_x)
+        def mesh_maker(lst: List):
+            """
+            функция, которая формирует набор значений, в которых будет производиться измерения
+            она выдает либо с заданным шагом, либо с фиксированным количеством точек
+            :param lst:
+            :return:
+            """
+            if True:  # придумать проверку на тип строки
+                arr = int(abs(lst[0] - lst[1] - 1) / lst[2])
+                mesh = np.linspace(lst[0], lst[1], arr)
+            else:
+                mesh = np.linspace(lst[0], lst[1], lst[2])
+            return mesh
 
-        if len(lst_y) != 0:
-            arr_y = int(abs(lst_y[0] - lst_y[1] - 1) / lst_y[2])  # шаг сетки y
-            y = np.linspace(lst_y[0], lst_y[1], arr_y)
-
-        if len(lst_z) != 0:
-            arr_z = int(abs(lst_z[0] - lst_z[1] - 1) / lst_z[2])  # шаг сетки Z
-            z = np.linspace(lst_z[0], lst_z[1], arr_z)
-
-        if len(lst_w) != 0:
-            arr_w = int(abs(lst_w[0] - lst_w[1] - 1) / lst_w[2])  # шаг сетки w
-            w = np.linspace(lst_w[0], lst_w[1], arr_w)
+        x = mesh_maker(lst_x)
+        y = mesh_maker(lst_y)
+        z = mesh_maker(lst_z)
+        w = mesh_maker(lst_w)
 
         return x, y, z, w, order
 
@@ -238,7 +257,7 @@ class Table1Widget(QWidget):
         }
 
         x, y, z, w, order = self.params_to_linspace()
-
+        # эти словари нужны для выгрузки данных
         keys = {
             1: x,
             2: y,
@@ -246,21 +265,41 @@ class Table1Widget(QWidget):
             4: w,
         }
         print(f"x={x}, y={y}, z={z}, w={w}")
-        #self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
+        # self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
+        # по координатам в соответствии с  порядком
 
-    def set_splits(self, i: str):                                          # по координатам в соответствии с  порядком
+    def set_splits(self, i: str):
+        """
+        функция не работает
+        :param i:
+        :return:
+        """
         self.control_keys_V[2] = i
+        self.tableWidget = MeshTable(self.control_keys_H, self.control_keys_V, self)
         self.tableWidget.setVerticalHeader(self.control_keys_V)
         print(i)
 
-    def setCoords(self):
+    def set_coords(self):
         pos = self.scanner.instrument.position()
-        self.tableWidget.model().setCoords(x = pos.x)
+        self.tableWidget.model().setCoords(x=pos.x, y=pos.y, z=pos.z, w=pos.w)
+
+        if self.check_relative.isChecked():  # снимает галочку "относит. координаты". если используются текущ коорд.
+            self.check_relative.setChecked(False)
+
+    def set_relate_coords(self):
+        """
+        координаты становятся относительными. То есть текущая точка становится нулем. Однако реальные координаты надо
+        все-таки где сохранить
+        :return:
+        """
+        self.tableWidget.model().setCoords(x=0, y=0, z=0, w=0)
+
 
 @dataclass
 class Path3d(PPath):
     widget: QWidget = None
     points: np.ndarray = np.array([])
     scanner: PScanner = None
+
     def __post_init__(self):
         self.widget = Path3dWidget(self.scanner)
