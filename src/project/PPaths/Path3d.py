@@ -9,13 +9,12 @@ from PyQt6.QtCore import Qt, QModelIndex, QObject, QModelIndex
 from PyQt6.QtGui import QColor
 from typing import Any
 from src.project.Widgets import StateDepPushButton, StateDepCheckBox
-
 import re
-# TODO: менять в таблице координату конца, или расстояние, на которую надо переместиться
-# TODO: менять количесвто измеряемых точек на шаг измерния
+
+# TODO: split -> step с изменением метода формирования массива точек, в которых проводятся измерения
 # TODO: итого: 4 таблицы, которые надо связать QStacked Widget, signal (по аналогии с тем, что было с панелями раньше)
-# TODO: во вкладке эксперимент добавить связь с таблицей и с функцией do_table в частности
-# TODO: прописать реализацию  StateDepCheckButton
+# TODO: во вкладке эксперимент добавить связь с таблицей и с функцией do_table в частности, реализовать временный вектор,
+# TODO: хранящий реальные данные сканер
 
 
 class Path3dWidget(QWidget):
@@ -29,19 +28,6 @@ class Path3dWidget(QWidget):
         self.setLayout(self.layout)
         group = QGroupBox(self)
         group_layout = QVBoxLayout(group)
-        """
-        может, проще сделать так, чем сигналы настраивать
-        несколько листов в таблице
-        self.coord_box = QCheckBox("Relative coordinates")
-        self.widget2 = Table1Widget()
-        self.widget1 = Table1Widget()
-        self.stackWidget = QTabWidget()
-        self.stackWidget.addTab(self.widget1, "Step")
-        self.stackWidget.addTab(self.widget2, "Split")
-        self.layout.addWidget(self.coord_box)
-        self.layout.addWidget(self.stackWidget)
-        
-        """
         self.widget1 = Table1Widget(self.scanner)
         group_layout.addWidget(self.widget1)
         self.layout.addWidget(group)
@@ -173,9 +159,8 @@ class Table1Widget(QWidget):
             text="Relatives coordinates",
             parent=self
         )
-
-        # self.check_relative = QCheckBox("Relatives coordinates")
-        self.check_relative.pressed.connect(self.set_relate_coords)
+        #self.check_relative.pressed.connect(self.set_relate_coords)
+        self.check_relative.stateChanged.connect(self.set_relate_coords)
         self.vboxlayout.addWidget(self.check_relative)
         self.hboxlayout.addWidget(self.vbox)
 
@@ -275,8 +260,7 @@ class Table1Widget(QWidget):
         :return:
         """
         self.control_keys_V[2] = i
-        self.tableWidget = MeshTable(self.control_keys_H, self.control_keys_V, self)
-        self.tableWidget.setVerticalHeader(self.control_keys_V)
+
         print(i)
 
     def set_coords(self):
@@ -286,13 +270,16 @@ class Table1Widget(QWidget):
         if self.check_relative.isChecked():  # снимает галочку "относит. координаты". если используются текущ коорд.
             self.check_relative.setChecked(False)
 
-    def set_relate_coords(self):
+    def set_relate_coords(self, state):
         """
         координаты становятся относительными. То есть текущая точка становится нулем. Однако реальные координаты надо
         все-таки где сохранить
         :return:
         """
-        self.tableWidget.model().setCoords(x=0, y=0, z=0, w=0)
+        if state:
+            self.tableWidget.model().setCoords(x=0, y=0, z=0, w=0)
+        else:
+            self.set_coords()
 
 
 @dataclass
