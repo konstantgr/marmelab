@@ -58,15 +58,21 @@ class PPath(PBase):
     """
     icon: QIcon = path_icon
 
+    def get_points(self):
+        return [[0, 0]]
 
 @dataclass
 class PMeasurable(PBase):
     """
     Класс измеряемой величины
     """
+    def pre_measure(self):
+        pass
+
+    def measure(self):
+        pass
 
 
-@dataclass
 class PExperiment(PBase):
     """
     Класс эксперимента

@@ -5,6 +5,9 @@ from src.project.PScanners import TRIMPScanner
 from src.project.PAnalyzers import RohdeSchwarzPAnalyzer
 from src.project.PVisualizers import PScannerVisualizer3D, PAnalyzerVisualizerRS
 from src.project.PMeasurables import MeasurableOfMeasurands
+
+from src.project.PExperiments import Experiment
+
 from PyQt6.QtWidgets import QTextEdit
 from src.project.PObjects import Object3d
 from src.project.PPaths import Path3d
@@ -15,10 +18,10 @@ from src.project.Project import PScannerStates
 
 scanner_signals = PScannerSignals()
 scanner = TRIMPScanner(
-    instrument=TRIMScanner(ip="127.0.0.1", port=9005, signals=scanner_signals),
+    instrument=TRIMScanner(ip="127.0.0.1", port=9006, signals=scanner_signals),
     signals=scanner_signals,
 )
-TRIM_emulator.run(blocking=False, motion_time=2, port=9005)  # use it only for emulating
+TRIM_emulator.run(blocking=False, motion_time=2, port=9006)  # use it only for emulating
 
 analyzer_signals = PAnalyzerSignals()
 analyzer = RohdeSchwarzPAnalyzer(
@@ -55,6 +58,16 @@ measurables.append(
     MeasurableOfMeasurands(
         measurands=analyzer.get_measurands(),
         name='Meas 2',
+    )
+)
+
+experiments.append(
+    Experiment(
+        p_analyzer=analyzer,
+        p_scanner=scanner,
+        p_path=paths.data[0],
+        p_measurement=measurables.data[0],
+        output_file='kek.csv'
     )
 )
 

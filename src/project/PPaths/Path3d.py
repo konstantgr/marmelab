@@ -229,5 +229,5 @@ class Table1Widget(QWidget):
 @dataclass
 class Path3d(PPath):
     widget: QWidget = field(default_factory=Path3dWidget)
-    points: np.ndarray = np.array([])
+    points: np.ndarray = field(default_factory=np.ndarray)
 
