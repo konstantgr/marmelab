@@ -1,9 +1,10 @@
 import socket
 import threading
+import time
 
 from typing import List, Union
 from src.analyzator.base_analyzator import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
-from ...utils import EmptySignal
+from src.utils import EmptySignal
 import numpy as np
 
 
@@ -41,12 +42,15 @@ class SocketAnalyzer(BaseAnalyzer):
             self._signals = signals
 
     def _send_cmd(self, cmd: str):
-        self.instrument.send(str.encode(cmd))
+        self.instrument.sendall(str.encode(cmd+'\n'))
+        print(cmd)
+        time.sleep(0.1)
         if '?' in cmd:
             # return self.instrument.recv(1024).decode()
             response = bytearray()
-            while True:
+            while not response.endswith(b'\n'):
                 chunk = self.instrument.recv(self.bufsize)
+                print(chunk)
                 if not chunk:
                     break
                 response += chunk
@@ -76,7 +80,7 @@ class SocketAnalyzer(BaseAnalyzer):
             self._send_cmd(f'SENS{channel}:SWE:POIN {freq_num}')
         if aver_fact is not None:
             self._send_cmd(f'SENS{channel}:AVER:STAT ON')
-            self._send_cmd(f'SENS{channel}:AVER:C {aver_fact}')
+            self._send_cmd(f'SENS{channel}:AVER:COUN  {aver_fact}')
         if smooth_aper is not None:
             self._send_cmd(f'CALC{channel}:SMO:STAT ON')
             self._send_cmd(f'CALC{channel}:SMO:APER {smooth_aper}')
@@ -111,17 +115,18 @@ class SocketAnalyzer(BaseAnalyzer):
 
         if not self.is_connected:
             raise AnalyzerConnectionError
-
+        # self._send_cmd(f"CALC{self.channel}:PAR:COUN 8")
         for num, s_param in enumerate(parameters):
             num += 1
-            self._send_cmd(f'CALC{self.channel}:PAR:DEF "Trc{num}", "{s_param}"')
-            self._send_cmd(f'CALC{self.channel}:PAR:SEL "Trc{num}"')
+            # self._send_cmd(f"CALC{self.channel}:PAR:COUN {num}")
+            self._send_cmd(f"CALC{self.channel}:PAR:DEF 'Tr {num}',{s_param}")
+            self._send_cmd(f"CALC{self.channel}:PAR:SEL 'Tr {num}'")
             trace_data = self._send_cmd(f'CALC{self.channel}:DATA? SDATA')
             trace_tup = tuple(map(str, trace_data.split(',')))
             trace_array = np.array(trace_tup).astype(float)
             res[f'{s_param}'] = trace_array[:-1:2] + 1j * trace_array[1::2]
 
-        freq_data = self._send_cmd(f'CALC:DATA:STIM?')  # rsinstrument examples csv
+        freq_data = self._send_cmd(f'SENS{self.channel}:FREQ:DATA?')  # rsinstrument examples csv
         freq_tup = tuple(map(str, freq_data.split(',')))
         res[f'f'] = np.array(freq_tup).astype(float)
 
@@ -139,9 +144,11 @@ class SocketAnalyzer(BaseAnalyzer):
 
 
 if __name__ == "__main__":
-    analyzer = SocketAnalyzer(ip="192.168.5.168", port=9000)
+    analyzer = SocketAnalyzer(ip="192.168.137.245", port=1024)
     analyzer.connect()
+    print('connect')
     analyzer.set_settings(sweep_type='LIN', freq_start=1000000000, freq_stop=3000000000,
                           freq_num=200, bandwidth=3000, aver_fact=5, smooth_aper=20)
-    results = analyzer.get_scattering_parameters(['S11', 'S23'])
+    print('settings done')
+    results = analyzer.get_scattering_parameters(['S22'])
     print(results['f'], results['S11'])
