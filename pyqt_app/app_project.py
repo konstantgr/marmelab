@@ -43,8 +43,9 @@ objects.append(
 
 paths.append(
     Path3d(
-        name='Path 1',
-        points=np.array([[1000*i, 0, 0] for i in range(5)])
+        name=f'Path 1',
+        points=np.array([[1000*i, 0, 0] for i in range(5)]),
+        scanner=scanner
     )
 )
 

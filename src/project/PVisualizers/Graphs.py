@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QTabWidget, QSizePolicy
+from PyQt6.QtWidgets import QWidget, QTabWidget, QSizePolicy, QComboBox
 from ..Project import PAnalyzerVisualizer, PWidget, PStorage, PAnalyzerStates
 from ..PMeasurables import MeasurableOfMeasurands
 from ..Worker import Worker

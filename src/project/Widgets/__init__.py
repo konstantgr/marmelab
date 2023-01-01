@@ -1,2 +1,3 @@
 from .SettingsTable import SettingsTableWidget
 from .StatedependentButton import StateDepPushButton
+from .StatedependentButton import StateDepCheckBox

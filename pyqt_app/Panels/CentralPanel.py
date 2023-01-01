@@ -20,6 +20,11 @@ class CentralPanel(QScrollArea, BasePanel):
         self.setWidget(self.stacked_widget)
         self.setWidgetResizable(True)
 
+        project.objects.signals.changed.connect(self.draw)
+        project.paths.signals.changed.connect(self.draw)
+        project.measurables.signals.changed.connect(self.draw)
+        project.experiments.signals.changed.connect(self.draw)
+
     def draw(self) -> None:
         """
         Отрисовка всех возможныйх центральных виджетов
