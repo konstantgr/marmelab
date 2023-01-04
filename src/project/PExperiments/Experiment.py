@@ -2,29 +2,51 @@ import numpy as np
 import pandas as pd
 
 from ..Project import (
-    PExperiment, PPath, PMeasurable, PScanner, PAnalyzer,
+    PExperiment, PPath, PMeasurable, PScanner, PAnalyzer, PBaseSignals, PMeasurand, PStorage,
     PScannerStates, PAnalyzerStates,
 )
 from ..Widgets import StateDepPushButton
 from ...scanner import Position
-from PyQt6.QtWidgets import QTextEdit, QWidget, QVBoxLayout, QGroupBox, QSizePolicy
+from PyQt6.QtWidgets import QTextEdit, QWidget, QVBoxLayout, QGroupBox, QSizePolicy, QComboBox, QLineEdit
 from PyQt6.QtCore import Qt, QThreadPool
-from typing import Callable
+from typing import Callable, List
 
 
+
+# TODO нужен виджет для эксперимента с выбором measurable и path, и файла, куда сохранять
 class Control(QWidget):
     def __init__(
             self,
             analyzer_states: PAnalyzerStates,
             scanner_states: PScannerStates,
+            measurables: PStorage[PMeasurable],
+            paths: PStorage[PPath],
             experiment_func: Callable
     ):
         super(Control, self).__init__()
+        self.measurables = measurables
+        self.current_measurable = measurables.data[0]
+
+        self.paths = paths
+        self.current_path = paths.data[0]
+
         vbox = QVBoxLayout(self)
         vbox.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(vbox)
 
         self._thread_pool = QThreadPool()
+        self.input_text = QLineEdit()
+        vbox.addWidget(self.input_text)
+
+        self.combo_measurable = QComboBox()
+        self.combo_measurable.addItems([i.name for i in self.measurables.data])
+        vbox.addWidget(self.combo_measurable)
+        self.combo_measurable.currentIndexChanged.connect(self.set_current_measurable)
+
+        self.combo_path = QComboBox()
+        self.combo_path.addItems([i.name for i in self.paths.data])
+        vbox.addWidget(self.combo_path)
+        self.combo_path.currentIndexChanged.connect(self.set_current_path)
 
         group = QGroupBox(self)
         group_layout = QVBoxLayout(group)
@@ -39,42 +61,52 @@ class Control(QWidget):
             text="Run",
             parent=self
         )
-
+        group_layout.addWidget(self.connect_button)
         self.connect_button.clicked.connect(experiment_func)
         group_layout.addWidget(self.connect_button)
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+
+    def set_current_measurable(self, i):
+        self.current_measurable = self.measurables[i]
+        self.measurables.signals.changed.emit()
+
+    def set_current_path(self, i):
+        self.current_path = self.paths[i]
+        self.paths.signals.changed.emit()
 
 
 class Experiment(PExperiment):
     def __init__(
             self,
-            name: str,
             p_analyzer: PAnalyzer,
             p_scanner: PScanner,
-            p_path: PPath,
-            p_measurement: PMeasurable,
+            p_paths: PStorage[PPath],
+            p_measurements: PStorage[PMeasurable],
             output_file: str
     ):
-        super(Experiment, self).__init__(
-            name=name,
-            widget=Control(p_analyzer.states, p_scanner.states, self.run)
-        )
+
+        self.name = 'Experiment1'
+        self.widget = Control(p_analyzer.states, p_scanner.states, p_measurements, p_paths, self.run)
+        self.signals = PBaseSignals()
 
         self.scanner = p_scanner
         self.analyzer = p_analyzer
-        self.measurable = p_measurement
+        self.measurables = p_measurements.data[0]
 
-        self.path = p_path
-        self.output_file = output_file
+        self.paths = p_paths.data[0]
+        self.output_file = None
 
     def run(self):
         self.scanner.states.is_in_use.set(True)
         self.analyzer.states.is_in_use.set(True)
+        # self.widget.current_measurable.pre_measure()
 
-        for idx, pos in enumerate(self.path.get_points()):
-            self.scanner.instrument.goto(pos)
+        self.create_data()
 
-            res_dict = self.measurable.measure()
+        for idx, coord in enumerate(self.widget.current_path.get_points()):
+            self.scanner.instrument.goto(Position(*coord))
+
+            res_dict = self.widget.current_measurable.measure()
             res_df = pd.DataFrame(res_dict)
             res_df.to_csv(self.output_file, mode='a', header=False)
 
@@ -82,7 +114,9 @@ class Experiment(PExperiment):
         self.analyzer.states.is_in_use.set(False)
 
     def create_data(self):
-        parameters_names = list(self.measurable.measure().keys())
+        self.output_file = self.widget.input_text.text() if self.widget.input_text.text() else 'test.csv'
+        print('here', self.output_file)
+        parameters_names = list(self.measurables.measure().keys())
         dimensions_num = ['x', 'y', 'z', 'w']
 
         header = [*parameters_names, *dimensions_num]
