@@ -3,6 +3,7 @@ from src.project import Project, PScannerSignals, PAnalyzerSignals, PStorage
 from src.analyzator.rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulator
 from src.project.PScanners import TRIMPScanner
 from src.project.PAnalyzers import RohdeSchwarzPAnalyzer
+from src.analyzator.socket_analyzer.socket_analyzer import SocketAnalyzer
 from src.project.PVisualizers import PScannerVisualizer3D, PAnalyzerVisualizerRS
 from src.project.PMeasurables import MeasurableOfMeasurands
 from src.project.PExperiments import Experiment
@@ -19,8 +20,8 @@ TRIM_emulator.run(blocking=False, motion_time=2, port=9006)  # use it only for e
 
 analyzer_signals = PAnalyzerSignals()
 analyzer = RohdeSchwarzPAnalyzer(
-    # instrument=RohdeSchwarzAnalyzer(ip="192.168.5.168", port="9000"),
-    instrument=RohdeSchwarzEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
+    instrument=SocketAnalyzer(ip="192.168.5.168", port=9000, signals=analyzer_signals),
+    # instrument=RohdeSchwarzEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
     signals=analyzer_signals
 )
 

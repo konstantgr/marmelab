@@ -136,7 +136,7 @@ class SocketAnalyzer(BaseAnalyzer):
         freq_tup = tuple(map(str, freq_data.split(',')))
         res[f'f'] = np.array(freq_tup).astype(float)
 
-        self._signals.data.emit((res['f'], *(res[f'{s_param}'] for s_param in parameters)), )
+        self._signals.data.emit(res)
         return res
 
     def is_connected(self) -> bool:

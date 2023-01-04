@@ -44,13 +44,12 @@ class RohdeSchwarzEmulator(RohdeSchwarzAnalyzer):
         if not self.is_connected:
             return
 
-        freq_tup = tuple(np.zeros(self.freq_num))
-        res[f'f'] = np.array(freq_tup).astype(float)
+        res[f'f'] = np.linspace(self.freq_start, self.freq_stop, self.freq_num)
 
         for num, S_param in enumerate(parameters):
-            trace_tup = tuple(np.zeros(self.freq_num))
-            res[f'{S_param}'] = np.array(trace_tup).astype(float)
+            trace_tup = np.linspace(0, 4*np.pi, self.freq_num)
+            res[f'{S_param}'] = np.sin(trace_tup)
 
-        self._signals.data.emit((res['f'], *(res[f'{S_param}'] for S_param in parameters)), )
+        self._signals.data.emit(res)
         sleep(0.2)
         return res

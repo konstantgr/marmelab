@@ -265,14 +265,12 @@ class SParamasWidget(QGroupBox):
 
         self.layout().addWidget(self.freq_widget)
 
-    def update_freq(self, *args, **kwargs):
-        print(*args)
-
 
 class SParams(PMeasurand):
     def __init__(self, analyzer: RohdeSchwarzAnalyzer):
         super(SParams, self).__init__(name='S-parameters')
         self._plot_widget = PlotWidget()
+        self._plot_item = PlotDataItem()
         self.analyzer = analyzer
         self._model = SParamsModel(analyzer=self.analyzer)
         self._widget = SParamasWidget(model=self._model)
@@ -286,10 +284,16 @@ class SParams(PMeasurand):
         return self._plot_widget
 
     def measure(self) -> Any:
-        time.sleep(1)
+        res = self._model.measure()
+        self._plot_item.setData(res['f'], np.abs(res['S11']))
+        return res
 
     def pre_measure(self) -> None:
-        pass
+        plot = self._plot_widget.getPlotItem()  # type: PlotItem
+        plot.clearPlots()
+        self._plot_item = PlotDataItem()
+        plot.addItem(self._plot_item)
+        self._model.pre_measure()
 
 
 class RohdeSchwarzPAnalyzer(PAnalyzer):
