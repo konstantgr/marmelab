@@ -294,7 +294,7 @@ class Path3d(PPath):
             name=name,
             widget=Path3dWidget(scanner=scanner),
         )
-        self.points: np.ndarray = np.array([])
+        self.points: np.ndarray = np.array([[1000*i, 0, 0] for i in range(5)])
 
     def get_points(self) -> list[Position]:
-        return []
+        return [Position(1000*i, 0, 0) for i in range(5)]

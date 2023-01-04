@@ -1,3 +1,5 @@
+import dataclasses
+
 import numpy as np
 import pandas as pd
 
@@ -78,15 +80,18 @@ class Control(QWidget):
 class Experiment(PExperiment):
     def __init__(
             self,
+            name: str,
             p_analyzer: PAnalyzer,
             p_scanner: PScanner,
             p_paths: PStorage[PPath],
             p_measurements: PStorage[PMeasurable],
-            output_file: str
     ):
-
-        self.name = 'Experiment1'
-        self.widget = Control(p_analyzer.states, p_scanner.states, p_measurements, p_paths, self.run)
+        widget = Control(p_analyzer.states, p_scanner.states, p_measurements, p_paths, self.run)
+        super(Experiment, self).__init__(
+            name=name,
+            widget=widget
+        )
+        self.widget = widget
         self.signals = PBaseSignals()
 
         self.scanner = p_scanner
@@ -103,11 +108,14 @@ class Experiment(PExperiment):
 
         self.create_data()
 
-        for idx, coord in enumerate(self.widget.current_path.get_points()):
-            self.scanner.instrument.goto(Position(*coord))
+        for idx, pos in enumerate(self.widget.current_path.get_points()):
+            self.scanner.instrument.goto(pos)
 
             res_dict = self.widget.current_measurable.measure()
             res_df = pd.DataFrame(res_dict)
+            for field in dataclasses.fields(pos):
+                if (c := pos.__getattribute__(field.name)) is not None:
+                    res_df[field.name] = c
             res_df.to_csv(self.output_file, mode='a', header=False)
 
         self.scanner.states.is_in_use.set(False)

@@ -61,9 +61,8 @@ experiments.append(
         name='Experiment 1',
         p_analyzer=analyzer,
         p_scanner=scanner,
-        p_path=paths.data[0],
-        p_measurement=measurables.data[0],
-        output_file='kek.csv'
+        p_paths=paths,
+        p_measurements=measurables,
     )
 )
 
