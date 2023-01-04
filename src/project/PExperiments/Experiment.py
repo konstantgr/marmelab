@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from ..Project import (
-    PExperiment, PPath, PMeasurable, PScanner, PAnalyzer, PBaseSignals,
+    PExperiment, PPath, PMeasurable, PScanner, PAnalyzer,
     PScannerStates, PAnalyzerStates,
 )
 from ..Widgets import StateDepPushButton
@@ -48,16 +48,17 @@ class Control(QWidget):
 class Experiment(PExperiment):
     def __init__(
             self,
+            name: str,
             p_analyzer: PAnalyzer,
             p_scanner: PScanner,
             p_path: PPath,
             p_measurement: PMeasurable,
             output_file: str
     ):
-
-        self.name = 'Experiment1'
-        self.widget = Control(p_analyzer.states, p_scanner.states, self.run)
-        self.signals = PBaseSignals()
+        super(Experiment, self).__init__(
+            name=name,
+            widget=Control(p_analyzer.states, p_scanner.states, self.run)
+        )
 
         self.scanner = p_scanner
         self.analyzer = p_analyzer
@@ -69,10 +70,9 @@ class Experiment(PExperiment):
     def run(self):
         self.scanner.states.is_in_use.set(True)
         self.analyzer.states.is_in_use.set(True)
-        self.measurable.pre_measure()
 
-        for idx, coord in enumerate(self.path.get_points()):
-            self.scanner.instrument.goto(Position(*coord))
+        for idx, pos in enumerate(self.path.get_points()):
+            self.scanner.instrument.goto(pos)
 
             res_dict = self.measurable.measure()
             res_df = pd.DataFrame(res_dict)

@@ -5,16 +5,10 @@ from src.project.PScanners import TRIMPScanner
 from src.project.PAnalyzers import RohdeSchwarzPAnalyzer
 from src.project.PVisualizers import PScannerVisualizer3D, PAnalyzerVisualizerRS
 from src.project.PMeasurables import MeasurableOfMeasurands
-
 from src.project.PExperiments import Experiment
-
-from PyQt6.QtWidgets import QTextEdit
 from src.project.PObjects import Object3d
 from src.project.PPaths import Path3d
-import numpy as np
-from src.project.PStorages import ObjectsStorage3d, PathsStorage3d, ExperimentsStorage
 from src.scanner.TRIM import TRIM_emulator
-from src.project.Project import PScannerStates
 
 scanner_signals = PScannerSignals()
 scanner = TRIMPScanner(
@@ -30,10 +24,10 @@ analyzer = RohdeSchwarzPAnalyzer(
     signals=analyzer_signals
 )
 
-objects = ObjectsStorage3d()
-paths = PathsStorage3d()
+objects = PStorage()
+paths = PStorage()
 measurables = PStorage()
-experiments = ExperimentsStorage()
+experiments = PStorage()
 
 objects.append(
     Object3d(
@@ -44,26 +38,26 @@ objects.append(
 paths.append(
     Path3d(
         name=f'Path 1',
-        points=np.array([[1000*i, 0, 0] for i in range(5)]),
         scanner=scanner
     )
 )
 
 measurables.append(
     MeasurableOfMeasurands(
-        measurands=analyzer.get_measurands(),
+        analyzer=analyzer,
         name='Meas 1',
     )
 )
 measurables.append(
     MeasurableOfMeasurands(
-        measurands=analyzer.get_measurands(),
+        analyzer=analyzer,
         name='Meas 2',
     )
 )
 
 experiments.append(
     Experiment(
+        name='Experiment 1',
         p_analyzer=analyzer,
         p_scanner=scanner,
         p_path=paths.data[0],
@@ -73,7 +67,7 @@ experiments.append(
 )
 
 scanner_visualizer = PScannerVisualizer3D(
-    instrument=scanner,
+    scanner=scanner,
     paths=paths,
     objects=objects,
 )

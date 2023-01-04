@@ -10,6 +10,8 @@ from PyQt6.QtGui import QColor
 from typing import Any
 from src.project.Widgets import StateDepPushButton, StateDepCheckBox
 import re
+from ...scanner import Position
+
 
 # TODO: split -> step с изменением метода формирования массива точек, в которых проводятся измерения
 # TODO: итого: 4 таблицы, которые надо связать QStacked Widget, signal (по аналогии с тем, что было с панелями раньше)
@@ -282,11 +284,17 @@ class Table1Widget(QWidget):
             self.set_coords()
 
 
-@dataclass
 class Path3d(PPath):
-    widget: QWidget = None
-    points: np.ndarray = np.array([])
-    scanner: PScanner = None
+    def __init__(
+            self,
+            name: str,
+            scanner: PScanner,
+    ):
+        super(Path3d, self).__init__(
+            name=name,
+            widget=Path3dWidget(scanner=scanner),
+        )
+        self.points: np.ndarray = np.array([])
 
-    def __post_init__(self):
-        self.widget = Path3dWidget(self.scanner)
+    def get_points(self) -> list[Position]:
+        return []

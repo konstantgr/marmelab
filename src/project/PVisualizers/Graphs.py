@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QWidget, QTabWidget, QSizePolicy, QComboBox
-from ..Project import PAnalyzerVisualizer, PWidget, PStorage, PAnalyzerStates
+from PyQt6.QtWidgets import QWidget, QTabWidget, QLabel, QSizePolicy, QComboBox
+from ..Project import PAnalyzerVisualizer, PWidget, PStorage, PAnalyzerStates, PMeasurable
 from ..PMeasurables import MeasurableOfMeasurands
 from ..Worker import Worker
 from PyQt6.QtCore import QThreadPool
@@ -9,27 +9,39 @@ class GraphWidget(QTabWidget):
     """
     This class makes widget with graphs data
     """
-    def __init__(self, measurables: PStorage[MeasurableOfMeasurands]):
+    def __init__(self, measurables: PStorage[PMeasurable]):
         super(GraphWidget, self).__init__()
         self.measurables = measurables
-        self.current_measurable = measurables.data[0]
+        self.current_measurable_index = 0
+        self._update_current_measurable()
 
         self._update()
         self.measurables.signals.changed.connect(self._update)
         self.currentChanged.connect(self.set_current_measurable)
 
     def set_current_measurable(self, index):
+        self.current_measurable_index = index
+        self._update_current_measurable()
+
+    def _update_current_measurable(self):
+        index = self.current_measurable_index
         self.current_measurable = self.measurables.data[index]
 
     def _update(self):
         self.clear()
         for i, measurable in enumerate(self.measurables.data):
-            self.addTab(measurable.plot_widget, measurable.name)
+            if measurable.plot_widget is not None:
+                self.addTab(measurable.plot_widget, measurable.name)
+            else:
+                self.addTab(QLabel('No plot'), measurable.name)
 
             def _on_change(_index, _measurable):
                 def _w():
                     self.removeTab(_index)
-                    self.insertTab(_index, _measurable.plot_widget, _measurable.name)
+                    if _measurable.plot_widget is not None:
+                        self.insertTab(_index, _measurable.plot_widget, _measurable.name)
+                    else:
+                        self.insertTab(_index, QLabel('No plot'), _measurable.name)
                     self.setCurrentIndex(_index)
                 return _w
 
@@ -39,7 +51,7 @@ class GraphWidget(QTabWidget):
 class PAnalyzerVisualizerRS(PAnalyzerVisualizer):
     def __init__(
             self,
-            measurables: PStorage[MeasurableOfMeasurands],
+            measurables: PStorage[PMeasurable],
             instrument_states: PAnalyzerStates,
     ):
         super(PAnalyzerVisualizerRS, self).__init__(measurables=measurables)
@@ -52,7 +64,6 @@ class PAnalyzerVisualizerRS(PAnalyzerVisualizer):
         self._mstate.changed_signal.connect(self.start_worker)
 
     def updater(self):
-        self._widget.current_measurable.pre_measure()
         while bool(self._mstate):
             self._widget.current_measurable.measure()
 

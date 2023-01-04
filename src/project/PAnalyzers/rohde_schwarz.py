@@ -1,12 +1,14 @@
+import dataclasses
 import time
 from typing import Any
 
 from ..Project import PAnalyzer, PWidget, PAnalyzerSignals, PAnalyzerStates, PMeasurand
 from ..Project import PMeasurable
-from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout, QSizePolicy, QGroupBox
+from PyQt6.QtWidgets import QWidget, QTextEdit, QCheckBox, QColorDialog, QComboBox, QPushButton, QGridLayout, QVBoxLayout, QSizePolicy, QGroupBox
 from ..icons import control_icon, settings_icon
 from PyQt6.QtCore import Qt, QThreadPool
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
+from PyQt6.QtGui import QColor
 from ..Variable import Unit, Setting
 from ..Widgets import SettingsTableWidget, StateDepPushButton
 from ...analyzator.rohde_schwarz import RohdeSchwarzAnalyzer
@@ -108,20 +110,123 @@ class TestMeasurand(PMeasurand):
         plot.addItem(self._plot_item)
 
 
-class SParamasWidget(QGroupBox):
-    def __init__(self):
-        super(SParamasWidget, self).__init__()
-        self.setLayout(QVBoxLayout())
+@dataclasses.dataclass
+class SParam:
+    """Класс S-параметра, который хранит его настройки"""
+    enable: bool = False
+    name: str = 'S11'
+    units: str = 'dBMag'
+    color: QColor = QColor('blue')
 
+
+class SParamsModel:
+    def __init__(
+            self,
+            analyzer: RohdeSchwarzAnalyzer,
+            s_size: int = 2,
+    ):
+        self.analyzer = analyzer
+        self.s_size = s_size
+        self.freq_start = 1*1e9
+        self.freq_stop = 5*1e9
+        self.freq_num = 50
+        self.s_params = []
+        for i in range(s_size):
+            for j in range(s_size):
+                self.s_params.append(SParam(
+                    enable=(i == j == 0),
+                    name=f'S{i+1}{j+1}'
+                ))
+
+    def measure(self) -> dict[str: Any]:
+        req = []
+        for s_param in self.s_params:
+            if s_param.enable:
+                req.append(s_param.name)
+        return self.analyzer.get_scattering_parameters(req)
+
+    # def get_s_param(self, index: int) -> SParam:
+    #     return self.s_params[index]
+
+    def set_s_param(
+            self,
+            index: int,
+            enable: bool = None,
+            name: str = None,
+            units: str = None,
+            color: QColor = None,
+    ):
+        if enable is not None:
+            self.s_params[index].enable = enable
+        if name is not None:
+            self.s_params[index].name = name
+        if units is not None:
+            self.s_params[index].units = units
+        if color is not None:
+            self.s_params[index].color = color
+
+    def set_freq(
+            self,
+            freq_start: float = None,
+            freq_stop: float = None,
+            freq_num: int = None,
+    ):
+        if freq_start is not None:
+            self.freq_start = freq_start
+        if freq_stop is not None:
+            self.freq_stop = freq_stop
+        if freq_num is not None:
+            self.freq_num = freq_num
+
+
+class SParamasWidget(QGroupBox):
+    def __init__(
+            self,
+            model: SParamsModel,
+    ):
+        super(SParamasWidget, self).__init__()
+        self.model = model
+
+        self.setLayout(QVBoxLayout())
         self.s_params_widget = QWidget(self)
+        self.layout().addWidget(self.s_params_widget)
+
+        layout = QGridLayout()
+        self.s_params_widget.setLayout(layout)
+        for i, s_param in enumerate(self.model.s_params):
+            enable = QCheckBox()
+            enable.setChecked(s_param.enable)
+            layout.addWidget(enable, i, 0)
+
+            param = QComboBox()
+            for k in range(model.s_size):
+                for j in range(model.s_size):
+                    param.addItem(f'S{k+1}{j+1}')
+            layout.addWidget(param, i, 1)
+
+            unit = QComboBox()
+            unit.addItem('dBMag')
+            layout.addWidget(unit, i, 2)
+
+            color = QPushButton('Color')
+            color.setStyleSheet(f"background-color: rgb{s_param.color.getRgb()[0:-1]}")
+            layout.addWidget(color, i, 3)
+
+        self.freq_widget = QWidget(self)
+        self.layout().addWidget(self.freq_widget)
+        layout = QVBoxLayout()
+        self.freq_widget.setLayout(layout)
+        # layout.addWidget()
+
 
 
 class SParams(PMeasurand):
-    def __init__(self, instrument: RohdeSchwarzAnalyzer):
+    def __init__(self, analyzer: RohdeSchwarzAnalyzer):
         super(SParams, self).__init__(name='S-parameters')
         self._plot_widget = PlotWidget()
-        self.instrument = instrument
-        self._widget = SParamasWidget()
+        self.analyzer = analyzer
+        self._model = SParamsModel(analyzer=self.analyzer)
+        self._widget = SParamasWidget(model=self._model)
 
     @property
     def widget(self) -> QWidget:
@@ -140,7 +245,10 @@ class SParams(PMeasurand):
 
 class RohdeSchwarzPAnalyzer(PAnalyzer):
     def __init__(self, signals: PAnalyzerSignals, instrument: RohdeSchwarzAnalyzer,):
-        super(RohdeSchwarzPAnalyzer, self).__init__(signals=signals, instrument=instrument)
+        super(RohdeSchwarzPAnalyzer, self).__init__(
+            signals=signals,
+            instrument=instrument
+        )
 
         self._control_widgets = [
             PWidget(
@@ -195,6 +303,6 @@ class RohdeSchwarzPAnalyzer(PAnalyzer):
 
     def get_measurands(self) -> list[PMeasurand]:
         return [
-            SParams(instrument=self.instrument),
+            SParams(analyzer=self.instrument),
             TestMeasurand()
         ]

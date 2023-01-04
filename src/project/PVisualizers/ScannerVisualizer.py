@@ -3,7 +3,7 @@ import pyqtgraph as pg
 import numpy as np
 from stl import mesh
 from ...scanner import BaseAxes
-from ..Project import PScanner, PScannerVisualizer, PWidget, PStorage
+from ..Project import PScanner, PScannerVisualizer, PWidget, PStorage, PScannerSignals
 import os
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtWidgets import QWidget, QTextEdit
@@ -12,7 +12,6 @@ from ..PObjects import Object3d
 from ..PPaths import Path3d
 from ..Widgets import SettingsTableWidget
 from ..Variable import Setting, Unit
-from ..PStorages import ObjectsStorage3d, PathsStorage3d
 from OpenGL.GL import GL_BLEND, GL_DEPTH_TEST, GL_ALPHA_TEST, GL_CULL_FACE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
 from ..icons import settings_icon
 
@@ -139,13 +138,13 @@ class TextItem(GLGraphicsItem):
 class ScannerVisualizer(gl.GLViewWidget):
     def __init__(
             self,
-            scanner: PScanner,
-            objects: ObjectsStorage3d,
-            paths: PathsStorage3d,
+            scanner_signals: PScannerSignals,
+            objects: PStorage,
+            paths: PStorage,
             **kwargs
     ):
         super().__init__(**kwargs)
-        self.scanner = scanner
+        self.scanner_signals = scanner_signals
         self.objects = objects
         self.paths = paths
 
@@ -173,11 +172,11 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.object_items = self.draw_objects()
         self.paths_items = self.draw_points()
 
-        self.scanner.signals.position.connect(self.set_scanner_pos)
+        self.scanner_signals.position.connect(self.set_scanner_pos)
         self.objects.signals.changed.connect(self.redraw_objects)
         self.paths.signals.changed.connect(self.redraw_paths)
-        self.objects.signals.element_changed.connect(self.redraw_objects)
-        self.paths.signals.element_changed.connect(self.redraw_paths)
+        # self.objects.signals.element_changed.connect(self.redraw_objects)
+        # self.paths.signals.element_changed.connect(self.redraw_paths)
 
     @coords_to_GL_coords
     def set_room_size(self, x: float, y: float, z: float):
@@ -549,11 +548,11 @@ class Settings(SettingsTableWidget):
 
 class PScannerVisualizer3D(PScannerVisualizer):
     def __init__(
-            self, *args, objects: ObjectsStorage3d, paths: PathsStorage3d, **kwargs
+            self, *args, objects: PStorage, paths: PStorage, **kwargs
     ):
         super(PScannerVisualizer3D, self).__init__(*args, **kwargs)
         self._widget = ScannerVisualizer(
-            scanner=self.instrument,
+            scanner_signals=self.scanner.signals,
             paths=paths,
             objects=objects
         )
