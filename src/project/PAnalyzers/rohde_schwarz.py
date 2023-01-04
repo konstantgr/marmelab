@@ -5,6 +5,7 @@ from typing import Any
 from ..Project import PAnalyzer, PWidget, PAnalyzerSignals, PAnalyzerStates, PMeasurand
 from ..Project import PMeasurable
 from PyQt6.QtWidgets import QWidget, QTextEdit, QCheckBox, QColorDialog, QComboBox, QPushButton, QGridLayout, QVBoxLayout, QSizePolicy, QGroupBox
+from PyQt6.QtWidgets import QLineEdit, QLabel
 from ..icons import control_icon, settings_icon
 from PyQt6.QtCore import Qt, QThreadPool
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
@@ -116,7 +117,7 @@ class SParam:
     enable: bool = False
     name: str = 'S11'
     units: str = 'dBMag'
-    color: QColor = QColor('blue')
+    color: QColor = None
 
 
 class SParamsModel:
@@ -135,8 +136,16 @@ class SParamsModel:
             for j in range(s_size):
                 self.s_params.append(SParam(
                     enable=(i == j == 0),
-                    name=f'S{i+1}{j+1}'
+                    name=f'S{i+1}{j+1}',
+                    color=QColor('blue'),
                 ))
+
+    def pre_measure(self):
+        self.analyzer.set_settings(
+            freq_start=self.freq_start,
+            freq_stop=self.freq_stop,
+            freq_num=self.freq_num
+        )
 
     def measure(self) -> dict[str: Any]:
         req = []
@@ -179,6 +188,21 @@ class SParamsModel:
             self.freq_num = freq_num
 
 
+class SParamsFreq(SettingsTableWidget):
+    def __init__(
+            self,
+            settings: list[Setting],
+            model: SParamsModel,
+    ):
+        super(SParamsFreq, self).__init__(settings=settings, default_settings_button=False)
+        self.model = model
+
+    def apply(self):
+        r = self.table.to_dict()
+        self.model.set_freq(r['freq_start'], r['freq_stop'], r['freq_num'])
+        self.model.pre_measure()
+
+
 class SParamasWidget(QGroupBox):
     def __init__(
             self,
@@ -212,12 +236,37 @@ class SParamasWidget(QGroupBox):
             color.setStyleSheet(f"background-color: rgb{s_param.color.getRgb()[0:-1]}")
             layout.addWidget(color, i, 3)
 
-        self.freq_widget = QWidget(self)
-        self.layout().addWidget(self.freq_widget)
-        layout = QVBoxLayout()
-        self.freq_widget.setLayout(layout)
-        # layout.addWidget()
+        self.freq_widget = SParamsFreq(
+            settings=[
+                Setting(
+                    name='freq_start',
+                    unit=Unit(Hz=1),
+                    description='Start frequency',
+                    type=float,
+                    default_value=1000000,
+                ),
+                Setting(
+                    name='freq_stop',
+                    unit=Unit(Hz=1),
+                    description='Start frequency',
+                    type=float,
+                    default_value=2000000,
+                ),
+                Setting(
+                    name='freq_num',
+                    unit=Unit(Hz=1),
+                    description='Number of frequency points',
+                    type=float,
+                    default_value=200,
+                ),
+            ],
+            model=self.model
+        )
 
+        self.layout().addWidget(self.freq_widget)
+
+    def update_freq(self, *args, **kwargs):
+        print(*args)
 
 
 class SParams(PMeasurand):
