@@ -194,7 +194,6 @@ class ScannerVisualizer(gl.GLViewWidget):
             self.room_sizeY = y
         if z is not None:
             self.room_sizeZ = z
-        self.redraw_grid()
 
     @coords_to_GL_coords
     def set_scanner_zone_size(self, x: float, y: float, z: float):
@@ -212,7 +211,6 @@ class ScannerVisualizer(gl.GLViewWidget):
             self.scanner_zone_sizeY = y
         if z is not None:
             self.scanner_zone_sizeZ = z
-        self.redraw_scanner_zone()
 
     @coords_to_GL_coords
     def set_offset(self, x: float, y: float, z: float):
@@ -230,8 +228,6 @@ class ScannerVisualizer(gl.GLViewWidget):
             self.scanner_offsetY = y
         if z is not None:
             self.scanner_offsetZ = z
-        self.redraw_scanner_zone()
-        self.redraw_scanner()
 
     @coords_to_GL_coords
     def set_scanner_L(self, x: float, y: float, z: float):
@@ -241,8 +237,6 @@ class ScannerVisualizer(gl.GLViewWidget):
             self.scanner_LY = y
         if z is not None:
             self.scanner_LZ = z
-        self.redraw_scanner_zone()
-        self.redraw_scanner()
 
     def set_settings(
             self,
@@ -263,7 +257,11 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.set_scanner_zone_size(x=scanner_zone_size_x, y=scanner_zone_size_y, z=scanner_zone_size_z)
         self.set_offset(x=scanner_offset_x, y=scanner_offset_y, z=scanner_offset_z)
         self.set_scanner_L(x=scanner_L_x, y=scanner_L_y, z=scanner_L_z)
+        self.redraw_grid()
+        self.redraw_scanner_zone()
+        self.redraw_scanner()
         self.redraw_objects()
+        self.redraw_paths()
 
     @BaseAxes_to_GL_coords
     def set_scanner_pos(self, x: float, y: float, z: float, w: float):
@@ -523,8 +521,8 @@ class ScannerVisualizer(gl.GLViewWidget):
                 tt[1, 1] = 1000 / 30
                 tt[2, 2] = 1000 / 30
                 tt[0, 3] = path.points[i, 2] + self.scanner_offsetX + self.scanner_LX
-                tt[1, 3] = path.points[i, 0] + self.scanner_offsetX + self.scanner_LX
-                tt[2, 3] = path.points[i, 1] + self.scanner_offsetY + self.scanner_LY
+                tt[1, 3] = path.points[i, 0] + self.scanner_offsetY + self.scanner_LY
+                tt[2, 3] = path.points[i, 1] + self.scanner_offsetZ + self.scanner_LZ
                 tr = pg.Transform3D(tt)
                 path_item.applyTransform(tr, False)
                 paths_items.append(path_item)
