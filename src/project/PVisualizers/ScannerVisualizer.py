@@ -522,9 +522,9 @@ class ScannerVisualizer(gl.GLViewWidget):
                 tt[0, 0] = 1000 / 30
                 tt[1, 1] = 1000 / 30
                 tt[2, 2] = 1000 / 30
-                tt[0, 3] = path.points[i, 2]
-                tt[1, 3] = path.points[i, 0]
-                tt[2, 3] = path.points[i, 1]
+                tt[0, 3] = path.points[i, 2] + self.scanner_offsetX + self.scanner_LX
+                tt[1, 3] = path.points[i, 0] + self.scanner_offsetX + self.scanner_LX
+                tt[2, 3] = path.points[i, 1] + self.scanner_offsetY + self.scanner_LY
                 tr = pg.Transform3D(tt)
                 path_item.applyTransform(tr, False)
                 paths_items.append(path_item)

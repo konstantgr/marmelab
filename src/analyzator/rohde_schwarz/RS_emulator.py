@@ -48,8 +48,8 @@ class RohdeSchwarzEmulator(RohdeSchwarzAnalyzer):
 
         for num, S_param in enumerate(parameters):
             trace_tup = np.linspace(0, 4*np.pi, self.freq_num)
-            res[f'{S_param}'] = np.sin(trace_tup)
+            res[f'{S_param}'] = np.sin(trace_tup) + np.random.normal(0, 0.1, self.freq_num)
 
         self._signals.data.emit(res)
-        sleep(0.2)
+        sleep(0.9)
         return res
