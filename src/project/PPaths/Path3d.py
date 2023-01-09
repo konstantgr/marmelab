@@ -214,7 +214,7 @@ class Table1Widget(QWidget):
             :param lst:
             :return:
             """
-            if True:  # придумать проверку на тип строки
+            if True:  # придумать проверку на тип строки (split/step)
                 arr = int(abs(lst[0] - lst[1] - 1) / lst[2])
                 mesh = np.linspace(lst[0], lst[1], arr)
             else:
@@ -255,13 +255,13 @@ class Table1Widget(QWidget):
 
     def set_splits(self, i: str):
         """
-        функция не работает
+        функция работает! однако надо настроить сигнал, чтобы значения изменялись моментально
         :param i:
         :return:
         """
-        self.control_keys_V[2] = i
-
-        print(i)
+        #self.control_keys_V[2] = i
+        self.tableWidget.model().setHeaderData(2, Qt.Orientation.Vertical, i)
+        print(i, self.control_keys_V[2], self.tableWidget.model().headerData(2, Qt.Orientation.Vertical))
 
     def set_coords(self):
         pos = self.scanner.instrument.position()
@@ -273,10 +273,11 @@ class Table1Widget(QWidget):
     def set_relate_coords(self, state):
         """
         координаты становятся относительными. То есть текущая точка становится нулем. Однако реальные координаты надо
-        все-таки где сохранить
+        все-таки где-mo сохранить
         :return:
         """
         if state:
+            #  добавить сохранение данных
             self.tableWidget.model().setCoords(x=0, y=0, z=0, w=0)
         else:
             self.set_coords()
