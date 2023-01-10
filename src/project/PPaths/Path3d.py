@@ -87,6 +87,10 @@ class MeshTableModel(QSmartTableModel):
             # self.headerDataChange  использовать в другой функции
         return True
 
+
+
+
+
     def setCoords(self, x: float = None, y: float = None, z: float = None, w: float = None):
         if x is not None:
             self._data[0][0] = x
@@ -104,7 +108,6 @@ class MeshTableModel(QSmartTableModel):
             self._data[0][3] = w
             index = self.index(0, 3)
             self.dataChanged.emit(index, index)
-        print(x, y, z, w)
 
 
 class MeshTable(QTableView):
@@ -144,6 +147,7 @@ class Table1Widget(QWidget):
             text="Set current coordinates",
             parent=self
         )
+
         self.set_button.clicked.connect(self.set_coords)
         self.hboxlayout.addWidget(self.set_button)
 
@@ -159,11 +163,15 @@ class Table1Widget(QWidget):
             text="Relatives coordinates",
             parent=self
         )
-        #self.check_relative.pressed.connect(self.set_relate_coords)
         self.check_relative.stateChanged.connect(self.set_relate_coords)
+
+        self.test_button = QPushButton("TEST BUTTON")  # временная тестовая кнопка
+        self.test_button.setStyleSheet('QPushButton {background-color: #DAD8A3; color: black;}')
+        self.test_button.clicked.connect(self.go_table)
+        self.vboxlayout.addWidget(self.test_button)
+
         self.vboxlayout.addWidget(self.check_relative)
         self.hboxlayout.addWidget(self.vbox)
-
         self.group_layout.addWidget(self.hbox)
 
         self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
@@ -202,10 +210,10 @@ class Table1Widget(QWidget):
             lst_z.append(self.tableWidget.model().index(_, self.control_keys_H.index("z")).data())
             lst_w.append(self.tableWidget.model().index(_, self.control_keys_H.index("w")).data())
 
-        lst_x = [int(float(i)) for i in lst_x if i.isdigit()]
-        lst_y = [int(float(i)) for i in lst_y if i.isdigit()]
-        lst_z = [int(float(i)) for i in lst_z if i.isdigit()]
-        lst_w = [int(float(i)) for i in lst_w if i.isdigit()]
+        lst_x = [float(i) for i in lst_x if i != ''] # реализовать проверку на пустые значения. Если их нет, ничего не делать
+        lst_y = [float(i) for i in lst_y if i != '']
+        lst_z = [float(i) for i in lst_z if i != '']
+        lst_w = [float(i) for i in lst_w if i != '']
 
         def mesh_maker(lst: List):
             """
@@ -214,12 +222,28 @@ class Table1Widget(QWidget):
             :param lst:
             :return:
             """
-            if True:  # придумать проверку на тип строки (split/step)
-                arr = int(abs(lst[0] - lst[1] - 1) / lst[2])
-                mesh = np.linspace(lst[0], lst[1], arr)
+
+            if len(lst) != 0:
+                if self.check_relative.isChecked():
+                    lst[1]  = lst[0] + lst[1]  # немного не то. Надо текущую координату брать
+                    #lst[0] = self.scanner.instrument.position().
+                    if self.control_keys_V[2] == "Step":
+                        arr = int(abs(lst[0] - lst[1] - 1) / lst[2])
+                        mesh = np.linspace(lst[0], lst[1], arr)
+                    elif self.control_keys_V[2] == "Split":
+                        mesh = np.linspace(lst[0], lst[1], int(lst[2]))
+
+                else:
+                    if self.check_relative.isChecked():
+                        if self.control_keys_V[2] == "Step":
+                            arr = int(abs(lst[0] - lst[1] - 1) / lst[2])
+                            mesh = np.linspace(lst[0], lst[1], arr)
+                        elif self.control_keys_V[2] == "Split":
+                            mesh = np.linspace(lst[0], lst[1], int(lst[2]))
+                return mesh
             else:
-                mesh = np.linspace(lst[0], lst[1], lst[2])
-            return mesh
+                pass
+
 
         x = mesh_maker(lst_x)
         y = mesh_maker(lst_y)
@@ -249,19 +273,41 @@ class Table1Widget(QWidget):
             3: z,
             4: w,
         }
-        print(f"x={x}, y={y}, z={z}, w={w}")
-        # self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
+        #print(f"x={x}, y={y}, z={z}, w={w}")  # принт для проверки данных
+        print([keys[i] for i in order], "".join([keys_str[i] for i in order]))
+
+        #self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
         # по координатам в соответствии с  порядком
+
+    # def do_line(self, coords: List[np.array], order: str, current_position: List = None):
+    #     """
+    #     настроить работу функции, которая перемещает сканнер по данным из таблицы. Я знаю, она должна быть в эксперименте
+    #     :param coords:
+    #     :param order:
+    #     :param current_position:
+    #     :return:
+    #     """
+    #     if current_position is None:
+    #         current_position = []
+    #     if len(coords) > 1:
+    #         for coord in coords[0]:
+    #             self.do_line(coords[1:], order, [*current_position, coord])
+    #     else:
+    #         for coord in coords[0]:
+    #             temp_coord = [*current_position, coord]
+    #             temp_doc = {order[i]: temp_coord[i] for i in range(len(order))}
+    #             new_pos = self.scanner.instrument.position(**temp_doc)
+    #             self.scanner.instrument.goto(new_pos)
+    #             self.measurements()  # пока заглушка. надо сделать чтобы измеряла что-то в точке
 
     def set_splits(self, i: str):
         """
-        функция работает! однако надо настроить сигнал, чтобы значения изменялись моментально
+        функция меняет split на step и наоборот в таблице
         :param i:
         :return:
         """
-        #self.control_keys_V[2] = i
-        self.tableWidget.model().setHeaderData(2, Qt.Orientation.Vertical, i)
-        print(i, self.control_keys_V[2], self.tableWidget.model().headerData(2, Qt.Orientation.Vertical))
+        self.control_keys_V[2] = i
+        self.tableWidget.model().headerDataChanged.emit(Qt.Orientation.Vertical, 0, 1)
 
     def set_coords(self):
         pos = self.scanner.instrument.position()

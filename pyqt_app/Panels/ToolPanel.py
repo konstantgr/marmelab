@@ -55,3 +55,4 @@ class ToolPanel(QToolBar):
                 name=f'Object {self.obj_counter}'
             )
         )
+
