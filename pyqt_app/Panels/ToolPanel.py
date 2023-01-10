@@ -1,5 +1,7 @@
-from src.project.Widgets import StateDepPushButton
+from src.project.Widgets import StateDepPushButton, StateDepQAction
 from PyQt6.QtWidgets import QToolBar, QPushButton
+from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtCore import QSize
 from pyqt_app import project
 import logging
 from pyqt_app.app_project import paths, objects
@@ -17,22 +19,29 @@ class ToolPanel(QToolBar):
         self.upd_button = QPushButton("Update current position")
         self.add_path_button = QPushButton("Add path")
         self.add_obj_button = QPushButton("Add object")
-        self.abort_button = StateDepPushButton(
+        self.abort_button = StateDepQAction(
             state=project.scanner.states.is_connected,
             text="Abort",
             parent=self
         )
-        self.abort_button.setProperty('color', 'red')
+        #self.abort_button.setProperty('color', 'red')
 
-        self.addWidget(self.upd_button)
+
+
+        self.setIconSize(QSize(20, 20))
+        #self.button_action = QAction(QIcon("arrow-circle-315-left.png"), "Test")
+        self.upd_button_action = QAction("Update current position")
+        self.upd_button_action.triggered.connect(self.upd_cur_pos)
+        self.addAction(self.upd_button_action)
+
         self.addWidget(self.add_path_button)
         self.addWidget(self.add_obj_button)
-        self.addWidget(self.abort_button)
+        self.addAction(self.abort_button)
 
         self.add_obj_button.clicked.connect(self.obj_adder)
         self.add_path_button.clicked.connect(self.path_adder)
-        self.upd_button.clicked.connect(self.upd_cur_pos)
-        self.abort_button.clicked.connect(project.scanner.instrument.abort)
+
+        self.abort_button.triggered.connect(project.scanner.instrument.abort)
 
     @staticmethod
     def upd_cur_pos():
