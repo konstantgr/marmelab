@@ -3,17 +3,17 @@ import pyqtgraph as pg
 import numpy as np
 from stl import mesh
 from ...scanner import BaseAxes
-from ..Project import PScanner, PScannerVisualizer, PWidget, PStorage, PScannerSignals
+from ..Project import PScannerVisualizer, PWidget, PStorage, PScannerSignals
 import os
 from PyQt6 import QtCore, QtGui
-from PyQt6.QtWidgets import QWidget, QTextEdit
+from PyQt6.QtWidgets import QWidget
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 from ..PObjects import Object3d
 from ..PPaths import Path3d
-from ..Widgets import SettingsTableWidget
-from ..Variable import Setting, Unit
+from src.views.Widgets import SettingsTableWidget
+from src.Variable import Setting, Unit
 from OpenGL.GL import GL_BLEND, GL_DEPTH_TEST, GL_ALPHA_TEST, GL_CULL_FACE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
-from ..icons import settings_icon
+from src.icons import settings_icon
 
 
 _DEFAULT_SETTINGS = [
@@ -95,19 +95,12 @@ _DEFAULT_SETTINGS = [
 DEFAULT_SETTINGS = {setting.name: setting.default_value for setting in _DEFAULT_SETTINGS}
 
 
-def coords_to_GL_coords(func):
-    def wrapper(self, x, y, z, w=None):
-        if w is not None:
-            return func(self, x=z, y=x, z=y, w=w)
-        else:
-            return func(self, x=z, y=x, z=y)
-    return wrapper
-
-
-def BaseAxes_to_GL_coords(func):
-    def wrapper(_, axes: BaseAxes):
-        return func(_, x=axes.z, y=axes.x, z=axes.y, w=axes.w)
-    return wrapper
+def coords_to_GL_coords(x, y, z, w=None):
+    """Перевод из координат сканера в координаты OpenGL"""
+    if w is not None:
+        return z, x, y, w
+    else:
+        return z, x, y
 
 
 class TextItem(GLGraphicsItem):
@@ -178,7 +171,6 @@ class ScannerVisualizer(gl.GLViewWidget):
         # self.objects.signals.element_changed.connect(self.redraw_objects)
         # self.paths.signals.element_changed.connect(self.redraw_paths)
 
-    @coords_to_GL_coords
     def set_room_size(self, x: float, y: float, z: float):
         """
         Set room sizes in meters
@@ -188,6 +180,7 @@ class ScannerVisualizer(gl.GLViewWidget):
         :param z:
         :return:
         """
+        x, y, z = coords_to_GL_coords(x, y, z)
         if x is not None:
             self.room_sizeX = x
         if y is not None:
@@ -195,7 +188,6 @@ class ScannerVisualizer(gl.GLViewWidget):
         if z is not None:
             self.room_sizeZ = z
 
-    @coords_to_GL_coords
     def set_scanner_zone_size(self, x: float, y: float, z: float):
         """
         Set scanner zone sizes in meters
@@ -205,6 +197,7 @@ class ScannerVisualizer(gl.GLViewWidget):
         :param z:
         :return:
         """
+        x, y, z = coords_to_GL_coords(x, y, z)
         if x is not None:
             self.scanner_zone_sizeX = x
         if y is not None:
@@ -212,7 +205,6 @@ class ScannerVisualizer(gl.GLViewWidget):
         if z is not None:
             self.scanner_zone_sizeZ = z
 
-    @coords_to_GL_coords
     def set_offset(self, x: float, y: float, z: float):
         """
         Set scanner zone offset in meters
@@ -222,6 +214,7 @@ class ScannerVisualizer(gl.GLViewWidget):
         :param z:
         :return:
         """
+        x, y, z = coords_to_GL_coords(x, y, z)
         if x is not None:
             self.scanner_offsetX = x
         if y is not None:
@@ -229,8 +222,8 @@ class ScannerVisualizer(gl.GLViewWidget):
         if z is not None:
             self.scanner_offsetZ = z
 
-    @coords_to_GL_coords
     def set_scanner_L(self, x: float, y: float, z: float):
+        x, y, z = coords_to_GL_coords(x, y, z)
         if x is not None:
             self.scanner_LX = x
         if y is not None:
@@ -263,9 +256,8 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.redraw_objects()
         self.redraw_paths()
 
-    @BaseAxes_to_GL_coords
-    def set_scanner_pos(self, x: float, y: float, z: float, w: float):
-        self.scanner_pos = BaseAxes(x, y, z, w)
+    def set_scanner_pos(self, axes: BaseAxes):
+        self.scanner_pos = BaseAxes(axes.z, axes.x, axes.y, axes.w)
         self.redraw_scanner()
 
     def draw_grid(self):

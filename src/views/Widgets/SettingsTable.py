@@ -1,14 +1,14 @@
-from PyQt6.QtWidgets import QAbstractItemView, QFrame, QWidget, QTableView, QSplitter, QGroupBox, QHBoxLayout, QSizePolicy, QHeaderView, QPushButton, QVBoxLayout
+from PyQt6.QtWidgets import QAbstractItemView, QFrame, QWidget, QTableView, QGroupBox, QHBoxLayout, QSizePolicy, QHeaderView, QPushButton, QVBoxLayout
 from PyQt6.QtCore import Qt, QAbstractTableModel
 from PyQt6 import QtCore
 from PyQt6.QtGui import QColor
-from ..Variable import Setting, Unit, Variable
+from src.Variable import Setting, Variable
 from typing import Union, Any
 import re
 from PyQt6.QtCore import QObject
 from dataclasses import dataclass
 from .StatedependentButton import StateDepPushButton
-from ..Project import PState
+from src.project.Project import PState
 
 
 @dataclass

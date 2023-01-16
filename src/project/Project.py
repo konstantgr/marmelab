@@ -2,13 +2,11 @@ from ..scanner import Scanner, ScannerSignals
 from ..analyzator import AnalyzerSignals, BaseAnalyzer
 from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
-from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QIcon
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from abc import abstractmethod, ABC, ABCMeta
-from typing import Union, Callable, Generic, TypeVar, Any, Type
-from .icons import path_icon, object_icon, base_icon
-from pyqtgraph import PlotWidget, GraphicsLayoutWidget
+from typing import Union, Generic, TypeVar, Any, Tuple
+from src.icons import path_icon, object_icon, base_icon
 
 
 def _meta_resolve(cls):
@@ -16,21 +14,6 @@ def _meta_resolve(cls):
         # https://stackoverflow.com/questions/28720217/multiple-inheritance-metaclass-conflict
         pass
     return _MetaResolver
-
-
-class PWidget:
-    """
-    Класс виджетов управления
-    """
-    def __init__(
-            self,
-            name: str,
-            widget: QWidget,
-            icon: QIcon = None
-    ):
-        self.name = name
-        self.widget = widget
-        self.icon = icon
 
 
 class PBaseSignals(QObject):
@@ -47,10 +30,8 @@ class PBase:
     def __init__(
             self,
             name: str,
-            widget: QWidget,
     ):
         self.name = name
-        self.widget = widget
         self.signals = PBaseSignals()
 
 
@@ -175,13 +156,16 @@ class PScannerStates:
     is_in_use: PState  # используется ли в эксперименте прямо сейчас
 
 
+ScannerType = TypeVar('ScannerType', bound=Scanner)
+
+
 class PScanner(ABC):
     """
     Класс сканера, объединяющего сам сканер, его состояния и сигналы
     """
     def __init__(
             self,
-            instrument: Scanner,
+            instrument: ScannerType,
             signals: PScannerSignals,
     ):
         self.signals = signals
@@ -203,14 +187,6 @@ class PScanner(ABC):
     def _set_settings(self, d: dict):
         self.instrument.set_settings(**d)
 
-    @property
-    @abstractmethod
-    def control_widgets(self) -> list[PWidget]:
-        """
-        Виджеты, управляющие сканером
-        """
-        pass
-
 
 class PScannerVisualizer(ABC):
     """
@@ -222,21 +198,10 @@ class PScannerVisualizer(ABC):
     ):
         self.scanner = scanner
 
-    @property
-    @abstractmethod
-    def widget(self) -> QWidget:
-        """
-        Виджет, отвечающий за визуализацию
-        """
-        pass
 
-    @property
-    @abstractmethod
-    def control_widgets(self) -> list[PWidget]:
-        """
-        Виджеты, управляющие визуализацией
-        """
-        pass
+class PMeasurandSignals(QObject):
+    changed: pyqtBoundSignal = pyqtSignal()
+    measured: pyqtBoundSignal = pyqtSignal()
 
 
 class PMeasurand(ABC):
@@ -252,18 +217,12 @@ class PMeasurand(ABC):
         :param name: название, например S-parameters, Signal amplitude
         """
         self.name = name
-
-    @property
-    @abstractmethod
-    def widget(self) -> QWidget:
-        """
-        Виджет измеряемой величины
-        """
+        self.signals = PMeasurandSignals()
 
     @abstractmethod
     def measure(self) -> Any:
         """
-        Провести измерение величины и перерисовать график, если такой есть
+        Провести измерение величины и сохранить значения
         """
 
     @abstractmethod
@@ -272,11 +231,16 @@ class PMeasurand(ABC):
         Настроить сканер перед измерением данной величины
         """
 
-    @property
     @abstractmethod
-    def plot_widget(self) -> Union[PlotWidget, GraphicsLayoutWidget, None]:
+    def fields(self) -> Tuple[str]:
         """
-        PlotWidget этой величины
+        Возвращает названия колонок в data
+        """
+
+    @abstractmethod
+    def get_data(self) -> Union[None, Any]:
+        """
+        Вернуть предыдущие значение. None, если измерений еще не было
         """
 
 
@@ -300,6 +264,9 @@ class PAnalyzerStates:
     is_in_use: PState  # используется в эксперименте прямо сейчас
 
 
+AnalyzerType = TypeVar('AnalyzerType', bound=BaseAnalyzer)
+
+
 class PAnalyzer(ABC):
     """
     Класс анализатора, объединяющий сигналы и статусы анализатора.
@@ -308,7 +275,7 @@ class PAnalyzer(ABC):
     def __init__(
             self,
             signals: PAnalyzerSignals,
-            instrument: BaseAnalyzer,
+            instrument: AnalyzerType,
     ):
         self.signals = signals
         self.instrument = instrument
@@ -327,15 +294,8 @@ class PAnalyzer(ABC):
         self.instrument.set_settings(**d)
 
     def set_current_measurand(self, measurand: PMeasurand):
-        """Объявить """
+        """Объявить measurand, к которому подготовлен анализатор"""
         self.current_measurand = measurand
-
-    @property
-    @abstractmethod
-    def control_widgets(self) -> list[PWidget]:
-        """
-        Виджеты, управляющие анализатором
-        """
 
     @abstractmethod
     def get_measurands(self) -> list[PMeasurand]:
@@ -344,32 +304,52 @@ class PAnalyzer(ABC):
         """
 
 
+class PMeasurableSignals(PBaseSignals):
+    measured: pyqtBoundSignal = pyqtSignal()
+
+
 class PMeasurable(PBase, metaclass=ABCMeta):
     """
     Класс измеряемой величины
     """
     def __init__(
             self,
-            name: str,
-            widget: QWidget
+            name: str
     ):
-        super(PMeasurable, self).__init__(
-            name=name,
-            widget=widget,
-        )
+        super(PMeasurable, self).__init__(name=name)
+        self.signals = PMeasurableSignals()
 
     @abstractmethod
     def measure(self) -> Any:
-        """Проводит измерение при помощи инструмента и возвращает результат"""
+        """Проводит измерение и возвращает результат"""
 
-    @property
-    def plot_widget(self) -> Union[PlotWidget, GraphicsLayoutWidget, None]:
-        return None
+    @abstractmethod
+    def fields(self) -> Tuple[str]:
+        """
+        Возвращает названия колонок в data
+        """
+
+    @abstractmethod
+    def get_data(self) -> Union[None, Any]:
+        """
+        Вернуть предыдущие значение. None, если измерений еще не было
+        """
 
 
 class PExperiment(PBase):
     """
     Класс эксперимента
+    """
+    @abstractmethod
+    def run(self):
+        """
+        Запуск эксперимента
+        """
+
+
+class PPlot(PBase):
+    """
+    Класс графиков
     """
 
 
@@ -382,7 +362,7 @@ class PStorageSignals(QObject):
     delete: pyqtBoundSignal = pyqtSignal(PBase)
 
 
-PBaseTypes = TypeVar('PBaseTypes', PBase, PExperiment, PMeasurable, PObject, PPath)
+PBaseTypes = TypeVar('PBaseTypes', PBase, PExperiment, PMeasurable, PObject, PPath, PPlot)
 
 
 class PStorage(Generic[PBaseTypes]):
@@ -422,23 +402,9 @@ class PAnalyzerVisualizer(ABC):
     """
     def __init__(
             self,
-            measurables: PStorage[PMeasurable],
+            plots: PStorage[PPlot],
     ):
-        self.measurables = measurables
-
-    @property
-    @abstractmethod
-    def widget(self) -> QWidget:
-        """
-        Виджет визуализации
-        """
-
-    @property
-    @abstractmethod
-    def control_widgets(self) -> list[PWidget]:
-        """
-        Виджеты, управляющие визуализацией
-        """
+        self.plots = plots
 
 
 class Project:
@@ -455,6 +421,7 @@ class Project:
             paths: PStorage[PPath],
             measurables: PStorage[PMeasurable],
             experiments: PStorage[PExperiment],
+            plots: PStorage[PPlot]
     ):
         self.scanner = scanner
         self.analyzer = analyzer
@@ -465,33 +432,4 @@ class Project:
         self.paths = paths
         self.measurables = measurables
         self.experiments = experiments
-
-    def tree(self) -> dict[str: list[PWidget]]:
-        """
-        Дерево проекта
-        """
-        tree = dict()
-
-        scanner_widgets = []
-        for widget in self.scanner.control_widgets:
-            scanner_widgets.append(widget)
-        tree['Scanner'] = scanner_widgets
-
-        analyzer_widgets = []
-        for widget in self.analyzer.control_widgets:
-            analyzer_widgets.append(widget)
-        tree['Analyzer'] = analyzer_widgets
-
-        tree['Scanner graphics'] = self.scanner_visualizer.control_widgets
-        tree['Analyzer graphics'] = self.analyzer_visualizer.control_widgets
-
-        tree['Objects'] = [PWidget(name=w.name, widget=w.widget, icon=w.icon) for w in self.objects.data]
-        tree['Paths'] = [PWidget(name=w.name, widget=w.widget, icon=w.icon) for w in self.paths.data]
-        tree['Measurables'] = [PWidget(name=w.name, widget=w.widget, icon=w.icon) for w in self.measurables.data]
-        tree['Experiments'] = [PWidget(name=w.name, widget=w.widget, icon=w.icon) for w in self.experiments.data]
-
-        return tree
-
-
-
-
+        self.plots = plots

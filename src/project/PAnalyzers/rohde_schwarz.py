@@ -2,16 +2,14 @@ import dataclasses
 import time
 from typing import Any
 
-from ..Project import PAnalyzer, PWidget, PAnalyzerSignals, PAnalyzerStates, PMeasurand
-from ..Project import PMeasurable
-from PyQt6.QtWidgets import QWidget, QTextEdit, QCheckBox, QColorDialog, QComboBox, QPushButton, QGridLayout, QVBoxLayout, QSizePolicy, QGroupBox
-from PyQt6.QtWidgets import QLineEdit, QLabel
-from ..icons import control_icon, settings_icon
+from ..Project import PAnalyzer, PAnalyzerSignals, PAnalyzerStates, PMeasurand
+from PyQt6.QtWidgets import QWidget, QTextEdit, QCheckBox, QComboBox, QPushButton, QGridLayout, QVBoxLayout, QSizePolicy, QGroupBox
+from src.icons import control_icon
 from PyQt6.QtCore import Qt, QThreadPool
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from PyQt6.QtGui import QColor
-from ..Variable import Unit, Setting
-from ..Widgets import SettingsTableWidget, StateDepPushButton
+from src.Variable import Unit, Setting
+from src.views.Widgets import SettingsTableWidget, StateDepPushButton
 from ...analyzator.rohde_schwarz import RohdeSchwarzAnalyzer
 from pyqtgraph import PlotWidget, PlotItem, PlotDataItem
 import numpy as np
@@ -54,25 +52,6 @@ class Control(QWidget):
         group_layout.addWidget(self.disconnect_button)
 
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
-
-
-class Settings(SettingsTableWidget):
-    def __init__(
-            self,
-            signals: PAnalyzerSignals,
-            states: PAnalyzerStates,
-            settings: list[Setting],
-            parent: QWidget = None
-    ):
-        super(Settings, self).__init__(
-            settings=settings,
-            parent=parent,
-            apply_state=states.is_connected & ~states.is_in_use
-        )
-        self.signals = signals
-
-    def apply(self):
-        self.signals.set_settings.emit(self.table.to_dict())
 
 
 class TestMeasurandSignals(QObject):
@@ -308,11 +287,6 @@ class RohdeSchwarzPAnalyzer(PAnalyzer):
                 'Control',
                 Control(instrument, self.states),
                 icon=control_icon,
-            ),
-            PWidget(
-                'Settings',
-                Settings(self.signals, self.states, self._get_settings()),
-                icon=settings_icon,
             )
         ]
 

@@ -1,4 +1,4 @@
-from ..Project import PState
+from src.project.Project import PState
 from PyQt6.QtWidgets import QPushButton, QCheckBox
 
 

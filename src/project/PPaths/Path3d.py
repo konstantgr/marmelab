@@ -1,14 +1,12 @@
 from ..Project import PPath, PScanner
-from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QPushButton,\
-    QSizePolicy, QMenuBar, QTabWidget, QCheckBox, QGroupBox, QComboBox
+from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QSizePolicy, QGroupBox, QComboBox
 import numpy as np
-from dataclasses import dataclass, field
 from typing import List
-from ..Widgets.SettingsTable import QSmartTableModel, Variable
-from PyQt6.QtCore import Qt, QModelIndex, QObject, QModelIndex
+from src.views.Widgets.SettingsTable import QSmartTableModel
+from PyQt6.QtCore import Qt, QObject, QModelIndex
 from PyQt6.QtGui import QColor
 from typing import Any
-from src.project.Widgets import StateDepPushButton, StateDepCheckBox
+from src.views.Widgets import StateDepPushButton, StateDepCheckBox
 import re
 from ...scanner import Position
 

@@ -1,4 +1,4 @@
-from src.project.Widgets import StateDepPushButton
+from src.views.Widgets import StateDepPushButton
 from PyQt6.QtWidgets import QToolBar, QPushButton
 from pyqt_app import project
 import logging

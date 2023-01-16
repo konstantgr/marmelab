@@ -1,18 +1,15 @@
 import dataclasses
 
-import numpy as np
 import pandas as pd
 
 from ..Project import (
-    PExperiment, PPath, PMeasurable, PScanner, PAnalyzer, PBaseSignals, PMeasurand, PStorage,
+    PExperiment, PPath, PMeasurable, PScanner, PAnalyzer, PBaseSignals, PStorage,
     PScannerStates, PAnalyzerStates,
 )
-from ..Widgets import StateDepPushButton
-from ...scanner import Position
-from PyQt6.QtWidgets import QTextEdit, QWidget, QVBoxLayout, QGroupBox, QSizePolicy, QComboBox, QLineEdit
+from src.views.Widgets import StateDepPushButton
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QSizePolicy, QComboBox, QLineEdit
 from PyQt6.QtCore import Qt, QThreadPool
-from typing import Callable, List
-
+from typing import Callable
 
 
 # TODO нужен виджет для эксперимента с выбором measurable и path, и файла, куда сохранять
