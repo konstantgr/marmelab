@@ -1,6 +1,11 @@
-from ..scanner import Scanner, ScannerSignals
-from ..analyzator import AnalyzerSignals, BaseAnalyzer
-from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
+# from ..scanner import Scanner, ScannerSignals
+# from ..analyzator import AnalyzerSignals, BaseAnalyzer
+# from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
+
+from anechoic_utils.scanner import Scanner, ScannerSignals
+from anechoic_utils.analyzator import AnalyzerSignals, BaseAnalyzer
+from anechoic_utils.scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
+
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QIcon
