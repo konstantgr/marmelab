@@ -1,6 +1,6 @@
 from ..Project import PState
 from PyQt6.QtWidgets import QPushButton, QCheckBox
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QIcon
 
 
 class StateDepPushButton(QPushButton):
@@ -21,10 +21,12 @@ class StateDepQAction(QAction):
     """
     Action, которое зависит от статуса
     """
-    def __init__(self, state: PState, *args, **kwargs):
+    def __init__(self, state: PState, set_icon, *args, **kwargs):
         super(StateDepQAction, self).__init__(*args, **kwargs)
         self.state = state
         self.update_state()
+        self.set_icon = set_icon
+        self.setIcon(self.set_icon)
         self.state.changed_signal.connect(self.update_state)
 
     def update_state(self):
