@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter, QTextEdit, QPushButton
 from PyQt6.QtCore import Qt
-from Panels import LogPanel, RightPanel, LeftPanel, CentralPanel
+from Panels import LogPanel, RightPanel, LeftPanel, CentralPanel, MenuPanel
 from Panels.BarPanel import BarPanel
 from Panels.ToolPanel import ToolPanel
 from pyqt_app import project
@@ -15,6 +15,8 @@ class MainWindow(QMainWindow):
 
         self.tool_panel = ToolPanel(self.main_widget)
         self.addToolBar(self.tool_panel)
+        self.menu_panel = MenuPanel()
+        self.setMenuBar(self.menu_panel)
 
         self.left_panel = LeftPanel(self.main_widget)  # settings selector
         self.center_panel = CentralPanel(self.main_widget)  # settings menu

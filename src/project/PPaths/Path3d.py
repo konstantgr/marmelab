@@ -39,14 +39,20 @@ class MeshTableModel(QSmartTableModel):
     """
     класс, обеспечивающий проверку значений в таблице
     """
-    def __init__(self, headers, v_headers, parent: QObject = None, ):
+    def __init__(self, parent: QObject = None, ):
         super(QSmartTableModel, self).__init__()
+        self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
+        self.control_keys_H = ["x", "y", "z", "w"]
         # self.variable = Variable(name="", default_value=0, type=float, description="")
         # self.variable = Variable(name="", default_value=0, type=float, unit=Length, description="")  реализовать валидацию
-        self._data = [["" for _ in range(len(headers))] for _ in range(4)]  # добавить None в валидные значения
-        self.headers = headers
-        self.v_headers = v_headers
+        self.headers = self.control_keys_H
+        self.v_headers = self.control_keys_V
+        self._data = [["" for _ in range(len(self.headers))] for _ in range(4)]  # добавить None в валидные значения
         self.pattern = re.compile(r"^\d+(?:\.\d+)?\s*(?:\[\s*[a-zA-Z]*\s*])?$")
+        self.relative = False
+
+    def set_relative(self, state: bool):
+        self.relative = state
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
@@ -87,6 +93,63 @@ class MeshTableModel(QSmartTableModel):
             # self.headerDataChange  использовать в другой функции
         return True
 
+    def params_to_linspace(self):
+        lst_x = []
+        lst_y = []
+        lst_z = []
+        lst_w = []
+        order1 = []
+
+        x, y, z, w = [], [], [], []
+
+        for _ in range(4):
+            order1.append((self.index(3, _).data()))
+
+        order = [int(i) for i in order1 if i.isdigit()]
+        print(order)
+        #  реализация считывания данных в таблице
+
+        for _ in range(3):
+            lst_x.append(self.index(_, self.control_keys_H.index("x")).data())
+            lst_y.append(self.index(_, self.control_keys_H.index("y")).data())
+            lst_z.append(self.index(_, self.control_keys_H.index("z")).data())
+            lst_w.append(self.index(_, self.control_keys_H.index("w")).data())
+
+        lst_x = [float(i) for i in lst_x if i != ''] # реализовать проверку на пустые значения. Если их нет, ничего не делать
+        lst_y = [float(i) for i in lst_y if i != '']
+        lst_z = [float(i) for i in lst_z if i != '']
+        lst_w = [float(i) for i in lst_w if i != '']
+
+        x = self.mesh_maker(lst_x)
+        y = self.mesh_maker(lst_y)
+        z = self.mesh_maker(lst_z)
+        w = self.mesh_maker(lst_w)
+
+        return x, y, z, w, order
+
+    def mesh_maker(self, lst: List):
+        """
+        функция, которая формирует набор значений, в которых будет производиться измерения
+        она выдает либо с заданным шагом, либо с фиксированным количеством точек
+        :param lst:
+        :return:
+        """
+
+        if len(lst) != 0:
+            if self.relative:
+                lst[1] = lst[0] + lst[1]  # немного не то. Надо текущую координату брать
+                #lst[0] = self.scanner.instrument.position().
+
+            if self.control_keys_V[2] == "Step":
+                arr = int(abs(lst[0] - lst[1] - 1) / lst[2])
+                mesh = np.linspace(lst[0], lst[1], arr)
+            elif self.control_keys_V[2] == "Split":
+                mesh = np.linspace(lst[0], lst[1], int(lst[2]))
+            return mesh
+        else:
+            pass
+
+
     def setCoords(self, x: float = None, y: float = None, z: float = None, w: float = None):
         if x is not None:
             self._data[0][0] = x
@@ -104,7 +167,6 @@ class MeshTableModel(QSmartTableModel):
             self._data[0][3] = w
             index = self.index(0, 3)
             self.dataChanged.emit(index, index)
-        print(x, y, z, w)
 
 
 class MeshTable(QTableView):
@@ -112,12 +174,10 @@ class MeshTable(QTableView):
     Реализация умной таблицы
     """
 
-    def __init__(self, header: List[str], v_header: List[str], parent: QWidget = None):
+    def __init__(self, parent: QWidget = None):
         super(MeshTable, self).__init__(parent)
-        self.header = header
-        self.v_header = v_header
-        self.setModel(MeshTableModel(header, v_header, parent))
-
+        self.model = MeshTableModel(parent)
+        self.setModel(self.model)
         header = self.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         header.setStretchLastSection(True)
@@ -144,6 +204,7 @@ class Table1Widget(QWidget):
             text="Set current coordinates",
             parent=self
         )
+
         self.set_button.clicked.connect(self.set_coords)
         self.hboxlayout.addWidget(self.set_button)
 
@@ -159,18 +220,19 @@ class Table1Widget(QWidget):
             text="Relatives coordinates",
             parent=self
         )
-        #self.check_relative.pressed.connect(self.set_relate_coords)
         self.check_relative.stateChanged.connect(self.set_relate_coords)
+
+        self.test_button = QPushButton("TEST BUTTON")  # временная тестовая кнопка
+        self.test_button.setStyleSheet('QPushButton {background-color: #DAD8A3; color: black;}')
+        self.test_button.clicked.connect(self.go_table)
+        self.vboxlayout.addWidget(self.test_button)
+
         self.vboxlayout.addWidget(self.check_relative)
         self.hboxlayout.addWidget(self.vbox)
-
         self.group_layout.addWidget(self.hbox)
 
-        self.control_keys_V = ["Begin coordinates", "End coordinates", "Step", "Order"]
-        self.control_keys_H = ["x", "y", "z", "w"]
-
         # формирование таблицы, в которой задаются значения координат, скоростей и шага для трех осей
-        self.tableWidget = MeshTable(self.control_keys_H, self.control_keys_V, self)
+        self.tableWidget = MeshTable(self)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget.setFixedHeight(200)
@@ -180,53 +242,7 @@ class Table1Widget(QWidget):
         self.layout.addWidget(self.group)
         self.layout.addWidget(self.tableWidget)
 
-    def params_to_linspace(self):
-        lst_x = []
-        lst_y = []
-        lst_z = []
-        lst_w = []
-        order1 = []
 
-        x, y, z, w = [], [], [], []
-
-        for _ in range(4):
-            order1.append((self.tableWidget.model().index(3, _).data()))
-
-        order = [int(i) for i in order1 if i.isdigit()]
-        print(order)
-        #  реализация считывания данных в таблице
-
-        for _ in range(3):
-            lst_x.append(self.tableWidget.model().index(_, self.control_keys_H.index("x")).data())
-            lst_y.append(self.tableWidget.model().index(_, self.control_keys_H.index("y")).data())
-            lst_z.append(self.tableWidget.model().index(_, self.control_keys_H.index("z")).data())
-            lst_w.append(self.tableWidget.model().index(_, self.control_keys_H.index("w")).data())
-
-        lst_x = [int(float(i)) for i in lst_x if i.isdigit()]
-        lst_y = [int(float(i)) for i in lst_y if i.isdigit()]
-        lst_z = [int(float(i)) for i in lst_z if i.isdigit()]
-        lst_w = [int(float(i)) for i in lst_w if i.isdigit()]
-
-        def mesh_maker(lst: List):
-            """
-            функция, которая формирует набор значений, в которых будет производиться измерения
-            она выдает либо с заданным шагом, либо с фиксированным количеством точек
-            :param lst:
-            :return:
-            """
-            if True:  # придумать проверку на тип строки
-                arr = int(abs(lst[0] - lst[1] - 1) / lst[2])
-                mesh = np.linspace(lst[0], lst[1], arr)
-            else:
-                mesh = np.linspace(lst[0], lst[1], lst[2])
-            return mesh
-
-        x = mesh_maker(lst_x)
-        y = mesh_maker(lst_y)
-        z = mesh_maker(lst_z)
-        w = mesh_maker(lst_w)
-
-        return x, y, z, w, order
 
     def go_table(self):
         """
@@ -235,13 +251,13 @@ class Table1Widget(QWidget):
         #  здесь вызов конвертации параметров из таблицы в списки
 
         keys_str = {
-            1: self.control_keys_H[0],
-            2: self.control_keys_H[1],
-            3: self.control_keys_H[2],
-            4: self.control_keys_H[3]
+            1: self.tableWidget.model.control_keys_H[0],
+            2: self.tableWidget.model.control_keys_H[1],
+            3: self.tableWidget.model.control_keys_H[2],
+            4: self.tableWidget.model.control_keys_H[3]
         }
 
-        x, y, z, w, order = self.params_to_linspace()
+        x, y, z, w, order = self.tableWidget.model.params_to_linspace()
         # эти словари нужны для выгрузки данных
         keys = {
             1: x,
@@ -249,38 +265,61 @@ class Table1Widget(QWidget):
             3: z,
             4: w,
         }
-        print(f"x={x}, y={y}, z={z}, w={w}")
-        # self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
+        #print(f"x={x}, y={y}, z={z}, w={w}")  # принт для проверки данных
+        print([keys[i] for i in order], "".join([keys_str[i] for i in order]))
+
+        #self.do_line([keys[i] for i in order], "".join([keys_str[i] for i in order]))   # вызов функции следования
         # по координатам в соответствии с  порядком
+
+    # def do_line(self, coords: List[np.array], order: str, current_position: List = None):
+    #     """
+    #     настроить работу функции, которая перемещает сканнер по данным из таблицы. Я знаю, она должна быть в эксперименте
+    #     :param coords:
+    #     :param order:
+    #     :param current_position:
+    #     :return:
+    #     """
+    #     if current_position is None:
+    #         current_position = []
+    #     if len(coords) > 1:
+    #         for coord in coords[0]:
+    #             self.do_line(coords[1:], order, [*current_position, coord])
+    #     else:
+    #         for coord in coords[0]:
+    #             temp_coord = [*current_position, coord]
+    #             temp_doc = {order[i]: temp_coord[i] for i in range(len(order))}
+    #             new_pos = self.scanner.instrument.position(**temp_doc)
+    #             self.scanner.instrument.goto(new_pos)
+    #             self.measurements()  # пока заглушка. надо сделать чтобы измеряла что-то в точке
 
     def set_splits(self, i: str):
         """
-        функция не работает
+        функция меняет split на step и наоборот в таблице
         :param i:
         :return:
         """
-        self.control_keys_V[2] = i
+        self.tableWidget.model.control_keys_V[2] = i
+        self.tableWidget.model.headerDataChanged.emit(Qt.Orientation.Vertical, 0, 1)
 
-        print(i)
-
-    def set_coords(self):
+    def set_coords(self):  #  перенести в модель
         pos = self.scanner.instrument.position()
-        self.tableWidget.model().setCoords(x=pos.x, y=pos.y, z=pos.z, w=pos.w)
-
-        if self.check_relative.isChecked():  # снимает галочку "относит. координаты". если используются текущ коорд.
-            self.check_relative.setChecked(False)
+        self.tableWidget.model.setCoords(x=pos.x, y=pos.y, z=pos.z, w=pos.w)
+        # снимает галочку "относит. координаты". если используются текущ коорд.
+        self.check_relative.setChecked(False)
 
     def set_relate_coords(self, state):
         """
         координаты становятся относительными. То есть текущая точка становится нулем. Однако реальные координаты надо
-        все-таки где сохранить
+        все-таки где-mo сохранить
         :return:
         """
+
         if state:
-            self.tableWidget.model().setCoords(x=0, y=0, z=0, w=0)
+            #  добавить сохранение данных
+            self.tableWidget.model.setCoords(x=0, y=0, z=0, w=0)
         else:
             self.set_coords()
-
+        self.tableWidget.model.set_relative(state)
 
 class Path3d(PPath):
     def __init__(
