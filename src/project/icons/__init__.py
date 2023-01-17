@@ -9,3 +9,5 @@ base_icon = QIcon(os.path.join(os.path.dirname(__file__), 'base.png'))
 arrow_circle = QIcon(os.path.join(os.path.dirname(__file__), 'arrow-circle-315-left.png'))
 arrow_circle_24 = QIcon(os.path.join(os.path.dirname(__file__), 'arrow-circle-double.png'))
 cross = QIcon(os.path.join(os.path.dirname(__file__), 'cross.png'))
+info = QIcon(os.path.join(os.path.dirname(__file__), 'information.png'))
+
