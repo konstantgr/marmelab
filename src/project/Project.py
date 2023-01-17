@@ -1,3 +1,5 @@
+import numpy as np
+
 from ..scanner import Scanner, ScannerSignals
 from ..analyzator import AnalyzerSignals, BaseAnalyzer
 from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
@@ -49,9 +51,29 @@ class PPath(PBase, metaclass=ABCMeta):
     icon: QIcon = path_icon
 
     @abstractmethod
+    def get_points_axes(self) -> Tuple[str]:
+        """
+        Возвращает оси координат в том порядке, в котором они измеряются, например ("x", "z")
+        """
+
     def get_points(self) -> list[Position]:
         """
-        Возвращает все точки в виде листа из последовательных позиций
+        Возвращает массив точек, в которых необходимо провести измерения.
+        """
+        res = []
+        points = self.get_points_ndarray()
+        for point in points:
+            position = Position(
+                **{name: value for name, value in zip(self.get_points_axes(), point)}
+            )
+            res.append(position)
+        return res
+
+    @abstractmethod
+    def get_points_ndarray(self) -> np.ndarray:
+        """
+        Возвращает массив точек, в которых необходимо провести измерения.
+        Размерность массива (n x m), где m - число координат, а n число измеряемых точек
         """
 
 
@@ -220,7 +242,7 @@ class PMeasurand(ABC):
         self.signals = PMeasurandSignals()
 
     @abstractmethod
-    def measure(self) -> Any:
+    def measure(self) -> np.ndarray:
         """
         Провести измерение величины и сохранить значения
         """
@@ -228,17 +250,17 @@ class PMeasurand(ABC):
     @abstractmethod
     def pre_measure(self) -> None:
         """
-        Настроить сканер перед измерением данной величины
+        Настроить анализатор перед измерением данной величины
         """
 
     @abstractmethod
-    def fields(self) -> Tuple[str]:
+    def get_measure_names(self) -> Tuple[str]:
         """
-        Возвращает названия колонок в data
+        Возвращает список названий измеренных величин, например [“freq”, “S11”]
         """
 
     @abstractmethod
-    def get_data(self) -> Union[None, Any]:
+    def get_data(self) -> Union[None, np.ndarray]:
         """
         Вернуть предыдущие значение. None, если измерений еще не было
         """
