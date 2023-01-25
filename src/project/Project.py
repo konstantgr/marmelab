@@ -51,7 +51,7 @@ class PPath(PBase, metaclass=ABCMeta):
     icon: QIcon = path_icon
 
     @abstractmethod
-    def get_points_axes(self) -> Tuple[str]:
+    def get_points_axes(self) -> Tuple[str, ...]:
         """
         Возвращает оси координат в том порядке, в котором они измеряются, например ("x", "z")
         """
@@ -254,9 +254,9 @@ class PMeasurand(ABC):
         """
 
     @abstractmethod
-    def get_measure_names(self) -> Tuple[str]:
+    def get_measure_names(self) -> Tuple[str, ...]:
         """
-        Возвращает список названий измеренных величин, например [“freq”, “S11”]
+        Возвращает кортеж названий измеренных величин, например (“freq”, “S11”)
         """
 
     @abstractmethod
@@ -292,7 +292,6 @@ AnalyzerType = TypeVar('AnalyzerType', bound=BaseAnalyzer)
 class PAnalyzer(ABC):
     """
     Класс анализатора, объединяющий сигналы и статусы анализатора.
-    Важное правило: к атрибуту instrument иметь доступ должны только модели, но не вьюшки!
     """
     def __init__(
             self,
@@ -346,7 +345,7 @@ class PMeasurable(PBase, metaclass=ABCMeta):
         """Проводит измерение и возвращает результат"""
 
     @abstractmethod
-    def fields(self) -> Tuple[str]:
+    def fields(self) -> Tuple[str, ...]:
         """
         Возвращает названия колонок в data
         """
