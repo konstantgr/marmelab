@@ -4,11 +4,9 @@ from ..scanner import Scanner, ScannerSignals
 from ..analyzator import AnalyzerSignals, BaseAnalyzer
 from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
-from PyQt6.QtGui import QIcon
 from dataclasses import dataclass
 from abc import abstractmethod, ABC, ABCMeta
 from typing import Union, Generic, TypeVar, Any, Tuple
-from src.icons import path_icon, object_icon, base_icon
 
 
 def _meta_resolve(cls):
@@ -27,7 +25,6 @@ class PBase:
     """
     Базовый класс всех объектов в проекте
     """
-    icon: QIcon = base_icon
 
     def __init__(
             self,
@@ -41,14 +38,12 @@ class PObject(PBase):
     """
     Класс объекта исследования
     """
-    icon: QIcon = object_icon
 
 
 class PPath(PBase, metaclass=ABCMeta):
     """
     Класс пути перемещения сканера
     """
-    icon: QIcon = path_icon
 
     @abstractmethod
     def get_points_axes(self) -> Tuple[str, ...]:
