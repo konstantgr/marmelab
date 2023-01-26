@@ -1,1 +1,1 @@
-from .Object3d import Object3d
+# from .Object3d import Object3d

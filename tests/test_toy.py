@@ -1,4 +1,4 @@
-from src.project.PAnalyzers.toy_analayzer import ToySparam
+from src.project.PAnalyzers import ToySparam
 
 
 def test_toy_sparams():
