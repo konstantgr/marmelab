@@ -417,7 +417,7 @@ class PStorageSignals(QObject):
     delete: pyqtBoundSignal = pyqtSignal(PBase)
 
 
-PBaseTypes = TypeVar('PBaseTypes', PBase, PExperiment, PMeasurable, PObject, PPath, PPlot)
+PBaseTypes = TypeVar('PBaseTypes', PBase, PExperiment, PMeasurable, PObject, PPath, PPlot1D, PPlot2D, PPlot3D)
 
 
 class PStorage(Generic[PBaseTypes]):
@@ -457,9 +457,13 @@ class PAnalyzerVisualizer(ABC):
     """
     def __init__(
             self,
-            plots: PStorage[PPlot],
+            plots_1d: PStorage[PPlot1D],
+            plots_2d: PStorage[PPlot2D],
+            plots_3d: PStorage[PPlot3D],
     ):
-        self.plots = plots
+        self.plots_1d = plots_1d
+        self.plots_2d = plots_2d
+        self.plots_3d = plots_3d
 
 
 class Project:
@@ -476,7 +480,9 @@ class Project:
             paths: PStorage[PPath],
             measurables: PStorage[PMeasurable],
             experiments: PStorage[PExperiment],
-            plots: PStorage[PPlot]
+            plots_1d: PStorage[PPlot1D],
+            plots_2d: PStorage[PPlot2D],
+            plots_3d: PStorage[PPlot3D],
     ):
         self.scanner = scanner
         self.analyzer = analyzer
@@ -487,4 +493,7 @@ class Project:
         self.paths = paths
         self.measurables = measurables
         self.experiments = experiments
-        self.plots = plots
+
+        self.plots_1d = plots_1d
+        self.plots_2d = plots_2d
+        self.plots_3d = plots_3d
