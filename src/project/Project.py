@@ -7,7 +7,7 @@ from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from dataclasses import dataclass
 from abc import abstractmethod, ABC, ABCMeta
 from typing import Union, Generic, TypeVar, Any, Tuple
-
+from ..Variable import Setting
 
 def _meta_resolve(cls):
     class _MetaResolver(type(QObject), type(cls)):
@@ -204,6 +204,13 @@ class PScanner(ABC):
     def _set_settings(self, d: dict):
         self.instrument.set_settings(**d)
 
+    @abstractmethod
+    def get_settings(self) -> list[Setting]:
+        """
+        Возвращает настройки, которые можно изменить
+        :return:
+        """
+
 
 class PScannerVisualizer(ABC):
     """
@@ -363,10 +370,42 @@ class PExperiment(PBase):
         """
 
 
-class PPlot(PBase):
+class PPlot1D(PBase):
+    """
+    """
+    @abstractmethod
+    def get_x(self) -> np.ndarray:
+        """
+        :return: возвращает х
+        """
+
+    @abstractmethod
+    def get_f(self) -> np.ndarray:
+        """
+        :return: возвращает значение функции f(х)
+        """
+
+
+class PPlot2D(PPlot1D, ABC):
     """
     Класс графиков
     """
+    @abstractmethod
+    def get_y(self) -> np.ndarray:
+        """
+        :return: возвращает у
+        """
+
+
+class PPlot3D(PPlot2D):
+    """
+    Класс графиков
+    """
+    @abstractmethod
+    def get_z(self) -> np.ndarray:
+        """
+        :return: возвращает z
+        """
 
 
 class PStorageSignals(QObject):

@@ -1,7 +1,10 @@
 from src.project.PAnalyzers import ToySparam, ToyAnalyser
-from src.project.Project import PAnalyzerSignals, PMeasurand
+from src.project.PScanners import ToyScanner
+from src.project.Project import PAnalyzerSignals, PMeasurand, PScannerSignals
 import numpy as np
 from src.analyzator.rohde_schwarz.rohde_schwarz import RohdeSchwarzAnalyzer
+from src.Variable import Setting
+from src.scanner.TRIM import TRIMScanner
 
 
 def test_toy_sparams():
@@ -18,3 +21,9 @@ def test_toy_analyser():
     assert isinstance(anal.get_measurands(), list)  # является ли первый аргумент экземпляром класса второго аргумента
     for measurand in anal.get_measurands():
         assert isinstance(measurand, PMeasurand)
+
+
+def test_toy_scanner():
+    scan = ToyScanner(instrument=TRIMScanner(ip="0.0.0.0", port=9000), signals=PScannerSignals())
+    for settings in scan.get_settings():
+        assert isinstance(settings, Setting)
