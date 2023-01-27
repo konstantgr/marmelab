@@ -9,6 +9,7 @@ from abc import abstractmethod, ABC, ABCMeta
 from typing import Union, Generic, TypeVar, Any, Tuple
 from ..Variable import Setting
 
+
 def _meta_resolve(cls):
     class _MetaResolver(type(QObject), type(cls)):
         # https://stackoverflow.com/questions/28720217/multiple-inheritance-metaclass-conflict
@@ -203,6 +204,22 @@ class PScanner(ABC):
 
     def _set_settings(self, d: dict):
         self.instrument.set_settings(**d)
+
+    @property
+    @abstractmethod
+    def dims_number(self) -> int:
+        """
+
+        :return: Возвращает размерность рабочего пространства
+        """
+
+    @property
+    @abstractmethod
+    def axes_number(self) -> int:
+        """
+
+        :return: Возвращает количество осей
+        """
 
     @abstractmethod
     def get_settings(self) -> list[Setting]:

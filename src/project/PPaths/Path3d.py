@@ -321,6 +321,7 @@ class Table1Widget(QWidget):
             self.set_coords()
         self.tableWidget.model.set_relative(state)
 
+
 class Path3d(PPath):
     def __init__(
             self,

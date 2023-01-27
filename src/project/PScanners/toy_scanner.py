@@ -21,3 +21,11 @@ class ToyScanner(PScanner):
 
     def get_settings(self) -> list[Setting]:
         return self._Settings
+
+    @property
+    def axes_number(self) -> int:
+        return 2
+
+    @property
+    def dims_number(self) -> int:
+        return 2
