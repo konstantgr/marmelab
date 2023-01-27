@@ -3,8 +3,8 @@ import numpy as np
 
 
 class ToyPath(PPath):
-    def __init__(self):
-        super(ToyPath, self).__init__()
+    def __init__(self, name: str):
+        super(ToyPath, self).__init__(name=name)
         self.x_min = 0
         self.y_min = 0
         self.x_max = 0
@@ -20,8 +20,14 @@ class ToyPath(PPath):
         return "y", "x"
 
     def get_points_ndarray(self) -> np.ndarray:
-        res = np.zeros()
-        for i, x in enumerate(np.linspace(self.x_min, self.x_max, 1000)):
-            for j, y in enumerate(np.linspace(self.y_min, self.y_max, 1000)):
-                res[i+1000*j] =
-        return np.ndarray()
+        res = []
+        xs = np.linspace(self.x_min, self.x_max, 1000)
+        ys = np.linspace(self.x_min, self.x_max, 1000)
+
+        for i in range(len(xs)):
+            for j in range(len(ys)):
+                if i % 2 == 0:
+                    res.append([xs[i], ys[j]])
+                else:
+                    res.append([xs[i], ys[-j-1]])
+        return np.ndarray(res)
