@@ -23,7 +23,7 @@ class ToySparam(PMeasurand):
     def measure(self) -> np.ndarray:
         freq = np.linspace(0, 10, 1000)
         s_param = np.sin(freq) + np.random.normal(0, 0.1, 1000)
-        res = np.zeros(1000, 2)
+        res = np.zeros((1000, 2))
         res[:, 0] = freq
         res[:, 1] = s_param
         self._data = res
