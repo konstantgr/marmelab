@@ -7,7 +7,7 @@ class ToyPath(PPath):
         super(ToyPath, self).__init__(name=name)
         self.x_min = None
         self.y_min = None
-        self.x_max = None
+        self.p = None
         self.y_max = None
         self.x_points = None
         self.y_points = None
