@@ -156,12 +156,6 @@ class PScannerSignals(QObject, ScannerSignals, metaclass=_meta_resolve(ScannerSi
     deceleration: pyqtBoundSignal = pyqtSignal([BaseAxes], [Deceleration])
     is_connected: pyqtBoundSignal = pyqtSignal(bool)
     is_moving: pyqtBoundSignal = pyqtSignal(bool)
-    set_settings: pyqtBoundSignal = pyqtSignal(dict)
-    stop: pyqtBoundSignal = pyqtSignal()
-    abort: pyqtBoundSignal = pyqtSignal()
-    connect: pyqtBoundSignal = pyqtSignal()
-    disconnect: pyqtBoundSignal = pyqtSignal()
-    home: pyqtBoundSignal = pyqtSignal()
 
 
 @dataclass
@@ -193,17 +187,6 @@ class PScanner(ABC):
             is_moving=PState(False, self.signals.is_moving),
             is_in_use=PState(False),
         )
-
-        # соединяем сигналы для управления с функциями сканера
-        self.signals.stop.connect(self.instrument.stop)
-        self.signals.abort.connect(self.instrument.abort)
-        self.signals.connect.connect(self.instrument.connect)
-        self.signals.disconnect.connect(self.instrument.disconnect)
-        self.signals.home.connect(self.instrument.home)
-        self.signals.set_settings.connect(self._set_settings)
-
-    def _set_settings(self, d: dict):
-        self.instrument.set_settings(**d)
 
     @property
     @abstractmethod
@@ -451,14 +434,17 @@ class PAnalyzerVisualizer(ABC):
         self.plots_3d = plots_3d
 
 
+PScannerTypes = TypeVar('PScannerType', bound=PScanner)
+PAnalyzerTypes = TypeVar('PAnalyzerTypes', bound=PAnalyzer)
+
 class Project:
     """
     Класс всего проекта
     """
     def __init__(
             self,
-            scanner: PScanner,
-            analyzer: PAnalyzer,
+            scanner: PScannerTypes,
+            analyzer: PAnalyzerTypes,
             scanner_visualizer: PScannerVisualizer,
             analyzer_visualizer: PAnalyzerVisualizer,
             objects: PStorage[PObject],

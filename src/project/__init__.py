@@ -8,7 +8,6 @@ from . import PAnalyzers
 from . import PObjects
 from . import PPaths
 from . import PScanners
-from . import PStorages
 from . import PVisualizers
 from .Project import PState, PScannerStates
 from .Project import PAnalyzerStates

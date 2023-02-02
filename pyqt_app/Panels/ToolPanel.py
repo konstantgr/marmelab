@@ -7,9 +7,8 @@ import logging
 from pyqt_app.app_project import paths, objects
 from PyQt6.QtWidgets import QMainWindow
 from src.project.PPaths import Path3d
-from src.project.PObjects import Object3d
-from src.project.icons import arrow_circle_24
-from src.project.icons import cross
+from src.icons import arrow_circle_24
+from src.icons import cross
 import numpy as np
 logger = logging.getLogger()
 

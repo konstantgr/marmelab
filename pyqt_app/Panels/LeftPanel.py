@@ -2,9 +2,8 @@ from PyQt6.QtWidgets import QHBoxLayout, QSizePolicy, QTreeWidget, QTreeWidgetIt
 from .BasePanel import BasePanel
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import QObject, pyqtBoundSignal, pyqtSignal
-from pyqt_app import project
-from src.project import PWidget
-
+from pyqt_app import project, builder
+from src.views.View import BaseView
 
 class TreeSignal(QObject):
     """
@@ -17,9 +16,9 @@ class TreeItem(QTreeWidgetItem):
     """
     Сущность из дерева, содержащая PWidget
     """
-    def __init__(self, *args, pwidget: PWidget, tree_num: int, **kwargs):
-        super(TreeItem, self).__init__(*args, [pwidget.name], **kwargs)
-        self.pwidget = pwidget
+    def __init__(self, *args, widget: BaseView, tree_num: int, **kwargs):
+        super(TreeItem, self).__init__(*args, [widget.widget_display_name()], **kwargs)
+        self.widget = widget
         self.tree_num = tree_num
 
 
@@ -48,7 +47,7 @@ class LeftPanel(BasePanel):
 
         project.objects.signals.changed.connect(self.draw)
         project.paths.signals.changed.connect(self.draw)
-        project.measurables.signals.changed.connect(self.draw)
+        project.measurands.signals.changed.connect(self.draw)
         project.experiments.signals.changed.connect(self.draw)
 
     def draw(self) -> None:
@@ -59,15 +58,21 @@ class LeftPanel(BasePanel):
         for item in root.takeChildren():
             root.removeChild(item)
 
-        project_tree = project.tree()
+        project_tree = builder.tree()
         i = 0
         for tab in project_tree.keys():
             tab_item = QTreeWidgetItem(self.tree, [tab])
-            for pwidget in project_tree[tab]:
-                item = TreeItem(tab_item, pwidget=pwidget, tree_num=i)
-                if pwidget.icon is not None:
-                    item.setIcon(0, pwidget.icon)
-                i += 1
+            for element in project_tree[tab]:
+                if not isinstance(element, list):
+                    item = TreeItem(tab_item, widget=element, tree_num=i)
+                    i += 1
+                else:
+                    item = QTreeWidgetItem(tab_item, ['31'])
+                    for el in element:
+                        TreeItem(item, widget=el, tree_num=i)
+                        i += 1
+                # if pwidget.icon is not None:
+                #     item.setIcon(0, pwidget.icon)
 
         self.tree.expandAll()
 

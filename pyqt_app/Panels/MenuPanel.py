@@ -1,6 +1,8 @@
 from PyQt6.QtWidgets import QMenuBar, QPushButton
 from PyQt6.QtGui import QIcon, QAction
-from src.project.icons import info
+from src.icons import info
+
+
 class MenuPanel(QMenuBar):
     def __init__(self):
         super(MenuPanel, self).__init__()

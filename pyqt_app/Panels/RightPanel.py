@@ -20,12 +20,12 @@ class RightPanel(BasePanel):
         self.vbox = QVBoxLayout(self)
         self.setLayout(self.vbox)
 
-        self.scanner_widget = scanner_visualizer.widget
-        self.graph_widget = analyzer_visualizer.widget
+        # self.scanner_widget = scanner_visualizer.widget
+        # self.graph_widget = analyzer_visualizer.widget
 
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
         graphs_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
-        graphs_splitter.insertWidget(0, self.scanner_widget)
-        graphs_splitter.insertWidget(1, self.graph_widget)
+        # graphs_splitter.insertWidget(0, self.scanner_widget)
+        # graphs_splitter.insertWidget(1, self.graph_widget)
         self.vbox.addWidget(graphs_splitter)

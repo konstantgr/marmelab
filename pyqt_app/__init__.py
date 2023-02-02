@@ -27,6 +27,6 @@ def except_hook(cls, exception, traceback):
 sys.excepthook = except_hook
 app = QApplication(sys.argv)
 
-from .app_project import project
+from .app_project import project, builder
 
 
