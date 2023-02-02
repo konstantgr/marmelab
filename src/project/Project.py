@@ -6,7 +6,7 @@ from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from dataclasses import dataclass
 from abc import abstractmethod, ABC, ABCMeta
-from typing import Union, Generic, TypeVar, Any, Tuple
+from typing import Union, Generic, TypeVar, Tuple
 from ..Variable import Setting
 
 
@@ -344,38 +344,6 @@ class PAnalyzer(ABC):
         """
 
 
-class PMeasurableSignals(PBaseSignals):
-    measured: pyqtBoundSignal = pyqtSignal()
-
-
-class PMeasurable(PBase, metaclass=ABCMeta):
-    """
-    Класс измеряемой величины
-    """
-    def __init__(
-            self,
-            name: str
-    ):
-        super(PMeasurable, self).__init__(name=name)
-        self.signals = PMeasurableSignals()
-
-    @abstractmethod
-    def measure(self) -> Any:
-        """Проводит измерение и возвращает результат"""
-
-    @abstractmethod
-    def fields(self) -> Tuple[str, ...]:
-        """
-        Возвращает названия колонок в data
-        """
-
-    @abstractmethod
-    def get_data(self) -> Union[None, Any]:
-        """
-        Вернуть предыдущие значение. None, если измерений еще не было
-        """
-
-
 class PExperiment(PBase):
     """
     Класс эксперимента
@@ -434,7 +402,7 @@ class PStorageSignals(QObject):
     delete: pyqtBoundSignal = pyqtSignal(PBase)
 
 
-PBaseTypes = TypeVar('PBaseTypes', PBase, PExperiment, PMeasurable, PObject, PPath, PPlot1D, PPlot2D, PPlot3D)
+PBaseTypes = TypeVar('PBaseTypes', PBase, PExperiment, PMeasurand, PObject, PPath, PPlot1D, PPlot2D, PPlot3D)
 
 
 class PStorage(Generic[PBaseTypes]):
@@ -495,7 +463,7 @@ class Project:
             analyzer_visualizer: PAnalyzerVisualizer,
             objects: PStorage[PObject],
             paths: PStorage[PPath],
-            measurables: PStorage[PMeasurable],
+            measurands: PStorage[PMeasurand],
             experiments: PStorage[PExperiment],
             plots_1d: PStorage[PPlot1D],
             plots_2d: PStorage[PPlot2D],
@@ -508,7 +476,7 @@ class Project:
 
         self.objects = objects
         self.paths = paths
-        self.measurables = measurables
+        self.measurands = measurands
         self.experiments = experiments
 
         self.plots_1d = plots_1d
