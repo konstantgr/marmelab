@@ -327,6 +327,29 @@ class PAnalyzer(ABC):
         """
 
 
+class PResults(PBase):
+    """
+    Класс результатов
+    """
+    @abstractmethod
+    def get_data(self) -> np.ndarray:
+        """
+        Возвращает все сохраненные данные
+        """
+
+    @abstractmethod
+    def get_data_names(self) -> Tuple[str, ...]:
+        """
+        Возвращает названия колонок данных
+        """
+
+    @abstractmethod
+    def append_data(self, data: np.ndarray):
+        """
+        Добавить новую строку в результаты
+        """
+
+
 class PExperiment(PBase):
     """
     Класс эксперимента
@@ -385,7 +408,7 @@ class PStorageSignals(QObject):
     delete: pyqtBoundSignal = pyqtSignal(PBase)
 
 
-PBaseTypes = TypeVar('PBaseTypes', PBase, PExperiment, PMeasurand, PObject, PPath, PPlot1D, PPlot2D, PPlot3D)
+PBaseTypes = TypeVar('PBaseTypes', PBase, PExperiment, PResults, PMeasurand, PObject, PPath, PPlot1D, PPlot2D, PPlot3D)
 
 
 class PStorage(Generic[PBaseTypes]):
@@ -451,6 +474,7 @@ class Project:
             paths: PStorage[PPath],
             measurands: PStorage[PMeasurand],
             experiments: PStorage[PExperiment],
+            results: PStorage[PResults],
             plots_1d: PStorage[PPlot1D],
             plots_2d: PStorage[PPlot2D],
             plots_3d: PStorage[PPlot3D],
@@ -464,6 +488,7 @@ class Project:
         self.paths = paths
         self.measurands = measurands
         self.experiments = experiments
+        self.results = results
 
         self.plots_1d = plots_1d
         self.plots_2d = plots_2d
