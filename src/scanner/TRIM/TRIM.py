@@ -17,7 +17,7 @@ logger = logging.getLogger('scanner.TRIM')
 STEPS_PER_MM_X = 8192
 STEPS_PER_MM_Y = 5120
 STEPS_PER_MM_Z = 5120
-STEPS_PER_DEG_W = 1
+STEPS_PER_DEG_W = 800
 
 AXES_SCALE = BaseAxes(
     x=STEPS_PER_MM_X,
