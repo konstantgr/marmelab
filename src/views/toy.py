@@ -10,6 +10,7 @@ class ToyView(BaseView):
         widget = QTextEdit('123')
         layout.addWidget(widget)
 
+
 class ToyScannerControl(ToyView):
     def widget_display_name(self) -> str:
         return 'Control'

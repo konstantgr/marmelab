@@ -62,7 +62,7 @@ class TRIMControl(QWidget):
         group_layout.addWidget(self.home_button)
         group_layout.addWidget(self.abort_button)
 
-        #self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        # self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
     def _home(self):
         self.scanner.home()
@@ -80,6 +80,7 @@ class TRIMControl(QWidget):
         """
         # self._thread_pool.start(Worker(self._home))
         self._home()
+
 
     def f_upd_cur_pos(self):
         logger.debug("Scanner position is:")

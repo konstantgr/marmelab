@@ -17,6 +17,7 @@ class StateDepPushButton(QPushButton):
         """Обновить возможность нажать на кнопку"""
         self.setEnabled(bool(self.state))
 
+
 class StateDepQAction(QAction):
     """
     Action, которое зависит от статуса
