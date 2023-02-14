@@ -63,7 +63,8 @@ project = Project(
     measurands=measurands,
     plots_1d=PStorage(),
     plots_2d=PStorage(),
-    plots_3d=PStorage()
+    plots_3d=PStorage(),
+    results=PStorage()
 )
 
 builder = AppBuilder(project=project)
