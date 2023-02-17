@@ -1,6 +1,6 @@
 from ..Project import PPath
 import numpy as np
-
+from src.views.Widgets.SettingsTable import QAbstractTableModel
 
 class ToyPath(PPath):
     def __init__(self, name: str):
@@ -35,3 +35,5 @@ class ToyPath(PPath):
                 else:
                     res.append([xs[i], ys[-j-1]])
         return np.array(res)
+
+
