@@ -335,7 +335,7 @@ class TRIMScanner(Scanner):
         )) is not None:
             cmds += cmds_from_axes(deceleration_par, basecmd='DC')
         if (motion_mode_par := settings_check(
-                motion_mode_x, motion_mode_y, motion_mode_z, motion_mode_w, motion_mode, (float, int)
+                motion_mode_x, motion_mode_y, motion_mode_z, motion_mode_w, motion_mode, int
         )) is not None:
             cmds += cmds_from_axes(motion_mode_par, basecmd='MM', scale=False)
         if (special_motion_mode_par := settings_check(
