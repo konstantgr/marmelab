@@ -349,18 +349,18 @@ class TRIMScanner(Scanner):
         self._send_cmds(cmds)
 
         if position_par is not None:
-            self.position_signal[type(position_par)].emit(position_par)
+            self._signals.position[type(position_par)].emit(position_par)
         if velocity_par is not None:
-            self.velocity_signal[type(velocity_par)].emit(velocity_par)
+            self._signals.velocity[type(velocity_par)].emit(velocity_par)
             # Это необходимо, так как в самом сканере некорректно реализована команда ASP -- она возвращает нули
             for axis in fields(velocity_par):
                 axis_velocity = velocity_par.__getattribute__(axis.name)
                 if axis_velocity is not None:
                     self._velocity.__setattr__(axis.name, axis_velocity)
         if acceleration_par is not None:
-            self.acceleration_signal[type(acceleration_par)].emit(acceleration_par)
+            self._signals.acceleration[type(acceleration_par)].emit(acceleration_par)
         if deceleration_par is not None:
-            self.deceleration_signal[type(deceleration_par)].emit(deceleration_par)
+            self._signals.deceleration[type(deceleration_par)].emit(deceleration_par)
         logger.debug("Settings have been applied")
 
     def _send_cmd(self, cmd: str) -> str:
@@ -539,7 +539,7 @@ class TRIMScanner(Scanner):
     def position(self) -> Position:
         res = self._send_cmd('APS')
         ans = Position(*self._parse_A_res(res))
-        self.position_signal.emit(ans)
+        self._signals.position.emit(ans)
         return ans
 
     def _encoder_position(self) -> Position:
@@ -553,19 +553,19 @@ class TRIMScanner(Scanner):
         return ans
 
     def velocity(self) -> Velocity:
-        self.velocity_signal.emit(self._velocity)
+        self._signals.velocity.emit(self._velocity)
         return self._velocity  # на данном сканере нельзя получить скорость
 
     def acceleration(self) -> Acceleration:
         res = self._send_cmd('AAC')
         ans = Acceleration(*self._parse_A_res(res))
-        self.acceleration_signal.emit(ans)
+        self._signals.acceleration.emit(ans)
         return ans
 
     def deceleration(self) -> Deceleration:
         res = self._send_cmd('ADC')
         ans = Deceleration(*self._parse_A_res(res))
-        self.deceleration_signal.emit(ans)
+        self._signals.deceleration.emit(ans)
         return ans
 
     def _motor_on(self) -> BaseAxes:
@@ -647,22 +647,6 @@ class TRIMScanner(Scanner):
 
     def home(self) -> None:
         self._motion_decorator(self._home)
-
-    @property
-    def position_signal(self):
-        return self._signals.position
-
-    @property
-    def velocity_signal(self):
-        return self._signals.velocity
-
-    @property
-    def acceleration_signal(self):
-        return self._signals.acceleration
-
-    @property
-    def deceleration_signal(self):
-        return self._signals.deceleration
 
     @property
     def is_moving(self) -> bool:
