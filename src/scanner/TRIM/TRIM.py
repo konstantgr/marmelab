@@ -172,6 +172,7 @@ def settings_check(
         z: float or None,
         w: float or None,
         axes: BaseAxes or None,
+        vtype: Union[type, tuple[type, ...]] = None
 ) -> None or BaseAxes:
     """
     Проверяет, как были переданы настройки: отдельными параметрами или при помощи BaseAxes.
@@ -180,12 +181,22 @@ def settings_check(
     """
     separated = not (x is None and y is None and z is None and w is None)
     if axes is not None:
+        if not isinstance(axes, BaseAxes):
+            raise TypeError(f"axes must be BaseAxes, not {type(axes)}")
         if not separated:
+            if vtype is not None:
+                for val in axes.__dict__.values():
+                    if not isinstance(val, vtype):
+                        raise TypeError(f"{vtype} expected, but f{type(val)} found")
             return axes
         raise RuntimeError("You have to pass either BaseAxes or separated settings, but not both")
     else:
         if not separated:
             return
+        if vtype is not None:
+            for val in axes.__dict__.values():
+                if not isinstance(val, vtype):
+                    raise TypeError(f"{vtype} expected, but f{type(val)} found")
         return BaseAxes(x=x, y=y, z=z, w=w)
 
 
@@ -308,31 +319,31 @@ class TRIMScanner(Scanner):
         """
         cmds = []
         if (position_par := settings_check(
-                position_x, position_y, position_z, position_w, position
+                position_x, position_y, position_z, position_w, position, (float, int)
         )) is not None:
             cmds += cmds_from_axes(position_par, basecmd='PS')
         if (velocity_par := settings_check(
-                velocity_x, velocity_y, velocity_z, velocity_w, velocity
+                velocity_x, velocity_y, velocity_z, velocity_w, velocity, (float, int)
         )) is not None:
             cmds += cmds_from_axes(velocity_par, basecmd='SP')
         if (acceleration_par := settings_check(
-                acceleration_x, acceleration_y, acceleration_z, acceleration_w, acceleration
+                acceleration_x, acceleration_y, acceleration_z, acceleration_w, acceleration, (float, int)
         )) is not None:
             cmds += cmds_from_axes(acceleration_par, basecmd='AC')
         if (deceleration_par := settings_check(
-                deceleration_x, deceleration_y, deceleration_z, deceleration_w, deceleration
+                deceleration_x, deceleration_y, deceleration_z, deceleration_w, deceleration, (float, int)
         )) is not None:
             cmds += cmds_from_axes(deceleration_par, basecmd='DC')
         if (motion_mode_par := settings_check(
-                motion_mode_x, motion_mode_y, motion_mode_z, motion_mode_w, motion_mode
+                motion_mode_x, motion_mode_y, motion_mode_z, motion_mode_w, motion_mode, (float, int)
         )) is not None:
             cmds += cmds_from_axes(motion_mode_par, basecmd='MM', scale=False)
         if (special_motion_mode_par := settings_check(
-                special_motion_mode_x, special_motion_mode_y, special_motion_mode_z, special_motion_mode_w, special_motion_mode
+                special_motion_mode_x, special_motion_mode_y, special_motion_mode_z, special_motion_mode_w, special_motion_mode, int
         )) is not None:
             cmds += cmds_from_axes(special_motion_mode_par, basecmd='SM', scale=False)
         if (motor_on_par := settings_check(
-                motor_on_x, motor_on_y, motor_on_z, motor_on_w, motor_on
+                motor_on_x, motor_on_y, motor_on_z, motor_on_w, motor_on, int
         )) is not None:
             cmds += cmds_from_axes(motor_on_par, basecmd='MO', scale=False)
         self._send_cmds(cmds)
@@ -406,7 +417,7 @@ class TRIMScanner(Scanner):
     @staticmethod
     def _parse_A_res(res: str, scale=True) -> Union[Iterable[int], Iterable[float]]:
         """
-        Принимает строку "1,2,10" и преобразует в кортеж целых чисел (1, 2, 10).
+        Принимает строку "1,2,10,5" и преобразует в кортеж целых чисел (1, 2, 10, 5).
         Если scale=True, переводит шаги в мм и радианы
 
         :param res: строка целых чисел, разделенных запятой
@@ -430,7 +441,7 @@ class TRIMScanner(Scanner):
         Проверка причины остановки
 
         """
-        time.sleep(0.02)
+        time.sleep(0.02)  # контроллер сканера не успевает выставлять причину остановки
         res = self._send_cmd('AEM')
         return self._parse_A_res(res, scale=False)
 
@@ -512,6 +523,8 @@ class TRIMScanner(Scanner):
         self.position()
 
     def goto(self, position: Position) -> None:
+        if not isinstance(position, BaseAxes):
+            raise TypeError('expected BaseAxes')
         self._motion_decorator(self._goto, position)
 
     def stop(self) -> None:
