@@ -12,30 +12,46 @@ from typing import Any
 from src.views.Widgets import StateDepPushButton, StateDepCheckBox
 import re
 from ...scanner import Position
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 # TODO: в классе TableModel реализовать вызов функции set_relative
+# TODO: в модели хранятся абсолютные координаты. при нажатии чекбокса данные меняются только во вьюшке. Когда пользоват.
+# TODO: вводит данные, их всегда надо переводить в абослютные координаты. реализовать в setData (в модели таблицы)
+# TODO: реализовать проверку в функции SetData на нажатый чекбокс(если галочка нажата, к конечным координатам прибавляем
+# TODO: то, что вбил пользователь, а начальные не меняем)
+# TODO: добавть во вьюшке кнопки: 1) устанавливает относительные координаты и одновременно перемещает точку начала
+# TODO: сканирования в позицию сканера, 2) просто перемещает точку сканирования в позицию сканера
+# TODO: траснпонировать заголовки
+# TODO: добавить чекбокс с выбором измеряемых осей
+
 
 
 @dataclass
-class Axis:
-    start: float = None
-    end: float = None
-    points: int = None
-    step: float = None
+class TableData:
+    start: Position = field(default_factory=Position)
+    end: Position = field(default_factory=Position)
+    points: Position = field(default_factory=Position)
+    step: Position = field(default_factory=Position)
 
 
 class TableModel(QAbstractTableModel):
-    def __init__(self):
+    def __init__(self, scanner: PScanner):
         super(TableModel, self).__init__()
         self.h_headers = ["x", "y", "z", "w"]
+        self.axes_names = ["x", "y", "z", "w"]
         self.relative = False
         self.split_type: str = "step"
-        self._data = [Axis(), Axis(), Axis(), Axis()]
+        self._data = TableData()
+        self.scanner_position = Position()
+        self.scanner = scanner
+        self.scanner.signals.position.connect(self.update_scanner_position)
+
+    def update_scanner_position(self, position: Position):
+        self.scanner_position = position
 
     @property
-    def v_header(self) -> list:
+    def v_headers(self) -> list:
         if self.split_type == "step":
             return ["Begin coordinates", "End coordinates", "Step", "Order"]
         elif self.split_type == "points":
@@ -50,6 +66,9 @@ class TableModel(QAbstractTableModel):
         :return:
         """
         self.relative = state
+        start_index = self.index(0, 0)
+        end_index = self.index(1, 3)
+        self.dataChanged.emit(start_index, end_index)
 
     def set_split_type(self, split_type: str):
         self.split_type = split_type
@@ -62,10 +81,66 @@ class TableModel(QAbstractTableModel):
             else:
                 return self.v_headers[section]
 
+    def data(self, index: QModelIndex, role: int = ...) -> Any:
+        row = index.row()
+        column = index.column()
+        axis_name = self.axes_names[column]
+        if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.EditRole:
+            if row == 0:
+                start = self._data.start
+                if self.relative:
+                    start -= self.scanner_position
+                return start.__getattribute__(axis_name)
+            elif row == 1:
+                end = self._data.end
+                if self.relative:
+                    end -= self.scanner_position
+                return end.__getattribute__(axis_name)
+            elif row == 2:
+                if self.split_type == "step":
+                    return self._data.step.__getattribute__(axis_name)
+                elif self.split_type == "points":
+                    return self._data.points.__getattribute__(axis_name)
 
-class ToyPath(PPath):
+    def match_positions(self):
+        """
+        функция, которая совмещает начало области измерения с положением сканера.
+        :param self:
+        :return:
+        """
+        self._data.end = self._data.end + self.scanner_position - self._data.start
+        self._data.start = self.scanner_position
+
+    def setData(self, index: QModelIndex, value: Any, role: int = ...) -> bool:
+        if role == Qt.ItemDataRole.EditRole:
+            row = index.row()
+            column = index.column()
+            axis_name = self.axes_names[column]
+            if row == 0:
+                self._data.start.__setattr__(axis_name, float(value))
+            elif row == 1:
+                self._data.end.__setattr__(axis_name, float(value))
+            elif row == 2:
+                if self.split_type == "step":
+                    self._data.step.__setattr__(axis_name, float(value))
+
+            self.dataChanged.emit(index, index)
+            # self.headerDataChange  использовать в другой функции
+        return True
+
+
+        #  использовать когда будет добавлена валидация, придумат способ проверки на координаты попроще
+        # elif role == Qt.ItemDataRole.BackgroundRole:
+        #     if self._data[row][column] == "":
+        #         return QColor('lightgrey')
+        #     # elif self._valid(self._data[row][column], self.variable):
+        #         # return
+        #     return QColor('red')
+
+
+class TablePathModel(PPath):
     def __init__(self, name: str):
-        super(ToyPath, self).__init__(name=name)
+        super(TablePathModel, self).__init__(name=name)
         self.x_min = None
         self.y_min = None
         self.p = None
