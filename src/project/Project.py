@@ -6,7 +6,7 @@ from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from dataclasses import dataclass
 from abc import abstractmethod, ABC, ABCMeta
-from typing import Union, Generic, TypeVar, Tuple
+from typing import Union, Generic, TypeVar, Tuple, Type
 from ..Variable import Setting
 
 
@@ -268,6 +268,9 @@ class PMeasurand(ABC):
         """
 
 
+PMeasurandType = TypeVar('PMeasurandType', bound=PMeasurand)
+
+
 class PAnalyzerSignals(QObject, AnalyzerSignals, metaclass=_meta_resolve(AnalyzerSignals)):
     """
     Сигналы анализатора
@@ -320,8 +323,9 @@ class PAnalyzer(ABC):
         """Объявить measurand, к которому подготовлен анализатор"""
         self.current_measurand = measurand
 
+    @staticmethod
     @abstractmethod
-    def get_measurands(self) -> list[PMeasurand]:
+    def get_measurands(self) -> list[Type[PMeasurand]]:
         """
         Вернуть лист величин, которые можно измерить
         """

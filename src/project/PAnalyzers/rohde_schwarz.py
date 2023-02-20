@@ -264,7 +264,7 @@ class SParams(PMeasurand):
 
     def measure(self) -> Any:
         res = self._model.measure()
-        self._plot_item.setData(res['f'], np.abs(res['S11']))
+        self._plot_item.setData(res['freq'], np.abs(res['S11']))
         return res
 
     def pre_measure(self) -> None:
