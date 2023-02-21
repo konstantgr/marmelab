@@ -13,6 +13,7 @@ from src.views.Widgets import StateDepPushButton, StateDepCheckBox
 import re
 from ...scanner import Position
 from dataclasses import dataclass, field
+import math
 
 
 # TODO: в классе TableModel реализовать вызов функции set_relative
@@ -73,6 +74,14 @@ class TableModel(QAbstractTableModel):
     def set_split_type(self, split_type: str):
         self.split_type = split_type
         self.headerDataChanged.emit(Qt.Orientation.Vertical, 0, 1)
+        start_index = self.index(2, 0)
+        end_index = self.index(2, 3)
+        self.dataChanged.emit(start_index, end_index)
+
+    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
+        flags = Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
+        flags |= Qt.ItemFlag.ItemIsEditable
+        return flags
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
@@ -99,6 +108,7 @@ class TableModel(QAbstractTableModel):
             elif row == 2:
                 if self.split_type == "step":
                     return self._data.step.__getattribute__(axis_name)
+
                 elif self.split_type == "points":
                     return self._data.points.__getattribute__(axis_name)
 
@@ -121,11 +131,15 @@ class TableModel(QAbstractTableModel):
             elif row == 1:
                 self._data.end.__setattr__(axis_name, float(value))
             elif row == 2:
+                start = self._data.start.__getattribute__(axis_name)
+                end = self._data.end.__getattribute__(axis_name)
                 if self.split_type == "step":
                     self._data.step.__setattr__(axis_name, float(value))
-
+                    self._data.points.__setattr__(axis_name, math.floor(abs(end - start) / float(value)))
+                elif self.split_type == "points":
+                    self._data.points.__setattr__(axis_name, int(value))
+                    self._data.step.__setattr__(axis_name, (abs(end - start) / int(value)))
             self.dataChanged.emit(index, index)
-            # self.headerDataChange  использовать в другой функции
         return True
 
 
@@ -139,37 +153,34 @@ class TableModel(QAbstractTableModel):
 
 
 class TablePathModel(PPath):
-    def __init__(self, name: str):
+    def __init__(self, name: str, scanner: PScanner):
         super(TablePathModel, self).__init__(name=name)
-        self.x_min = None
-        self.y_min = None
-        self.p = None
-        self.y_max = None
-        self.x_points = None
-        self.y_points = None
+        self.table_model = TableModel(scanner)
 
-    def set_lims(self, x_min, x_max, y_min, y_max, x_points, y_points):
-        self.x_min = x_min
-        self.y_min = y_min
-        self.x_max = x_max
-        self.y_max = y_max
-        self.x_points = x_points
-        self.y_points = y_points
+    def set_relative(self, state: bool):
+        self.table_model.set_relative(state)
+
+    def set_split_type(self, split_type: str):
+        self.table_model.set_split_type(split_type)
 
     def get_points_axes(self) -> tuple[str, ...]:
-        return "y", "x"
+        pass
 
     def get_points_ndarray(self) -> np.ndarray:
-        res = []
-        xs = np.linspace(self.x_min, self.x_max, self.x_points, dtype=float)
-        ys = np.linspace(self.y_min, self.y_max, self.y_points, dtype=float)
+        pass
 
-        for i in range(len(xs)):
-            for j in range(len(ys)):
-                if i % 2 == 0:
-                    res.append([xs[i], ys[j]])
-                else:
-                    res.append([xs[i], ys[-j-1]])
-        return np.array(res)
+    def mesh_maker(self, lst: List):
+        """
+        функция, которая формирует набор значений, в которых будет производиться измерения
+        она выдает либо с заданным шагом, либо с фиксированным количеством точек, возможно реализовать без списка
+        :param lst:
+        :return:
+        """
+        if self.split_type == "step":
+            arr = int(abs(lst[0] - lst[1] - 1) / lst[2])
+            mesh = np.linspace(lst[0], lst[1], arr)
+        elif self.split_type == "points":
+            mesh = np.linspace(lst[0], lst[1], int(lst[2]))
+        return mesh
 
 
