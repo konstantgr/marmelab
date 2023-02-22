@@ -19,7 +19,10 @@ def _meta_resolve(cls):
 
 class PBaseSignals(QObject):
     """Сигналы PBase"""
+    # TODO: remove changed ?
     changed: pyqtBoundSignal = pyqtSignal()
+    name_changed: pyqtBoundSignal = pyqtSignal()
+    display_changed: pyqtBoundSignal = pyqtSignal()
 
 
 class PBase:
