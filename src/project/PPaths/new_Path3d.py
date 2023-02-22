@@ -14,7 +14,7 @@ import re
 from ...scanner import Position
 from dataclasses import dataclass, field
 import math
-
+from enum import IntEnum, auto
 
 # TODO: в классе TableModel реализовать вызов функции set_relative
 # TODO: в модели хранятся абсолютные координаты. при нажатии чекбокса данные меняются только во вьюшке. Когда пользоват.
@@ -26,6 +26,11 @@ import math
 # TODO: траснпонировать заголовки
 # TODO: добавить чекбокс с выбором измеряемых осей
 
+
+class RowNumber(IntEnum):
+    start: int = 0
+    end: int = 1
+    step_split: int = 2
 
 
 @dataclass
@@ -67,15 +72,15 @@ class TableModel(QAbstractTableModel):
         :return:
         """
         self.relative = state
-        start_index = self.index(0, 0)
-        end_index = self.index(1, 3)
+        start_index = self.index(RowNumber.start, len(self.v_headers) - 1)
+        end_index = self.index(RowNumber.end, len(self.v_headers) - 1)
         self.dataChanged.emit(start_index, end_index)
 
     def set_split_type(self, split_type: str):
         self.split_type = split_type
         self.headerDataChanged.emit(Qt.Orientation.Vertical, 0, 1)
-        start_index = self.index(2, 0)
-        end_index = self.index(2, 3)
+        start_index = self.index(RowNumber.step_split, 0)
+        end_index = self.index(RowNumber.step_split, len(self.v_headers) - 1)
         self.dataChanged.emit(start_index, end_index)
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
@@ -95,17 +100,17 @@ class TableModel(QAbstractTableModel):
         column = index.column()
         axis_name = self.axes_names[column]
         if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.EditRole:
-            if row == 0:
+            if row == RowNumber.start:
                 start = self._data.start
                 if self.relative:
                     start -= self.scanner_position
                 return start.__getattribute__(axis_name)
-            elif row == 1:
+            elif row == RowNumber.end:
                 end = self._data.end
                 if self.relative:
                     end -= self.scanner_position
                 return end.__getattribute__(axis_name)
-            elif row == 2:
+            elif row == RowNumber.step_split:
                 if self.split_type == "step":
                     return self._data.step.__getattribute__(axis_name)
 
@@ -126,11 +131,11 @@ class TableModel(QAbstractTableModel):
             row = index.row()
             column = index.column()
             axis_name = self.axes_names[column]
-            if row == 0:
+            if row == RowNumber.start:
                 self._data.start.__setattr__(axis_name, float(value))
-            elif row == 1:
+            elif row == RowNumber.end:
                 self._data.end.__setattr__(axis_name, float(value))
-            elif row == 2:
+            elif row == RowNumber.step_split:
                 start = self._data.start.__getattribute__(axis_name)
                 end = self._data.end.__getattribute__(axis_name)
                 if self.split_type == "step":
