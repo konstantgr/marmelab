@@ -1,11 +1,12 @@
 import numpy as np
+import pandas as pd
+import sqlalchemy as db
 
 from typing import Tuple
 from pathlib import Path
-from ..Project import PResults
-import sqlalchemy as db
 from sqlalchemy.orm import Session
 
+from ..Project import PResults
 from db_structures import create_db, ResultsDb
 
 
@@ -32,11 +33,15 @@ class SQLResults(PResults):
         self.connection.close()
         self.connection = None
 
-    def get_data(self) -> np.ndarray:
+    def get_data(self, pandas=True) -> np.ndarray:
         """
         Возвращает все сохраненные данные
         """
-        return self.results
+        if pandas:
+            sql = "SELECT * FROM Results "
+            return pd.read_sql(sql, con=self.engine).to_numpy()
+        else:
+            return ResultsDb.query.all()
 
     def get_data_names(self) -> Tuple[str, ...]:
         """
