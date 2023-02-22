@@ -17,7 +17,7 @@ class TreeItem(QTreeWidgetItem):
     Сущность из дерева, содержащая PWidget
     """
     def __init__(self, *args, widget: BaseView, tree_num: int, **kwargs):
-        super(TreeItem, self).__init__(*args, [widget.widget_display_name()], **kwargs)
+        super(TreeItem, self).__init__(*args, [widget.display_name()], **kwargs)
         self.widget = widget
         self.tree_num = tree_num
 

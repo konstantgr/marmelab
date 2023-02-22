@@ -12,11 +12,11 @@ class ToyView(BaseView):
 
 
 class ToyScannerControl(ToyView):
-    def widget_display_name(self) -> str:
+    def display_name(self) -> str:
         return 'Control'
 
 
 class ToyScannerSettings(ToyView):
-    def widget_display_name(self) -> str:
+    def display_name(self) -> str:
         return 'Settings'
 

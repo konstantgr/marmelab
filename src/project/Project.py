@@ -457,8 +457,9 @@ class PAnalyzerVisualizer(ABC):
         self.plots_3d = plots_3d
 
 
-PScannerTypes = TypeVar('PScannerType', bound=PScanner)
+PScannerTypes = TypeVar('PScannerTypes', bound=PScanner)
 PAnalyzerTypes = TypeVar('PAnalyzerTypes', bound=PAnalyzer)
+
 
 class Project:
     """

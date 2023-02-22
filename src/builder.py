@@ -12,7 +12,7 @@ from .project.PExperiments import ToyExperiment
 
 from .views.toy import ToyView, ToyScannerControl, ToyScannerSettings
 from .views.View import BaseView
-
+from dataclasses import dataclass
 from PyQt6.QtWidgets import QWidget
 from typing import Union, Type
 
@@ -24,6 +24,11 @@ BINDS = {
     # ScannerVisualizer: ToyView,
     # PAnalyzerVisualizerRS: ToyView
 }
+
+@dataclass
+class GroupView:
+    view: BaseView
+
 
 
 class AppBuilder:
