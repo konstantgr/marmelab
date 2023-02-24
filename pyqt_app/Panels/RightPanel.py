@@ -11,8 +11,8 @@ class RightPanel(BasePanel):
     """
     def __init__(
             self,
-            scanner_visualizer: PScannerVisualizer,
-            analyzer_visualizer: PAnalyzerVisualizer,
+            # scanner_visualizer: PScannerVisualizer,
+            # analyzer_visualizer: PAnalyzerVisualizer,
             **kwargs
     ):
         super(RightPanel, self).__init__(**kwargs)

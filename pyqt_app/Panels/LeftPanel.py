@@ -5,6 +5,7 @@ from PyQt6.QtCore import QObject, pyqtBoundSignal, pyqtSignal
 from pyqt_app import project, builder
 from src.views.View import BaseView
 
+
 class TreeSignal(QObject):
     """
     Сигналы дерева проекта
@@ -16,8 +17,8 @@ class TreeItem(QTreeWidgetItem):
     """
     Сущность из дерева, содержащая PWidget
     """
-    def __init__(self, *args, widget: BaseView, tree_num: int, **kwargs):
-        super(TreeItem, self).__init__(*args, [widget.display_name()], **kwargs)
+    def __init__(self, *args, widget: BaseView, name: str, tree_num: int, **kwargs):
+        super(TreeItem, self).__init__(*args, [name], **kwargs)
         self.widget = widget
         self.tree_num = tree_num
 
@@ -58,18 +59,21 @@ class LeftPanel(BasePanel):
         for item in root.takeChildren():
             root.removeChild(item)
 
-        project_tree = builder.tree()
+        project_tree = builder.view_tree()
+        print(project_tree)
         i = 0
         for tab in project_tree.keys():
             tab_item = QTreeWidgetItem(self.tree, [tab])
             for element in project_tree[tab]:
-                if not isinstance(element, list):
-                    item = TreeItem(tab_item, widget=element, tree_num=i)
+                name = element[0]
+                view = element[1]
+                if isinstance(view, BaseView):
+                    item = TreeItem(tab_item, widget=view, name=name, tree_num=i)
                     i += 1
-                else:
-                    item = QTreeWidgetItem(tab_item, ['31'])
-                    for el in element:
-                        TreeItem(item, widget=el, tree_num=i)
+                elif isinstance(view, tuple):
+                    item = QTreeWidgetItem(tab_item, name)
+                    for el_name, el in view:
+                        TreeItem(item, widget=el, name=el_name, tree_num=i)
                         i += 1
                 # if pwidget.icon is not None:
                 #     item.setIcon(0, pwidget.icon)

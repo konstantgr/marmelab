@@ -6,7 +6,7 @@ from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from dataclasses import dataclass
 from abc import abstractmethod, ABC, ABCMeta
-from typing import Union, Generic, TypeVar, Tuple
+from typing import Union, Generic, TypeVar, Tuple, Type
 from ..Variable import Setting
 
 
@@ -17,15 +17,20 @@ def _meta_resolve(cls):
     return _MetaResolver
 
 
+ProjectType = TypeVar('ProjectType', bound='Project')
+
+
 class PBaseSignals(QObject):
     """Сигналы PBase"""
     changed: pyqtBoundSignal = pyqtSignal()
 
 
-class PBase:
+class PBase(metaclass=ABCMeta):
     """
     Базовый класс всех объектов в проекте
     """
+    base_name = 'base'
+    type_name = 'No name'
 
     def __init__(
             self,
@@ -34,17 +39,26 @@ class PBase:
         self.name = name
         self.signals = PBaseSignals()
 
+    @classmethod
+    @abstractmethod
+    def reproduce(cls, name: str, project: ProjectType) -> 'PBaseTypes':
+        """Создает экземпляр класса"""
 
-class PObject(PBase):
+
+class PObject(PBase, metaclass=ABCMeta):
     """
     Класс объекта исследования
     """
+    base_name = 'obj'
+    type_name = 'Object'
 
 
 class PPath(PBase, metaclass=ABCMeta):
     """
     Класс пути перемещения сканера
     """
+    base_name = 'path'
+    type_name = 'Path'
 
     @abstractmethod
     def get_points_axes(self) -> Tuple[str, ...]:
@@ -175,6 +189,9 @@ class PScanner(ABC):
     """
     Класс сканера, объединяющего сам сканер, его состояния и сигналы
     """
+    base_name = 'sc'
+    type_name = 'Scanner'
+
     def __init__(
             self,
             instrument: ScannerType,
@@ -224,6 +241,7 @@ class PScannerVisualizer(ABC):
 
 
 class PMeasurandSignals(QObject):
+    """Сигналы межеранда"""
     changed: pyqtBoundSignal = pyqtSignal()
     measured: pyqtBoundSignal = pyqtSignal()
 
@@ -232,6 +250,9 @@ class PMeasurand(ABC):
     """
     Физическая величина, которая может быть измерена анализатором
     """
+    base_name = 'meas'
+    type_name = 'Measurand'
+
     def __init__(
             self,
             name: str,
@@ -295,6 +316,9 @@ class PAnalyzer(ABC):
     """
     Класс анализатора, объединяющий сигналы и статусы анализатора.
     """
+    base_name = 'an'
+    type_name = 'Analyzer'
+
     def __init__(
             self,
             signals: PAnalyzerSignals,
@@ -331,6 +355,9 @@ class PResults(PBase):
     """
     Класс результатов
     """
+    base_name = 'res'
+    type_name = 'Results'
+
     @abstractmethod
     def get_data(self) -> np.ndarray:
         """
@@ -354,6 +381,9 @@ class PExperiment(PBase):
     """
     Класс эксперимента
     """
+    base_name = 'exp'
+    type_name = 'Experiments'
+
     @abstractmethod
     def run(self):
         """
@@ -362,8 +392,10 @@ class PExperiment(PBase):
 
 
 class PPlot1D(PBase):
-    """
-    """
+    """Класс графиков f(x)"""
+    base_name = 'plt'
+    type_name = 'Plot f(x)'
+
     @abstractmethod
     def get_x(self) -> np.ndarray:
         """
@@ -379,8 +411,10 @@ class PPlot1D(PBase):
 
 class PPlot2D(PPlot1D, ABC):
     """
-    Класс графиков
+    Класс графиков f(x, y)
     """
+    type_name = 'Plot f(x, y)'
+
     @abstractmethod
     def get_y(self) -> np.ndarray:
         """
@@ -390,8 +424,10 @@ class PPlot2D(PPlot1D, ABC):
 
 class PPlot3D(PPlot2D):
     """
-    Класс графиков
+    Класс графиков f(x, y, z)
     """
+    type_name = 'Plot f(x, y, z)'
+
     @abstractmethod
     def get_z(self) -> np.ndarray:
         """
@@ -404,11 +440,10 @@ class PStorageSignals(QObject):
     Сигналы хранилища
     """
     changed: pyqtBoundSignal = pyqtSignal()  # эмит при .add() и .delete()
-    add: pyqtBoundSignal = pyqtSignal(PBase)
-    delete: pyqtBoundSignal = pyqtSignal(PBase)
 
 
 PBaseTypes = TypeVar('PBaseTypes', PBase, PExperiment, PResults, PMeasurand, PObject, PPath, PPlot1D, PPlot2D, PPlot3D)
+PPlotTypes = TypeVar('PPlotTypes', PPlot1D, PPlot2D, PPlot3D)
 
 
 class PStorage(Generic[PBaseTypes]):
@@ -421,8 +456,6 @@ class PStorage(Generic[PBaseTypes]):
     ):
         self.signals = PStorageSignals()
         self.data: list[PBaseTypes] = []
-        self.signals.add.connect(self.append)
-        self.signals.delete.connect(self.delete)
         self.last_index = last_index  # каждый append увеличивает last_index на 1
 
     def append(self, x: PBaseTypes):
@@ -437,6 +470,7 @@ class PStorage(Generic[PBaseTypes]):
         """
         Удалить элемент из хранилища
         """
+        # TODO: добавить автоматический поиск всех сигналов в классе.
         x.signals.changed.disconnect()
         self.data.remove(x)
         self.signals.changed.emit()
@@ -448,13 +482,9 @@ class PAnalyzerVisualizer(ABC):
     """
     def __init__(
             self,
-            plots_1d: PStorage[PPlot1D],
-            plots_2d: PStorage[PPlot2D],
-            plots_3d: PStorage[PPlot3D],
+            plots: PStorage[PPlotTypes],
     ):
-        self.plots_1d = plots_1d
-        self.plots_2d = plots_2d
-        self.plots_3d = plots_3d
+        self.plots = plots
 
 
 PScannerTypes = TypeVar('PScannerTypes', bound=PScanner)
@@ -469,21 +499,15 @@ class Project:
             self,
             scanner: PScannerTypes,
             analyzer: PAnalyzerTypes,
-            scanner_visualizer: PScannerVisualizer,
-            analyzer_visualizer: PAnalyzerVisualizer,
             objects: PStorage[PObject],
             paths: PStorage[PPath],
             measurands: PStorage[PMeasurand],
             experiments: PStorage[PExperiment],
             results: PStorage[PResults],
-            plots_1d: PStorage[PPlot1D],
-            plots_2d: PStorage[PPlot2D],
-            plots_3d: PStorage[PPlot3D],
+            plots: PStorage[PPlotTypes],
     ):
         self.scanner = scanner
         self.analyzer = analyzer
-        self.scanner_visualizer = scanner_visualizer
-        self.analyzer_visualizer = analyzer_visualizer
 
         self.objects = objects
         self.paths = paths
@@ -491,6 +515,27 @@ class Project:
         self.experiments = experiments
         self.results = results
 
-        self.plots_1d = plots_1d
-        self.plots_2d = plots_2d
-        self.plots_3d = plots_3d
+        self.plots = plots
+
+    def get_storage_by_class(self, cls: Type):
+        """Return storage for class"""
+        if issubclass(cls, PObject):
+            return self.objects
+        elif issubclass(cls, PPath):
+            return self.paths
+        elif issubclass(cls, PMeasurand):
+            return self.measurands
+        elif issubclass(cls, PExperiment):
+            return self.experiments
+        elif issubclass(cls, PResults):
+            return self.results
+        elif issubclass(cls, (PPlot1D, PPlot2D, PPlot3D)):
+            return self.plots
+        else:
+            raise TypeError(f"Can't find storage for {cls} class")
+
+    def get_storages(self) -> Tuple[PStorage, ...]:
+        return self.objects, self.paths, self.measurands,\
+               self.experiments, self.results, self.plots
+
+

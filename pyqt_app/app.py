@@ -1,5 +1,5 @@
 from MainWindow import MainWindow
-from pyqt_app import app
+from pyqt_app import app, builder
 
 
 STYLE_SHEET = """

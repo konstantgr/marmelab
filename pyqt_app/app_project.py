@@ -2,11 +2,11 @@ from src.scanner.TRIM import TRIMScanner
 from src.project import Project, PScannerSignals, PAnalyzerSignals, PStorage
 from src.analyzator.rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulator
 from src.project.PScanners import ToyScanner
-from src.project.PAnalyzers import ToyAnalyser, ToySparam
+from src.project.PAnalyzers import ToyAnalyser
 from src.project.PExperiments import ToyExperiment
 from src.project.PPaths import ToyPath
 from src.scanner.TRIM import TRIM_emulator
-from src.builder import AppBuilder
+from src.Builder import AppBuilder
 
 scanner_signals = PScannerSignals()
 scanner = ToyScanner(
@@ -29,42 +29,33 @@ experiments = PStorage()
 
 paths.append(
     ToyPath(
-        name=f'Path 1',
+        name=f'path1',
     )
 )
 
 paths.append(
     ToyPath(
-        name=f'Path 2',
+        name=f'path2',
     )
 )
-
 
 experiments.append(
     ToyExperiment(
         scanner=scanner,
-        name='Experiment 1'
+        name='exp1'
     )
 )
-
-scanner_visualizer = None
-
-analyzer_visualizer = None
-
 
 project = Project(
     scanner=scanner,
     analyzer=analyzer,
-    scanner_visualizer=scanner_visualizer,
-    analyzer_visualizer=analyzer_visualizer,
     objects=objects,
     paths=paths,
     experiments=experiments,
     measurands=measurands,
-    plots_1d=PStorage(),
-    plots_2d=PStorage(),
-    plots_3d=PStorage(),
+    plots=PStorage(),
     results=PStorage()
 )
 
 builder = AppBuilder(project=project)
+builder.restore_model_views()
