@@ -12,8 +12,3 @@ class BaseView(QWidget):
 
     def display_name(self) -> str:
         return self.model.name
-
-
-
-class BaseViewGroup:
-    views: List[BaseView]
