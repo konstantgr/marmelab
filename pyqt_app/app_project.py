@@ -6,7 +6,7 @@ from src.project.PAnalyzers import ToyAnalyser
 from src.project.PExperiments import ToyExperiment
 from src.project.PPaths import ToyPath
 from src.scanner.TRIM import TRIM_emulator
-from src.Builder import AppBuilder, FactoryGroups
+from src.builder import AppBuilder, FactoryGroups
 from src.ModelView import ModelViewFactory
 
 from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl

@@ -4,7 +4,7 @@ from .project.PPaths import ToyPath
 from .project.PExperiments import ToyExperiment
 
 from .views.toy import ToyView
-from .Builder import AppBuilder, FactoryGroups
+from .builder import AppBuilder, FactoryGroups
 
 AppBuilder.register_factory(
     ModelViewFactory(

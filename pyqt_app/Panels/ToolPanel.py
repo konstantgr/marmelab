@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QToolBar, QPushButton
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtCore import QSize
 from pyqt_app import project, builder
-from src.Builder import FactoryGroups
+from src.builder import FactoryGroups
 import logging
 from src.icons import arrow_circle_24
 from src.icons import cross
