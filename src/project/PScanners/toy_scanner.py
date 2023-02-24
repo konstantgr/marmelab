@@ -9,7 +9,7 @@ class ToyScanner(PScanner):
             instrument: TRIMScanner,
             signals: PScannerSignals
     ):
-        super(ToyScanner, self).__init__(instrument=instrument, signals=signals)
+        super(ToyScanner, self).__init__(name='Toy Scanner', instrument=instrument, signals=signals)
         self._Settings = [
             Setting(
                 name="Velocity",

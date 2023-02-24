@@ -2,11 +2,15 @@ from src.scanner.TRIM import TRIMScanner
 from src.project import Project, PScannerSignals, PAnalyzerSignals, PStorage
 from src.analyzator.rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulator
 from src.project.PScanners import ToyScanner
-from src.project.PAnalyzers import ToyAnalyser, ToySparam
+from src.project.PAnalyzers import ToyAnalyser
 from src.project.PExperiments import ToyExperiment
 from src.project.PPaths import ToyPath
 from src.scanner.TRIM import TRIM_emulator
-from src.builder import AppBuilder
+from src.Builder import AppBuilder, FactoryGroups
+from src.ModelView import ModelViewFactory
+
+from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl
+import src.binds
 
 scanner_signals = PScannerSignals()
 scanner = ToyScanner(
@@ -19,52 +23,53 @@ analyzer_signals = PAnalyzerSignals()
 analyzer = ToyAnalyser(
     # instrument=SocketAnalyzer(ip="192.168.5.168", port=9000, signals=analyzer_signals),
     instrument=RohdeSchwarzEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
-    signals=analyzer_signals
+    signals=analyzer_signals,
+    name="Toy analyzer"
 )
 
-objects = PStorage()
 paths = PStorage()
-measurands = PStorage()
 experiments = PStorage()
 
 paths.append(
     ToyPath(
-        name=f'Path 1',
+        name=f'path1',
     )
 )
 
 paths.append(
     ToyPath(
-        name=f'Path 2',
+        name=f'path2',
     )
 )
-
 
 experiments.append(
     ToyExperiment(
         scanner=scanner,
-        name='Experiment 1'
+        name='exp1'
     )
 )
-
-scanner_visualizer = None
-
-analyzer_visualizer = None
-
 
 project = Project(
     scanner=scanner,
     analyzer=analyzer,
-    scanner_visualizer=scanner_visualizer,
-    analyzer_visualizer=analyzer_visualizer,
-    objects=objects,
+    objects=PStorage(),
     paths=paths,
     experiments=experiments,
-    measurands=measurands,
-    plots_1d=PStorage(),
-    plots_2d=PStorage(),
-    plots_3d=PStorage(),
+    measurands=PStorage(),
+    plots=PStorage(),
     results=PStorage()
 )
 
+AppBuilder.register_factory(
+    factory=ModelViewFactory(view_types=(ToyScannerSettings, ToyScannerControl,), model=scanner),
+    group=FactoryGroups.scanners
+)
+
+AppBuilder.register_factory(
+    factory=ModelViewFactory(view_types=(ToyView,), model=analyzer),
+    group=FactoryGroups.analyzers
+)
+
 builder = AppBuilder(project=project)
+builder.restore_model_views()
+builder.load_instruments()

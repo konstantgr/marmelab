@@ -7,16 +7,16 @@ class ToyView(BaseView):
         super(ToyView, self).__init__(model=model, *args, **kwargs)
         layout = QHBoxLayout()
         self.setLayout(layout)
-        widget = QTextEdit('123')
+        widget = QTextEdit(f'{model.name} {self.display_name()}')
         layout.addWidget(widget)
 
 
 class ToyScannerControl(ToyView):
-    def widget_display_name(self) -> str:
+    def display_name(self) -> str:
         return 'Control'
 
 
 class ToyScannerSettings(ToyView):
-    def widget_display_name(self) -> str:
+    def display_name(self) -> str:
         return 'Settings'
 

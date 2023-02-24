@@ -1,6 +1,7 @@
-from ..Project import PPath
+from ..Project import PPath, ProjectType
 import numpy as np
 from src.views.Widgets.SettingsTable import QAbstractTableModel
+
 
 class ToyPath(PPath):
     def __init__(self, name: str):
@@ -11,6 +12,10 @@ class ToyPath(PPath):
         self.y_max = None
         self.x_points = None
         self.y_points = None
+
+    @classmethod
+    def reproduce(cls, name: str, project: ProjectType) -> 'ToyPath':
+        return cls(name=name)
 
     def set_lims(self, x_min, x_max, y_min, y_max, x_points, y_points):
         self.x_min = x_min

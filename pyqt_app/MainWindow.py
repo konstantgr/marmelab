@@ -33,8 +33,8 @@ class MainWindow(QMainWindow):
         project.analyzer.signals.is_connected.emit(False)
 
         self.right_panel = RightPanel(
-            scanner_visualizer=project.scanner_visualizer,
-            analyzer_visualizer=project.analyzer_visualizer,
+            # scanner_visualizer=project.scanner_visualizer,
+            # analyzer_visualizer=project.analyzer_visualizer,
             parent=self.main_widget
         )  # graphics
 
