@@ -1,7 +1,5 @@
 from .ModelView import ModelViewFactory
 
-from .project.PAnalyzers import ToyAnalyser
-from .project.PScanners import ToyScanner
 from .project.PPaths import ToyPath
 from .project.PExperiments import ToyExperiment
 

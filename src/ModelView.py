@@ -42,6 +42,7 @@ class ModelView:
             self.connected_list.remove(self)
         if self.storage is not None:
             self.storage.delete(self.model)
+            self.storage.signals.changed.emit()
         # TODO: проверить, что все удаляется
         del self.views
         del self.model
@@ -62,8 +63,8 @@ class ModelViewFactory:
         :param model: модель
         """
         self.view_types = view_types
-        self.model_type = model_type
-        self.model = model
+        self.model_type: Type[PBaseTypes] = model_type
+        self.model: Union[PBaseTypes, PAnalyzerTypes, PScannerTypes] = model
 
         if self.model is None and self.model_type is None:
             raise ValueError("only one of model and model_type has to be None")
@@ -79,7 +80,7 @@ class ModelViewFactory:
     def create(self, project: Project, from_model: PBaseTypes = None) -> ModelView:
         """Create ModelView instance and add its model to storage"""
         if from_model is not None:
-            storage = None
+            storage = project.get_storage_by_class(type(from_model))
             model = from_model
         elif self.model is None:
             model_type = self.model_type
@@ -98,7 +99,7 @@ class ModelViewFactory:
         )
         if self.connected_list is not None:
             self.connected_list.append(model_view)
-        if storage is not None:
+        if storage is not None and model not in storage.data:
             storage.append(model)
         return model_view
 

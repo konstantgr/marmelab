@@ -475,7 +475,7 @@ class PStorage(Generic[PBaseTypes]):
         Удалить элемент из хранилища
         """
         # TODO: добавить автоматический поиск всех сигналов в классе.
-        x.signals.changed.disconnect()
+        # x.signals.changed.disconnect(slot=None)
         self.data.remove(x)
         self.signals.changed.emit()
 
