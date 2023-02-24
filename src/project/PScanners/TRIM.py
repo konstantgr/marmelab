@@ -1,4 +1,4 @@
-from ..Project import PScanner
+from ..Project import PScanner, PScannerSignals, PScannerTypes
 from src.Variable import Setting, Unit
 from ...scanner.TRIM import TRIMScanner, DEFAULT_SETTINGS
 
@@ -7,8 +7,8 @@ logger = logging.getLogger()
 
 
 class TRIMPScanner(PScanner):
-    def __init__(self, *args, instrument: TRIMScanner, **kwargs):
-        super(TRIMPScanner, self).__init__(*args, instrument, **kwargs)
+    def __init__(self, name: str, instrument: TRIMScanner, signals: PScannerSignals):
+        super(TRIMPScanner, self).__init__(name=name, instrument=instrument, signals=signals)
         self._settings = []
         UNITS = {
             'acceleration': Unit(m=1, s=-2),
@@ -33,3 +33,15 @@ class TRIMPScanner(PScanner):
 
     def get_settings(self) -> list[Setting]:
         return self._settings
+
+    @property
+    def dims_number(self) -> int:
+        return 3
+
+    @property
+    def axes_number(self) -> int:
+        return 4
+
+
+
+

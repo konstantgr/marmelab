@@ -38,12 +38,14 @@ class CentralPanel(QScrollArea, BasePanel):
         i = 0
         for tab in project_tree.keys():
             for element_name, element in project_tree[tab]:
-                if isinstance(element, BaseView):
-                    self.stacked_widget.insertWidget(i, element)
+                if element is None:
+                    continue
+                elif isinstance(element, BaseView):
+                    self.stacked_widget.insertWidget(i, element.widget)
                     i += 1
                 elif isinstance(element, list):
                     for el_name, el in element:
-                        self.stacked_widget.insertWidget(i, el)
+                        self.stacked_widget.insertWidget(i, el.widget)
                         i += 1
 
     def display(self, tree_num: int) -> None:

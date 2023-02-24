@@ -1,7 +1,7 @@
 from src.scanner.TRIM import TRIMScanner
 from src.project import Project, PScannerSignals, PAnalyzerSignals, PStorage
 from src.analyzator.rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulator
-from src.project.PScanners import ToyScanner
+from src.project.PScanners import ToyScanner, TRIMPScanner
 from src.project.PAnalyzers import ToyAnalyser
 from src.project.PExperiments import ToyExperiment
 from src.project.PPaths import ToyPath
@@ -10,10 +10,12 @@ from src.builder import AppBuilder, FactoryGroups
 from src.ModelView import ModelViewFactory
 
 from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl
+from src.views.PScanners import TRIMControl, TRIMSettings
 import src.binds
 
 scanner_signals = PScannerSignals()
-scanner = ToyScanner(
+scanner = TRIMPScanner(
+    name="TRIM scanner",
     instrument=TRIMScanner(ip="127.0.0.1", port=9006, signals=scanner_signals),
     signals=scanner_signals,
 )
@@ -61,9 +63,17 @@ project = Project(
 )
 
 AppBuilder.register_factory(
-    factory=ModelViewFactory(view_types=(ToyScannerSettings, ToyScannerControl,), model=scanner),
-    group=FactoryGroups.scanners
+    ModelViewFactory(
+        view_types=(TRIMControl, TRIMSettings,),
+        model=scanner,
+    ),
+    group=FactoryGroups.scanners,
 )
+
+# AppBuilder.register_factory(
+#     factory=ModelViewFactory(view_types=(ToyScannerSettings, ToyScannerControl,), model=scanner),
+#     group=FactoryGroups.scanners
+# )
 
 AppBuilder.register_factory(
     factory=ModelViewFactory(view_types=(ToyView,), model=analyzer),

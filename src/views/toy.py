@@ -1,14 +1,11 @@
 from PyQt6.QtWidgets import QLabel, QTextEdit, QHBoxLayout
-from .View import BaseView
+from .View import BaseView, QWidgetType
 
 
 class ToyView(BaseView):
-    def __init__(self, model, *args, **kwargs):
-        super(ToyView, self).__init__(model=model, *args, **kwargs)
-        layout = QHBoxLayout()
-        self.setLayout(layout)
-        widget = QTextEdit(f'{model.name} {self.display_name()}')
-        layout.addWidget(widget)
+    def construct_widget(self) -> QWidgetType:
+        widget = QTextEdit(f'{self.model.name} {self.display_name()}')
+        return widget
 
 
 class ToyScannerControl(ToyView):

@@ -3,7 +3,7 @@ from PyQt6.QtCore import Qt, QAbstractTableModel
 from PyQt6 import QtCore
 from PyQt6.QtGui import QColor
 from src.Variable import Setting, Variable
-from typing import Union, Any
+from typing import Union, Any, Callable
 import re
 from PyQt6.QtCore import QObject
 from dataclasses import dataclass
@@ -175,10 +175,12 @@ class SettingsTableWidget(QWidget):
             apply_state: PState = None,
             apply_button: bool = True,
             default_settings_button: bool = True,
+            apply: Callable = None,
             **kwargs
     ):
         super(SettingsTableWidget, self).__init__(**kwargs)
         self.default_settings = settings
+        self.apply = apply if apply is not None else self.apply_func
 
         group = QGroupBox(self)
         group.setLayout(QVBoxLayout())
@@ -229,7 +231,7 @@ class SettingsTableWidget(QWidget):
             apply_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
             buttons_widget.layout().addWidget(apply_button)
 
-    def apply(self):
+    def apply_func(self):
         """
         Применить настройки из таблицы
         """

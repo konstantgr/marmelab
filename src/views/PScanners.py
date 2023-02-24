@@ -1,60 +1,59 @@
 from PyQt6.QtWidgets import QSplitter
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QGroupBox
+from PyQt6.QtWidgets import QWidget, QSizePolicy, QGroupBox, QVBoxLayout
 from .Widgets import SettingsTableWidget, StateDepPushButton
-from ..project import PScannerSignals, PScannerStates
 from ..Variable import Setting
-from ..scanner.TRIM import TRIMScanner
+from ..project.PScanners import TRIMPScanner
 from ..scanner.scanner import Position
 from PyQt6.QtCore import Qt, QThreadPool
+from .View import BaseView, QWidgetType
+
 
 import logging
 logger = logging.getLogger()
 
 
-class TRIMControl(QWidget):
-    def __init__(self,
-                 states: PScannerStates,
-                 scanner: TRIMScanner
-                 ):
-        super().__init__()
-        self.scanner = scanner
-        vbox = QVBoxLayout(self)
-        vbox.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.setLayout(vbox)
-
-        self._thread_pool = QThreadPool()
-
-        group = QGroupBox(self)
-        group_layout = QVBoxLayout(group)
-        group_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        vbox.addWidget(group)
+class TRIMControl(BaseView):
+    def __init__(self, *args, **kwargs):
+        super(TRIMControl, self).__init__(*args, **kwargs)
+        self.scanner = self.model
+        states = self.model.states
 
         self.connect_button = StateDepPushButton(
             state=~states.is_connected & ~states.is_in_use,
             text="Connect",
-            parent=self
         )
+
         m_state = states.is_connected & ~states.is_moving & ~states.is_in_use
         self.disconnect_button = StateDepPushButton(
             state=m_state,
             text="Disconnect",
-            parent=self
         )
         self.home_button = StateDepPushButton(
             state=m_state,
             text="Home",
-            parent=self
         )
         self.abort_button = StateDepPushButton(
             state=states.is_connected,
             text="Abort",
-            parent=self
         )
 
-        self.connect_button.clicked.connect(scanner.connect)
-        self.disconnect_button.clicked.connect(scanner.disconnect)
+    def construct_widget(self) -> QWidgetType:
+        widget = QWidget()
+        vbox = QVBoxLayout(widget)
+        vbox.setAlignment(Qt.AlignmentFlag.AlignTop)
+        widget.setLayout(vbox)
+
+        widget._thread_pool = QThreadPool()
+
+        group = QGroupBox(widget)
+        group_layout = QVBoxLayout(group)
+        group_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        vbox.addWidget(group)
+
+        self.connect_button.clicked.connect(self.scanner.instrument.connect)
+        self.disconnect_button.clicked.connect(self.scanner.instrument.disconnect)
         self.home_button.clicked.connect(self.f_home)
-        self.abort_button.clicked.connect(scanner.abort)
+        self.abort_button.clicked.connect(self.scanner.instrument.abort)
 
         self.abort_button.setProperty('color', 'red')
         group_layout.addWidget(self.connect_button)
@@ -62,13 +61,13 @@ class TRIMControl(QWidget):
         group_layout.addWidget(self.home_button)
         group_layout.addWidget(self.abort_button)
 
-        # self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        return widget
 
     def _home(self):
-        self.scanner.home()
-        self.scanner.set_settings(position=Position(2262.92, 2137.09, 0, 0))
+        self.scanner.instrument.home()
+        self.scanner.instrument.set_settings(position=Position(2262.92, 2137.09, 0, 0))
         logger.debug("Scanner at home. Scanner position is:")
-        current_position = self.scanner.position()
+        current_position = self.scanner.instrument.position()
         logger.debug(f'x: {current_position.x}')
         logger.debug(f'y: {current_position.y}')
         logger.debug(f'z: {current_position.z}')
@@ -81,39 +80,39 @@ class TRIMControl(QWidget):
         # self._thread_pool.start(Worker(self._home))
         self._home()
 
-
-    def f_upd_cur_pos(self):
-        logger.debug("Scanner position is:")
-        current_position = self.scanner.position()
-        logger.debug('x: ', current_position.x)
-        logger.debug('y: ', current_position.y)
-        logger.debug('z: ', current_position.z)
+    def display_name(self) -> str:
+        return "Control"
 
 
-class TRIMSettings(QSplitter):
-    def __init__(
-            self,
-            signals: PScannerSignals,
-            states: PScannerStates,
-            settings: list[Setting],
-            parent: QWidget = None
-    ):
-        super(TRIMSettings, self).__init__(
-            parent=parent,
-            orientation=Qt.Orientation.Vertical,
-        )
-        self.signals = signals
+class TRIMSettings(BaseView):
+    def __init__(self, *args, **kwargs):
+        super(TRIMSettings, self).__init__(*args, **kwargs)
+        self.signals = self.model.signals
+        self.states = self.model.states
 
         self.settings_table = SettingsTableWidget(
-            settings=settings,
-            parent=self,
-            apply_state=states.is_connected & ~states.is_moving & ~states.is_in_use
+            settings=self.model.get_settings(),
+            apply_state=self.states.is_connected & ~self.states.is_moving & ~self.states.is_in_use,
+            apply=self.apply
         )
-        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        self.addWidget(self.settings_table)
-        self.addWidget(QWidget())
-        self.setChildrenCollapsible(False)
-        self.setProperty('type', 'inner')
+
+    def construct_widget(self) -> QWidgetType:
+        widget = QWidget()
+        widget.setLayout(QVBoxLayout())
+        splitter = QSplitter(orientation=Qt.Orientation.Vertical)
+        widget.layout().addWidget(splitter)
+
+        splitter.addWidget(self.settings_table)
+        splitter.addWidget(QWidget())
+        splitter.setChildrenCollapsible(False)
+        splitter.setProperty('type', 'inner')
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 1)
+        return widget
 
     def apply(self):
-        self.signals.set_settings.emit(self.settings_table.table.to_dict())
+        self.model.instrument.set_settings(**self.settings_table.table.to_dict())
+        logger.info("Settings were applied")
+
+    def display_name(self) -> str:
+        return "Settings"

@@ -46,7 +46,7 @@ class ModelView:
         if self.storage is not None:
             self.storage.delete(self.model)
         for view in self.views:
-            view.deleteLater()
+            view.widget.deleteLater()
         # TODO: проверить, что все удаляется
         del self.views
         del self.model
@@ -97,9 +97,15 @@ class ModelViewFactory:
             storage = None
             model = self.model
 
+        views = []
+        for view_cl in self.view_types:
+            view = view_cl(model)
+            view.construct()
+            views.append(view)
+
         model_view = ModelView(
             model=model,
-            views=tuple(view_cl(model) for view_cl in self.view_types),
+            views=tuple(views),
             storage=storage,
             connected_list=self.connected_list,
             icon=self.icon

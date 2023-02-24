@@ -186,7 +186,7 @@ def settings_check(
         if not separated:
             if vtype is not None:
                 for val in axes.__dict__.values():
-                    if not isinstance(val, vtype):
+                    if not (isinstance(val, vtype) or val is None):
                         raise TypeError(f"{vtype} expected, but f{type(val)} found")
             return axes
         raise RuntimeError("You have to pass either BaseAxes or separated settings, but not both")
@@ -194,8 +194,8 @@ def settings_check(
         if not separated:
             return
         if vtype is not None:
-            for val in axes.__dict__.values():
-                if not isinstance(val, vtype):
+            for val in (x, y, z, w):
+                if not (isinstance(val, vtype) or val is None):
                     raise TypeError(f"{vtype} expected, but f{type(val)} found")
         return BaseAxes(x=x, y=y, z=z, w=w)
 
