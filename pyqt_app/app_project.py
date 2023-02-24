@@ -8,7 +8,7 @@ from src.project.PPaths import ToyPath
 from src.scanner.TRIM import TRIM_emulator
 from src.builder import AppBuilder, FactoryGroups
 from src.ModelView import ModelViewFactory
-
+from src import icons
 from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl
 from src.views.PScanners import TRIMControl, TRIMSettings
 import src.binds
@@ -66,6 +66,7 @@ AppBuilder.register_factory(
     ModelViewFactory(
         view_types=(TRIMControl, TRIMSettings,),
         model=scanner,
+        icon=icons.scanner_icon
     ),
     group=FactoryGroups.scanners,
 )
@@ -76,8 +77,12 @@ AppBuilder.register_factory(
 # )
 
 AppBuilder.register_factory(
-    factory=ModelViewFactory(view_types=(ToyView,), model=analyzer),
-    group=FactoryGroups.analyzers
+    factory=ModelViewFactory(
+        view_types=(),
+        model=analyzer,
+        icon=icons.analyzer_icon
+    ),
+    group=FactoryGroups.analyzers,
 )
 
 builder = AppBuilder(project=project)

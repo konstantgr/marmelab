@@ -3,6 +3,7 @@ from .BasePanel import BasePanel
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import QObject, pyqtBoundSignal, pyqtSignal, Qt, QPoint
 from pyqt_app import project, builder
+from src.project.Project import PScanner, PAnalyzer
 from src.views.View import BaseView
 from src.ModelView import ModelView
 from typing import Union
@@ -92,7 +93,10 @@ class LeftPanel(BasePanel):
             group_item = TreeGroupItem(self.tree, name=group.value)
             for element in project_tree[group]:
                 views = element.views
-                if len(views) == 1:
+                if len(views) == 0:
+                    item = TreeModelItem(group_item, model_view=element, name=element.model.name, tree_num=-1)
+                    item.setIcon(0, element.icon)
+                elif len(views) == 1:
                     item = TreeModelViewItem(group_item, model_view=element, name=views[0].display_name(), tree_num=i)
                     item.setIcon(0, element.icon)
                     i += 1
@@ -115,6 +119,8 @@ class LeftPanel(BasePanel):
     def context_menu(self, pos: QPoint):
         item = self.tree.itemAt(pos)
         if isinstance(item, TreeModelViewItem) and not isinstance(item, TreeViewItem):
+            if isinstance(item.model_view.model, (PScanner, PAnalyzer)) and isinstance(item, TreeModelItem):
+                return
             menu = QMenu()
             delete_action = QAction("Delete")
             delete_action.triggered.connect(item.model_view.delete)

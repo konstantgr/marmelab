@@ -101,6 +101,7 @@ class TRIMSettings(BaseView):
         widget.setLayout(QVBoxLayout())
         splitter = QSplitter(orientation=Qt.Orientation.Vertical)
         widget.layout().addWidget(splitter)
+        widget.layout().setContentsMargins(0, 0, 0, 0)
 
         splitter.addWidget(self.settings_table)
         splitter.addWidget(QWidget())
