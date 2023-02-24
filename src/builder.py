@@ -15,6 +15,7 @@ def _check_cls(
 
 
 class FactoryGroups(Enum):
+    """Группы моделей"""
     scanners = "Scanners"
     analyzers = "Analyzers"
     objects = "Objects"
@@ -27,6 +28,7 @@ class FactoryGroups(Enum):
 
 
 class AppBuilder:
+    """Контроллер """
     factories: Dict[FactoryGroups, List[ModelViewFactory]] = {group: [] for group in FactoryGroups}
     group_by_factory: Dict[ModelViewFactory, FactoryGroups] = {}
     factory_by_type: Dict[type, ModelViewFactory] = {}

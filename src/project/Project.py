@@ -521,7 +521,7 @@ class Project:
 
         self.plots = plots
 
-    def get_storage_by_class(self, cls: Type) -> Union[PStorage, None]:
+    def get_storage_by_class(self, cls: Type) -> PStorage:
         """Return storage for class"""
         if issubclass(cls, PObject):
             return self.objects
@@ -535,10 +535,6 @@ class Project:
             return self.results
         elif issubclass(cls, (PPlot1D, PPlot2D, PPlot3D)):
             return self.plots
-        elif issubclass(cls, PScanner):
-            return
-        elif issubclass(cls, PAnalyzer):
-            return
         else:
             raise TypeError(f"Can't find storage for {cls} class")
 

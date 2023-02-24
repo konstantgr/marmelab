@@ -64,17 +64,19 @@ class ModelViewFactory:
         self.view_types = view_types
         self.model_type: Type[PBaseTypes] = model_type
         self.model = model
+
         if self.model is None and self.model_type is None:
             raise ValueError("only one of model and model_type has to be None")
         if self.model is not None and self.model_type is not None:
             raise ValueError("model or model_type has to be None")
+
         self.type = self.model_type if self.model is None else type(self.model)
         self.connected_list = None
 
     def create(self, project: Project, from_model: PBaseTypes = None) -> ModelView:
         """Create ModelView instance and add its model to storage"""
         if from_model is not None:
-            storage = project.get_storage_by_class(type(from_model))
+            storage = None
             model = from_model
         elif self.model is None:
             model_type = self.model_type
@@ -83,64 +85,18 @@ class ModelViewFactory:
             model = self.model_type.reproduce(name=model_name, project=project)
             storage.append(model)
         else:
-            storage = project.get_storage_by_class(type(self.model))
+            storage = None
             model = self.model
-            if storage is not None:
-                storage.append(model)
         model_view = ModelView(
             model=model,
             views=tuple(view_cl(model) for view_cl in self.view_types),
             storage=storage,
             connected_list=self.connected_list
         )
-        self.connected_list.append(model_view)
+        if self.connected_list is not None:
+            self.connected_list.append(model_view)
         return model_view
 
     def connect_to_list(self, list_: List[ModelView]):
+        """Connects factory to the list. Factory will add a new ModelViews to it"""
         self.connected_list = list_
-
-# GroupOfModelViewFactoryTypes = Tuple[str, List[ModelViewFactory]]
-#
-#
-# class GroupOfModelViewFactory:
-#     """Группа фабрик моделей и вьюшек"""
-#     def __init__(
-#             self,
-#             name: str,
-#             inner_groups: Tuple['GroupOfModelViewFactory'] = None,
-#     ):
-#         self.name = name
-#         self.inner_groups = list(inner_groups)
-#         self.model_view_factories = []
-#
-#     def add_group(self, group: 'GroupOfModelViewFactory'):
-#         self.inner_groups.append(group)
-#
-#     def add_factory(self, factory: ModelViewFactory):
-#         self.model_view_factories.append(factory)
-#
-#     def factories(self) -> List[Union[GroupOfModelViewFactoryTypes, List[ModelViewFactory]]]:
-#         res = []
-#         for group in self.inner_groups:
-#             res.append(group.factories())
-#         for model_view in self.model_view_factories:
-#             res.append(model_view)
-#         return res
-
-
-# class GroupOfModelViewFactory:
-#     def __init__(
-#             self,
-#             name: str,
-#     ):
-#         self.name = name
-#         self.model_view_factories: List[ModelViewFactory] = []
-#         self.group_of_model_view_factories: List['GroupOfModelViewFactory'] = []
-#
-#     def register_factory(self, factory: Union[ModelViewFactory, 'GroupOfModelViewFactory']):
-#         if isinstance(factory, ModelViewFactory):
-#             self.model_view_factories.append(factory)
-#         elif isinstance(factory, self.__class__):
-#             self.group_of_model_view_factories.append(factory)
-#         else:
-#             raise TypeError("factory has to be ModelViewFactory or GroupOfModelViewFactory")
