@@ -1,4 +1,4 @@
-from .project.Project import Project
+from .project.Project import Project, PScanner, PAnalyzer
 from .ModelView import ModelViewFactory, ModelView_ViewTreeType, ModelView
 from typing import List, Dict, Union, Type, Tuple
 from enum import Enum
@@ -30,15 +30,12 @@ class FactoryGroups(Enum):
 class AppBuilder:
     """Контроллер """
     factories: Dict[FactoryGroups, List[ModelViewFactory]] = {group: [] for group in FactoryGroups}
-    group_by_factory: Dict[ModelViewFactory, FactoryGroups] = {}
     factory_by_type: Dict[type, ModelViewFactory] = {}
 
     @classmethod
     def register_factory(cls, factory: ModelViewFactory, group: FactoryGroups):
         """Зарегистрировать фабрику ModelView"""
-        print(factory)
         cls.factories[group].append(factory)
-        cls.group_by_factory[factory] = group
         cls.factory_by_type[factory.type] = factory
 
     def __init__(
@@ -52,6 +49,7 @@ class AppBuilder:
                 factory.connect_to_list(self.model_views[group])
 
     def restore_model_views(self):
+        """Create views for existing models"""
         for storage in self.project.get_storages():
             for model in storage.data:
                 if type(model) not in AppBuilder.factory_by_type:
@@ -59,6 +57,8 @@ class AppBuilder:
                 factory = AppBuilder.factory_by_type[type(model)]
                 factory.create(project=self.project, from_model=model)
 
+    def load_instruments(self):
+        """Load scanners and analyzers"""
         for scanner_factory in AppBuilder.factories[FactoryGroups.scanners]:
             scanner_factory.create(project=self.project)
 

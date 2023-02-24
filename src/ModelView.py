@@ -38,10 +38,10 @@ class ModelView:
 
     def delete(self):
         """Delete an instance from storage and del itself"""
-        if self.storage is not None:
-            self.storage.delete(self.model)
         if self.connected_list is not None:
             self.connected_list.remove(self)
+        if self.storage is not None:
+            self.storage.delete(self.model)
         # TODO: проверить, что все удаляется
         del self.views
         del self.model
@@ -62,7 +62,7 @@ class ModelViewFactory:
         :param model: модель
         """
         self.view_types = view_types
-        self.model_type: Type[PBaseTypes] = model_type
+        self.model_type = model_type
         self.model = model
 
         if self.model is None and self.model_type is None:
@@ -70,7 +70,10 @@ class ModelViewFactory:
         if self.model is not None and self.model_type is not None:
             raise ValueError("model or model_type has to be None")
 
-        self.type = self.model_type if self.model is None else type(self.model)
+        if self.model_type is not None:
+            self.type: Union[PBaseTypes, PScannerTypes, PAnalyzerTypes] = self.model_type
+        else:
+            self.type: Union[PBaseTypes, PScannerTypes, PAnalyzerTypes] = type(self.model)
         self.connected_list = None
 
     def create(self, project: Project, from_model: PBaseTypes = None) -> ModelView:
@@ -81,12 +84,12 @@ class ModelViewFactory:
         elif self.model is None:
             model_type = self.model_type
             storage = project.get_storage_by_class(model_type)
-            model_name = f'{model_type.base_name}+{storage.last_index+1}'
+            model_name = f'{model_type.base_name}{storage.last_index+1}'
             model = self.model_type.reproduce(name=model_name, project=project)
-            storage.append(model)
         else:
             storage = None
             model = self.model
+
         model_view = ModelView(
             model=model,
             views=tuple(view_cl(model) for view_cl in self.view_types),
@@ -95,6 +98,8 @@ class ModelViewFactory:
         )
         if self.connected_list is not None:
             self.connected_list.append(model_view)
+        if storage is not None:
+            storage.append(model)
         return model_view
 
     def connect_to_list(self, list_: List[ModelView]):

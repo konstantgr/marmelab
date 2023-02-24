@@ -7,7 +7,7 @@ class ToyView(BaseView):
         super(ToyView, self).__init__(model=model, *args, **kwargs)
         layout = QHBoxLayout()
         self.setLayout(layout)
-        widget = QTextEdit('123')
+        widget = QTextEdit(f'{model.name} {self.display_name()}')
         layout.addWidget(widget)
 
 

@@ -41,11 +41,10 @@ class CentralPanel(QScrollArea, BasePanel):
                 if isinstance(element, BaseView):
                     self.stacked_widget.insertWidget(i, element)
                     i += 1
-                elif isinstance(element, tuple):
+                elif isinstance(element, list):
                     for el_name, el in element:
                         self.stacked_widget.insertWidget(i, el)
                         i += 1
-
 
     def display(self, tree_num: int) -> None:
         """

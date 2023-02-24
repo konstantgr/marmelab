@@ -27,9 +27,7 @@ analyzer = ToyAnalyser(
     name="Toy analyzer"
 )
 
-objects = PStorage()
 paths = PStorage()
-measurands = PStorage()
 experiments = PStorage()
 
 paths.append(
@@ -54,10 +52,10 @@ experiments.append(
 project = Project(
     scanner=scanner,
     analyzer=analyzer,
-    objects=objects,
+    objects=PStorage(),
     paths=paths,
     experiments=experiments,
-    measurands=measurands,
+    measurands=PStorage(),
     plots=PStorage(),
     results=PStorage()
 )
@@ -74,3 +72,4 @@ AppBuilder.register_factory(
 
 builder = AppBuilder(project=project)
 builder.restore_model_views()
+builder.load_instruments()
