@@ -94,9 +94,11 @@ class LeftPanel(BasePanel):
                 views = element.views
                 if len(views) == 1:
                     item = TreeModelViewItem(group_item, model_view=element, name=views[0].display_name(), tree_num=i)
+                    item.setIcon(0, element.icon)
                     i += 1
                 elif len(views) > 1:
                     item = TreeModelItem(group_item, model_view=element, name=element.model.name, tree_num=-1)
+                    item.setIcon(0, element.icon)
                     for view in views:
                         TreeViewItem(item, model_view=element, name=view.display_name(), tree_num=i)
                         i += 1
