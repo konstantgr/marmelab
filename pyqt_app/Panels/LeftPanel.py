@@ -60,7 +60,6 @@ class LeftPanel(BasePanel):
             root.removeChild(item)
 
         project_tree = builder.view_tree()
-        print(project_tree)
         i = 0
         for tab in project_tree.keys():
             tab_item = QTreeWidgetItem(self.tree, [tab])
