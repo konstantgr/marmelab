@@ -17,6 +17,7 @@ class ModelView:
             storage: PStorage = None,
             connected_list: List = None,
             icon: QIcon = None,
+            removable: bool = True,
     ):
         """
 
@@ -29,6 +30,7 @@ class ModelView:
         self.storage = storage
         self.connected_list = connected_list
         self.icon = icon
+        self.removable = removable
 
     def view_tree(self) -> ModelView_ViewTreeType:
         """Create list which represents tree structure"""
@@ -59,18 +61,25 @@ class ModelViewFactory:
             view_types: Tuple[Type[BaseView], ...],
             model_type: Type[PBaseTypes] = None,
             model: Union[PBaseTypes, PAnalyzerTypes, PScannerTypes] = None,
-            icon: QIcon = base_icon
+            icon: QIcon = base_icon,
+            reproducible: bool = True,
+            removable: bool = True,
     ):
         """
 
         :param view_types: список классов вьюшек
         :param model_type: класс модели
         :param model: модель
+        :param icon: иконка
+        :param reproducible: может ли сфабрикован ModelView пользователем
+        :param removable: может ли ModelView быть удален пользователем
         """
         self.view_types = view_types
         self.model_type: Type[PBaseTypes] = model_type
         self.model: Union[PBaseTypes, PAnalyzerTypes, PScannerTypes] = model
         self.icon = icon
+        self.reproducible = reproducible
+        self.removable = removable
 
         if self.model is None and self.model_type is None:
             raise ValueError("only one of model and model_type has to be None")
@@ -108,7 +117,8 @@ class ModelViewFactory:
             views=tuple(views),
             storage=storage,
             connected_list=self.connected_list,
-            icon=self.icon
+            icon=self.icon,
+            removable=self.removable
         )
         if self.connected_list is not None:
             self.connected_list.append(model_view)

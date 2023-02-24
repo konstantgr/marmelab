@@ -48,4 +48,4 @@ class SocketAnalyzerControl(BaseView):
         return widget
 
     def display_name(self) -> str:
-        return "Control"
+        return self.analyzer.name

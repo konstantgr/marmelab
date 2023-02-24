@@ -18,6 +18,7 @@ class FactoryGroups(Enum):
     """Группы моделей"""
     scanners = "Scanners"
     analyzers = "Analyzers"
+    visualizers = "Visualizers"
     objects = "Objects"
     paths = "Paths"
     measurands = "Measurands"
@@ -64,6 +65,11 @@ class AppBuilder:
 
         for analyzer_factory in AppBuilder.factories[FactoryGroups.analyzers]:
             analyzer_factory.create(project=self.project)
+
+    def load_visualizers(self):
+        """Load visualizers"""
+        for visualizer_factory in AppBuilder.factories[FactoryGroups.visualizers]:
+            visualizer_factory.create(project=self.project)
 
     def view_tree(self) -> Dict[str, List[ModelView_ViewTreeType]]:
         tree = dict()

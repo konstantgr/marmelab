@@ -119,10 +119,10 @@ class LeftPanel(BasePanel):
     def context_menu(self, pos: QPoint):
         item = self.tree.itemAt(pos)
         if isinstance(item, TreeModelViewItem) and not isinstance(item, TreeViewItem):
-            if isinstance(item.model_view.model, (PScanner, PAnalyzer)) and isinstance(item, TreeModelItem):
-                return
+
             menu = QMenu()
-            delete_action = QAction("Delete")
-            delete_action.triggered.connect(item.model_view.delete)
-            menu.addAction(delete_action)
-            menu.exec(self.tree.mapToGlobal(pos))
+            if item.model_view.removable:
+                delete_action = QAction("Delete")
+                delete_action.triggered.connect(item.model_view.delete)
+                menu.addAction(delete_action)
+                menu.exec(self.tree.mapToGlobal(pos))

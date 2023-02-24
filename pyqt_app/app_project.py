@@ -9,7 +9,9 @@ from src.scanner.TRIM import TRIM_emulator
 from src.builder import AppBuilder, FactoryGroups
 from src.ModelView import ModelViewFactory
 from src import icons
+from src.project.PVisualizers import PScannerVisualizer3D
 from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl
+from src.views.PScannerVisualizers import ScannerVisualizer3DSettings
 from src.views.PScanners import TRIMControl, TRIMSettings
 from src.views.PAnalyzers import SocketAnalyzerControl
 import src.binds
@@ -30,8 +32,15 @@ analyzer = ToyAnalyser(
     name="Toy analyzer"
 )
 
+objects = PStorage()
 paths = PStorage()
 experiments = PStorage()
+
+scanner_visualizer = PScannerVisualizer3D(
+    scanner=scanner,
+    objects=objects,
+    paths=paths,
+)
 
 paths.append(
     ToyPath(
@@ -55,37 +64,48 @@ experiments.append(
 project = Project(
     scanner=scanner,
     analyzer=analyzer,
-    objects=PStorage(),
+    objects=objects,
     paths=paths,
     experiments=experiments,
     measurands=PStorage(),
     plots=PStorage(),
-    results=PStorage()
+    results=PStorage(),
+    scanner_visualizer=scanner_visualizer
 )
 
 AppBuilder.register_factory(
     ModelViewFactory(
         view_types=(TRIMControl, TRIMSettings,),
         model=scanner,
-        icon=icons.scanner_icon
+        icon=icons.scanner_icon,
+        removable=False,
+        reproducible=False
     ),
     group=FactoryGroups.scanners,
 )
-
-# AppBuilder.register_factory(
-#     factory=ModelViewFactory(view_types=(ToyScannerSettings, ToyScannerControl,), model=scanner),
-#     group=FactoryGroups.scanners
-# )
 
 AppBuilder.register_factory(
     factory=ModelViewFactory(
         view_types=(SocketAnalyzerControl,),
         model=analyzer,
-        icon=icons.analyzer_icon
+        icon=icons.analyzer_icon,
+        removable=False,
+        reproducible=False
     ),
     group=FactoryGroups.analyzers,
+)
+
+AppBuilder.register_factory(
+    factory=ModelViewFactory(
+        view_types=(ScannerVisualizer3DSettings,),
+        model=scanner_visualizer,
+        removable=False,
+        reproducible=False
+    ),
+    group=FactoryGroups.visualizers
 )
 
 builder = AppBuilder(project=project)
 builder.restore_model_views()
 builder.load_instruments()
+builder.load_visualizers()

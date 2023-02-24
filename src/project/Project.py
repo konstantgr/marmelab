@@ -4,6 +4,7 @@ from ..scanner import Scanner, ScannerSignals
 from ..analyzator import AnalyzerSignals, BaseAnalyzer
 from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
+from PyQt6.QtWidgets import QWidget
 from dataclasses import dataclass
 from abc import abstractmethod, ABC, ABCMeta
 from typing import Union, Generic, TypeVar, Tuple, Type
@@ -234,15 +235,14 @@ class PScanner(ABC):
         """
 
 
-class PScannerVisualizer(ABC):
+class PScannerVisualizer(PBase, metaclass=ABCMeta):
     """
     Класс визуализатора сканера
     """
-    def __init__(
-            self,
-            scanner: PScanner
-    ):
-        self.scanner = scanner
+    @property
+    @abstractmethod
+    def widget(self) -> QWidget:
+        """Виджет самого визуализатора"""
 
 
 class PMeasurandSignals(QObject):
@@ -517,6 +517,7 @@ class Project:
             experiments: PStorage[PExperiment],
             results: PStorage[PResults],
             plots: PStorage[PPlotTypes],
+            scanner_visualizer: PScannerVisualizer,
     ):
         self.scanner = scanner
         self.analyzer = analyzer
@@ -528,6 +529,8 @@ class Project:
         self.results = results
 
         self.plots = plots
+
+        self.scanner_visualizer = scanner_visualizer
 
     def get_storage_by_class(self, cls: Type) -> PStorage:
         """Return storage for class"""

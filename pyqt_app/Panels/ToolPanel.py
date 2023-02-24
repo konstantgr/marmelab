@@ -69,19 +69,20 @@ class ToolPanel(QToolBar):
         self.addSeparator()
 
         for group, factories in builder.factories.items():
-            if group in (FactoryGroups.scanners, FactoryGroups.analyzers):
-                continue
             group_widget = ToolGroup(group.value)
             group_toolbar = GroupToolBar()
             group_widget.layout().addWidget(group_toolbar)
 
+            i = 0
             for factory in factories:
-                button = QAction(factory.icon, factory.type.type_name, group_toolbar)
-                group_toolbar.addAction(button)
-                button.triggered.connect(
-                    partial(factory.create, project=project)
-                )
+                if factory.reproducible:
+                    i += 1
+                    button = QAction(factory.icon, factory.type.type_name, group_toolbar)
+                    group_toolbar.addAction(button)
+                    button.triggered.connect(
+                        partial(factory.create, project=project)
+                    )
 
-            if len(factories) > 0:
+            if i > 0:
                 self.addWidget(group_widget)
                 self.addSeparator()
