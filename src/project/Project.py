@@ -194,9 +194,11 @@ class PScanner(ABC):
 
     def __init__(
             self,
+            name: str,
             instrument: ScannerType,
             signals: PScannerSignals,
     ):
+        self.name = name
         self.signals = signals
         self.instrument = instrument
         self.states = PScannerStates(
@@ -321,9 +323,11 @@ class PAnalyzer(ABC):
 
     def __init__(
             self,
+            name: str,
             signals: PAnalyzerSignals,
             instrument: AnalyzerType,
     ):
+        self.name = name
         self.signals = signals
         self.instrument = instrument
         self.states = PAnalyzerStates(
@@ -517,7 +521,7 @@ class Project:
 
         self.plots = plots
 
-    def get_storage_by_class(self, cls: Type):
+    def get_storage_by_class(self, cls: Type) -> Union[PStorage, None]:
         """Return storage for class"""
         if issubclass(cls, PObject):
             return self.objects
@@ -531,6 +535,10 @@ class Project:
             return self.results
         elif issubclass(cls, (PPlot1D, PPlot2D, PPlot3D)):
             return self.plots
+        elif issubclass(cls, PScanner):
+            return
+        elif issubclass(cls, PAnalyzer):
+            return
         else:
             raise TypeError(f"Can't find storage for {cls} class")
 

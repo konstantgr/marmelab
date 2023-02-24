@@ -53,7 +53,7 @@ class ModelViewFactory:
             self,
             view_types: Tuple[Type[BaseView], ...],
             model_type: Type[PBaseTypes] = None,
-            model: PBaseTypes = None,
+            model: Union[PBaseTypes, PAnalyzerTypes, PScannerTypes] = None,
     ):
         """
 
@@ -85,7 +85,8 @@ class ModelViewFactory:
         else:
             storage = project.get_storage_by_class(type(self.model))
             model = self.model
-            storage.append(model)
+            if storage is not None:
+                storage.append(model)
         model_view = ModelView(
             model=model,
             views=tuple(view_cl(model) for view_cl in self.view_types),

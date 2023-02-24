@@ -1,5 +1,4 @@
-from .project.Project import Project, PBaseTypes
-from .project.Project import PPath, PObject, PMeasurand, PResults, PExperiment, PPlot1D, PPlot2D, PPlot3D
+from .project.Project import Project
 from .ModelView import ModelViewFactory, ModelView_ViewTreeType, ModelView
 from typing import List, Dict, Union, Type, Tuple
 from enum import Enum
@@ -35,9 +34,10 @@ class AppBuilder:
     @classmethod
     def register_factory(cls, factory: ModelViewFactory, group: FactoryGroups):
         """Зарегистрировать фабрику ModelView"""
+        print(factory)
         cls.factories[group].append(factory)
         cls.group_by_factory[factory] = group
-        cls.factory_by_type[factory.type]  = factory
+        cls.factory_by_type[factory.type] = factory
 
     def __init__(
             self,
@@ -56,6 +56,12 @@ class AppBuilder:
                     raise TypeError(f"Can't find any factory. Unknown model type {type(model)}.")
                 factory = AppBuilder.factory_by_type[type(model)]
                 factory.create(project=self.project, from_model=model)
+
+        for scanner_factory in AppBuilder.factories[FactoryGroups.scanners]:
+            scanner_factory.create(project=self.project)
+
+        for analyzer_factory in AppBuilder.factories[FactoryGroups.analyzers]:
+            analyzer_factory.create(project=self.project)
 
     def view_tree(self) -> Dict[str, List[ModelView_ViewTreeType]]:
         tree = dict()

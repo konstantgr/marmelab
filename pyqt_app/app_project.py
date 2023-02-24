@@ -6,7 +6,11 @@ from src.project.PAnalyzers import ToyAnalyser
 from src.project.PExperiments import ToyExperiment
 from src.project.PPaths import ToyPath
 from src.scanner.TRIM import TRIM_emulator
-from src.Builder import AppBuilder
+from src.Builder import AppBuilder, FactoryGroups
+from src.ModelView import ModelViewFactory
+
+from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl
+import src.binds
 
 scanner_signals = PScannerSignals()
 scanner = ToyScanner(
@@ -19,7 +23,8 @@ analyzer_signals = PAnalyzerSignals()
 analyzer = ToyAnalyser(
     # instrument=SocketAnalyzer(ip="192.168.5.168", port=9000, signals=analyzer_signals),
     instrument=RohdeSchwarzEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
-    signals=analyzer_signals
+    signals=analyzer_signals,
+    name="Toy analyzer"
 )
 
 objects = PStorage()
@@ -55,6 +60,16 @@ project = Project(
     measurands=measurands,
     plots=PStorage(),
     results=PStorage()
+)
+
+AppBuilder.register_factory(
+    factory=ModelViewFactory(view_types=(ToyScannerSettings, ToyScannerControl,), model=scanner),
+    group=FactoryGroups.scanners
+)
+
+AppBuilder.register_factory(
+    factory=ModelViewFactory(view_types=(ToyView,), model=analyzer),
+    group=FactoryGroups.analyzers
 )
 
 builder = AppBuilder(project=project)

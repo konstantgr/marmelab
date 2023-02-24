@@ -70,8 +70,8 @@ class LeftPanel(BasePanel):
                 if isinstance(view, BaseView):
                     item = TreeItem(tab_item, widget=view, name=name, tree_num=i)
                     i += 1
-                elif isinstance(view, tuple):
-                    item = QTreeWidgetItem(tab_item, name)
+                elif isinstance(view, list):
+                    item = QTreeWidgetItem(tab_item, [name])
                     for el_name, el in view:
                         TreeItem(item, widget=el, name=el_name, tree_num=i)
                         i += 1
