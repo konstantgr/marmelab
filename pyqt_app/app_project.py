@@ -11,6 +11,7 @@ from src.ModelView import ModelViewFactory
 from src import icons
 from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl
 from src.views.PScanners import TRIMControl, TRIMSettings
+from src.views.PAnalyzers import SocketAnalyzerControl
 import src.binds
 
 scanner_signals = PScannerSignals()
@@ -78,7 +79,7 @@ AppBuilder.register_factory(
 
 AppBuilder.register_factory(
     factory=ModelViewFactory(
-        view_types=(),
+        view_types=(SocketAnalyzerControl,),
         model=analyzer,
         icon=icons.analyzer_icon
     ),

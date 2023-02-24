@@ -393,7 +393,7 @@ class PExperiment(PBase):
     Класс эксперимента
     """
     base_name = 'exp'
-    type_name = 'Experiments'
+    type_name = 'Experiment'
 
     @abstractmethod
     def run(self):
