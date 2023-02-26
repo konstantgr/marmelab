@@ -13,4 +13,4 @@ info = QIcon(os.path.join(os.path.dirname(__file__), 'information.png'))
 analyzer_icon = QIcon(os.path.join(os.path.dirname(__file__), 'analyzer.png'))
 scanner_icon = QIcon(os.path.join(os.path.dirname(__file__), 'scanner.png'))
 experiment_icon = QIcon(os.path.join(os.path.dirname(__file__), 'experiment.png'))
-
+abort = QIcon(os.path.join(os.path.dirname(__file__), 'abort.png'))

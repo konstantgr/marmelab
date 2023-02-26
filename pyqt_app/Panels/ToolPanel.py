@@ -5,8 +5,7 @@ from PyQt6.QtCore import QSize, Qt
 from pyqt_app import project, builder
 from src.builder import FactoryGroups
 import logging
-from src.icons import arrow_circle_24
-from src.icons import cross
+from src import icons
 from functools import partial
 import numpy as np
 logger = logging.getLogger()
@@ -51,13 +50,13 @@ class ToolPanel(QToolBar):
 
         self.abort_button = StateDepQAction(
             state=project.scanner.states.is_connected,
-            set_icon=cross,
+            set_icon=icons.abort,
             text="Abort",
             parent=self
         )
         self.upd_button_action = StateDepQAction(
             state=project.scanner.states.is_connected,
-            set_icon=arrow_circle_24,
+            set_icon=icons.arrow_circle_24,
             text="Update\nposition",
             parent=self
         )
