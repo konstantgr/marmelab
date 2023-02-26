@@ -78,3 +78,33 @@ class Points3D(GLGraphicsItem):
         GL.glDisableClientState(GL.GL_COLOR_ARRAY)
         GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
 
+
+# Own shader
+lights_shader = pg.opengl.shaders.ShaderProgram('light_shader', [
+    pg.opengl.shaders.VertexShader("""
+        varying vec3 normal;
+        varying vec4 pos;
+        void main() {
+            // compute here for use in fragment shader
+            normal = normalize(gl_NormalMatrix * gl_Normal);
+            gl_FrontColor = gl_Color;
+            gl_BackColor = gl_Color;
+            gl_Position = ftransform();
+            pos = gl_Vertex;
+        }
+    """),
+    pg.opengl.shaders.FragmentShader("""
+        varying vec3 normal;
+        varying vec4 pos;
+        void main() {
+            vec3 lightSource = gl_NormalMatrix * vec3(10000.0, 10000.0, 10000.0);
+            vec3 lightVector = normalize(lightSource - pos.xyz);
+            float diff = max(dot(normal, lightVector), 0.0);
+            vec4 color = gl_Color;
+            color.x = color.x * (0.6 + 0.4*diff);
+            color.y = color.y * (0.6 + 0.4*diff);
+            color.z = color.z * (0.6 + 0.4*diff);
+            gl_FragColor = color;
+        }
+    """)
+])

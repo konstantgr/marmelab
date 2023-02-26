@@ -15,7 +15,7 @@ import os
 import OpenGL.GL as GL
 from PyQt6.QtWidgets import QWidget
 from OpenGL.GL import GL_BLEND, GL_DEPTH_TEST, GL_ALPHA_TEST, GL_CULL_FACE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
-from .utils import TextItem, Points3D
+from .utils import TextItem, Points3D, lights_shader
 
 import logging
 logger = logging.getLogger()
@@ -371,13 +371,13 @@ class Widget(gl.GLViewWidget):
         ]
         linew = gl.GLLinePlotItem(pos=pts, antialias=True, width=2, color=color2)
         self.addItem(linew)
-
         pillar = gl.GLMeshItem(
             meshdata=self.pillar_meshdata,
             smooth=True,
             drawFaces=True,
             drawEdges=False,
-            color=pg.mkColor((100, 100, 100, 230)),
+            color=pg.mkColor((120, 120, 120, 200)),
+            shader=lights_shader,
             glOptions={
                 GL_DEPTH_TEST: True,
                 GL_BLEND: True,
