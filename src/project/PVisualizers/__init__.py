@@ -1,3 +1,3 @@
-from .ScannerVisualizer import PScannerVisualizer3D
+from .xyzw_model import xyzwScannerVisualizer
 # from .AnalyzerVisualizer import PAnalyzerVisualizerRS
 

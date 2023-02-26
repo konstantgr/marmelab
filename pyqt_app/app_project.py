@@ -7,11 +7,11 @@ from src.project.PExperiments import ToyExperiment
 from src.project.PPaths import ToyPath
 from src.scanner.TRIM import TRIM_emulator
 from src.builder import AppBuilder, FactoryGroups
-from src.ModelView import ModelViewFactory
+from src.ModelView import ModelViewFactory, ModelViewVisualizerFactory
 from src import icons
-from src.project.PVisualizers import PScannerVisualizer3D
+from src.project.PVisualizers import xyzwScannerVisualizer
 from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl
-from src.views.PScannerVisualizers import ScannerVisualizer3DSettings
+from src.views.PScannerVisualizers.xyzw import xyzwSettings, xyzwWidget
 from src.views.PScanners import TRIMControl, TRIMSettings
 from src.views.PAnalyzers import SocketAnalyzerControl
 import src.binds
@@ -36,7 +36,8 @@ objects = PStorage()
 paths = PStorage()
 experiments = PStorage()
 
-scanner_visualizer = PScannerVisualizer3D(
+scanner_visualizer = xyzwScannerVisualizer(
+    name="Scanner visualizer",
     scanner=scanner,
     objects=objects,
     paths=paths,
@@ -95,17 +96,16 @@ AppBuilder.register_factory(
     group=FactoryGroups.analyzers,
 )
 
-AppBuilder.register_factory(
-    factory=ModelViewFactory(
-        view_types=(ScannerVisualizer3DSettings,),
+AppBuilder.register_scanner_visualizer_factory(
+    factory=ModelViewVisualizerFactory(
+        view_types=(xyzwSettings,),
         model=scanner_visualizer,
-        removable=False,
-        reproducible=False
-    ),
-    group=FactoryGroups.visualizers
+        visualizer_widget_type=xyzwWidget,
+    )
 )
 
-builder = AppBuilder(project=project)
-builder.restore_model_views()
-builder.load_instruments()
-builder.load_visualizers()
+builder_ = AppBuilder(project=project)
+builder_.restore_model_views()
+builder_.load_instruments()
+builder_.load_visualizers()
+builder = builder_

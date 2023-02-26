@@ -18,7 +18,16 @@ def _meta_resolve(cls):
     return _MetaResolver
 
 
-ProjectType = TypeVar('ProjectType', bound='Project')
+class PNamed:
+    """Класс с названиями"""
+    base_name = 'noname'
+    type_name = 'No name'
+
+    def __init__(
+            self,
+            name: str,
+    ):
+        self.name = name
 
 
 class PBaseSignals(QObject):
@@ -29,19 +38,24 @@ class PBaseSignals(QObject):
     display_changed: pyqtBoundSignal = pyqtSignal()
 
 
-class PBase(metaclass=ABCMeta):
+SignalsTypes = TypeVar('SignalsTypes')
+ProjectType = TypeVar('ProjectType', bound='Project')
+
+
+class PBase(PNamed, metaclass=ABCMeta):
     """
     Базовый класс всех объектов в проекте
     """
     base_name = 'base'
-    type_name = 'No name'
+    type_name = 'Base'
 
     def __init__(
             self,
             name: str,
+            signals: SignalsTypes = None
     ):
-        self.name = name
-        self.signals = PBaseSignals()
+        super(PBase, self).__init__(name=name)
+        self.signals = signals if signals is not None else PBaseSignals()
 
     @classmethod
     @abstractmethod
@@ -189,7 +203,7 @@ class PScannerStates:
 ScannerType = TypeVar('ScannerType', bound=Scanner)
 
 
-class PScanner(ABC):
+class PScanner(PNamed, metaclass=ABCMeta):
     """
     Класс сканера, объединяющего сам сканер, его состояния и сигналы
     """
@@ -202,7 +216,7 @@ class PScanner(ABC):
             instrument: ScannerType,
             signals: PScannerSignals,
     ):
-        self.name = name
+        super(PScanner, self).__init__(name=name)
         self.signals = signals
         self.instrument = instrument
         self.states = PScannerStates(
@@ -235,14 +249,10 @@ class PScanner(ABC):
         """
 
 
-class PScannerVisualizer(PBase, metaclass=ABCMeta):
+class PScannerVisualizer(PNamed, metaclass=ABCMeta):
     """
     Класс визуализатора сканера
     """
-    @property
-    @abstractmethod
-    def widget(self) -> QWidget:
-        """Виджет самого визуализатора"""
 
 
 class PMeasurandSignals(QObject):
@@ -251,7 +261,7 @@ class PMeasurandSignals(QObject):
     measured: pyqtBoundSignal = pyqtSignal()
 
 
-class PMeasurand(ABC):
+class PMeasurand(PNamed, metaclass=ABCMeta):
     """
     Физическая величина, которая может быть измерена анализатором
     """
@@ -262,11 +272,7 @@ class PMeasurand(ABC):
             self,
             name: str,
     ):
-        """
-
-        :param name: название, например S-parameters, Signal amplitude
-        """
-        self.name = name
+        super(PMeasurand, self).__init__(name=name)
         self.signals = PMeasurandSignals()
 
     @abstractmethod
@@ -320,7 +326,7 @@ class PAnalyzerStates:
 AnalyzerType = TypeVar('AnalyzerType', bound=BaseAnalyzer)
 
 
-class PAnalyzer(ABC):
+class PAnalyzer(PNamed, metaclass=ABCMeta):
     """
     Класс анализатора, объединяющий сигналы и статусы анализатора.
     """
@@ -333,7 +339,7 @@ class PAnalyzer(ABC):
             signals: PAnalyzerSignals,
             instrument: AnalyzerType,
     ):
-        self.name = name
+        super(PAnalyzer, self).__init__(name=name)
         self.signals = signals
         self.instrument = instrument
         self.states = PAnalyzerStates(
@@ -420,7 +426,7 @@ class PPlot1D(PBase):
         """
 
 
-class PPlot2D(PPlot1D, ABC):
+class PPlot2D(PPlot1D, metaclass=ABCMeta):
     """
     Класс графиков f(x, y)
     """
@@ -433,7 +439,7 @@ class PPlot2D(PPlot1D, ABC):
         """
 
 
-class PPlot3D(PPlot2D):
+class PPlot3D(PPlot2D, metaclass=ABCMeta):
     """
     Класс графиков f(x, y, z)
     """

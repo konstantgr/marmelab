@@ -31,6 +31,9 @@ class TRIMPScanner(PScanner):
                     default_value=axis_value,
                 ))
 
+    def set_settings(self, **settings):
+        self.instrument.set_settings(**settings)
+
     def get_settings(self) -> list[Setting]:
         return self._settings
 

@@ -11,10 +11,9 @@ import logging
 logger = logging.getLogger()
 
 
-class SocketAnalyzerControl(BaseView):
+class SocketAnalyzerControl(BaseView[PAnalyzer]):
     def __init__(self, *args, **kwargs):
         super(SocketAnalyzerControl, self).__init__(*args, **kwargs)
-        self.analyzer: PAnalyzer = self.model
         states = self.model.states
 
         self.connect_button = StateDepPushButton(
@@ -39,8 +38,8 @@ class SocketAnalyzerControl(BaseView):
         group_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         vbox.addWidget(group)
 
-        self.connect_button.clicked.connect(self.analyzer.instrument.connect)
-        self.disconnect_button.clicked.connect(self.analyzer.instrument.disconnect)
+        self.connect_button.clicked.connect(self.model.instrument.connect)
+        self.disconnect_button.clicked.connect(self.model.instrument.disconnect)
 
         group_layout.addWidget(self.connect_button)
         group_layout.addWidget(self.disconnect_button)
@@ -48,4 +47,4 @@ class SocketAnalyzerControl(BaseView):
         return widget
 
     def display_name(self) -> str:
-        return self.analyzer.name
+        return self.model.name

@@ -1,92 +1,21 @@
+from ..Widgets import SettingsTableWidget
+from ...project.PVisualizers.xyzw_model import xyzwScannerVisualizer
+from ..View import BaseView, QWidgetType
+from PyQt6.QtWidgets import QSplitter, QVBoxLayout, QTabWidget
+from PyQt6.QtCore import Qt
 import pyqtgraph.opengl as gl
 import pyqtgraph as pg
 import numpy as np
 from stl import mesh
 from ...scanner import BaseAxes
-from ..Project import PScannerVisualizer, PStorage, PScannerSignals, PScanner, ProjectType, PBaseTypes
+from ...project.Project import PPath
 import os
-from PyQt6 import QtCore, QtGui
 from PyQt6.QtWidgets import QWidget
-from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
-from src.Variable import Setting, Unit
 from OpenGL.GL import GL_BLEND, GL_DEPTH_TEST, GL_ALPHA_TEST, GL_CULL_FACE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+from .utils import TextItem
 
-
-DEFAULT_SETTINGS = [
-    Setting(
-        name='room_size_x',
-        unit=Unit(m=1),
-        description='',
-        default_value=3000,
-    ),
-    Setting(
-        name='room_size_y',
-        unit=Unit(m=1),
-        description='',
-        default_value=3000,
-    ),
-    Setting(
-        name='room_size_z',
-        unit=Unit(m=1),
-        description='',
-        default_value=5000,
-    ),
-    Setting(
-        name='scanner_zone_size_x',
-        unit=Unit(m=1),
-        description='',
-        default_value=2262.92,
-    ),
-    Setting(
-        name='scanner_zone_size_y',
-        unit=Unit(m=1),
-        description='',
-        default_value=2137.09,
-    ),
-    Setting(
-        name='scanner_zone_size_z',
-        unit=Unit(m=1),
-        description='',
-        default_value=531.4,
-    ),
-    Setting(
-        name='scanner_offset_x',
-        unit=Unit(m=1),
-        description='',
-        default_value=368.54,
-    ),
-    Setting(
-        name='scanner_offset_y',
-        unit=Unit(m=1),
-        description='',
-        default_value=300,
-    ),
-    Setting(
-        name='scanner_offset_z',
-        unit=Unit(m=1),
-        description='',
-        default_value=200,
-    ),
-    Setting(
-        name='scanner_L_x',
-        unit=Unit(m=1),
-        description='',
-        default_value=0,
-    ),
-    Setting(
-        name='scanner_L_y',
-        unit=Unit(m=1),
-        description='',
-        default_value=0,
-    ),
-    Setting(
-        name='scanner_L_z',
-        unit=Unit(m=1),
-        description='',
-        default_value=200,
-    ),
-
-]
+import logging
+logger = logging.getLogger()
 
 
 def coords_to_GL_coords(x, y, z, w=None):
@@ -97,43 +26,17 @@ def coords_to_GL_coords(x, y, z, w=None):
         return z, x, y
 
 
-class TextItem(GLGraphicsItem):
-    """Draws text in 3D."""
-
-    def __init__(self, pos: list[int, int], text: str, font_size: int = 16, color=QtCore.Qt.GlobalColor.black):
-        """All keyword arguments are passed to setData()"""
-        GLGraphicsItem.__init__(self)
-        self.pos = pos
-        self.color = color
-        self.text = text
-        self.font_size = font_size
-        self.font = QtGui.QFont('Arial', font_size)
-
-    def paint(self):
-        if len(self.text) < 1:
-            return
-        self.setupGLState()
-
-        painter = QtGui.QPainter(self.view())
-        painter.setPen(self.color)
-        painter.setFont(self.font)
-        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing | QtGui.QPainter.RenderHint.TextAntialiasing)
-        painter.drawText(self.pos[0], self.pos[1]+self.font_size, self.text)
-        painter.end()
-
-
-class ScannerVisualizer(gl.GLViewWidget):
+class Widget(gl.GLViewWidget):
     def __init__(
             self,
-            scanner_signals: PScannerSignals,
-            objects: PStorage,
-            paths: PStorage,
+            model: xyzwScannerVisualizer,
             **kwargs
     ):
         super().__init__(**kwargs)
-        self.scanner_signals = scanner_signals
-        self.objects = objects
-        self.paths = paths
+        self.model = model
+        self.scanner_signals = model.scanner.signals
+        self.objects = model.objects
+        self.paths = model.paths
 
         self.room_sizeX, self.room_sizeY, self.room_sizeZ = 5000, 3000, 3000  # mm
         self.scanner_zone_sizeX, self.scanner_zone_sizeY, self.scanner_zone_sizeZ = 531.4, 2262.92, 2137.09
@@ -162,6 +65,7 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.scanner_signals.position.connect(self.set_scanner_pos)
         self.objects.signals.changed.connect(self.redraw_objects)
         self.paths.signals.changed.connect(self.redraw_paths)
+        self.model.signals.settings_updated.connect(self.settings_updated)
         # self.objects.signals.element_changed.connect(self.redraw_objects)
         # self.paths.signals.element_changed.connect(self.redraw_paths)
 
@@ -224,6 +128,9 @@ class ScannerVisualizer(gl.GLViewWidget):
             self.scanner_LY = y
         if z is not None:
             self.scanner_LZ = z
+
+    def settings_updated(self):
+        self.set_settings(**self.model.settings)
 
     def set_settings(
             self,
@@ -487,32 +394,33 @@ class ScannerVisualizer(gl.GLViewWidget):
 
     def draw_points(self):
         paths_items = []
-        # for path in self.paths.data:  # type: Path3d
-        #     for i in range(path.points.shape[0]):
-        #         path_item = gl.GLMeshItem(
-        #             meshdata=self.point_meshdata,
-        #             smooth=True,
-        #             drawFaces=True,
-        #             color=pg.mkColor((100, 100, 255, 150)),
-        #             glOptions={
-        #                 GL_DEPTH_TEST: True,
-        #                 GL_BLEND: True,
-        #                 GL_ALPHA_TEST: True,
-        #                 GL_CULL_FACE: True,
-        #                 'glBlendFunc': (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA),
-        #             },  # or use one of str: translucent, opaque, additive
-        #         )
-        #         tt = np.eye(4)
-        #         tt[0, 0] = 1000 / 30
-        #         tt[1, 1] = 1000 / 30
-        #         tt[2, 2] = 1000 / 30
-        #         tt[0, 3] = path.points[i, 2] + self.scanner_offsetX + self.scanner_LX
-        #         tt[1, 3] = path.points[i, 0] + self.scanner_offsetY + self.scanner_LY
-        #         tt[2, 3] = path.points[i, 1] + self.scanner_offsetZ + self.scanner_LZ
-        #         tr = pg.Transform3D(tt)
-        #         path_item.applyTransform(tr, False)
-        #         paths_items.append(path_item)
-        #         self.addItem(path_item)
+        for path in self.paths.data:  # type: PPath
+            points = path.get_points_ndarray()
+            for i in range(points.shape[0]):
+                path_item = gl.GLMeshItem(
+                    meshdata=self.point_meshdata,
+                    smooth=True,
+                    drawFaces=True,
+                    color=pg.mkColor((100, 100, 255, 150)),
+                    glOptions={
+                        GL_DEPTH_TEST: True,
+                        GL_BLEND: True,
+                        GL_ALPHA_TEST: True,
+                        GL_CULL_FACE: True,
+                        'glBlendFunc': (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA),
+                    },  # or use one of str: translucent, opaque, additive
+                )
+                tt = np.eye(4)
+                tt[0, 0] = 1000 / 60
+                tt[1, 1] = 1000 / 60
+                tt[2, 2] = 1000 / 60
+                tt[0, 3] = points[i, 2] + self.scanner_offsetX + self.scanner_LX
+                tt[1, 3] = points[i, 0] + self.scanner_offsetY + self.scanner_LY
+                tt[2, 3] = points[i, 1] + self.scanner_offsetZ + self.scanner_LZ
+                tr = pg.Transform3D(tt)
+                path_item.applyTransform(tr, False)
+                paths_items.append(path_item)
+                self.addItem(path_item)
         return paths_items
 
     def redraw_paths(self):
@@ -521,21 +429,36 @@ class ScannerVisualizer(gl.GLViewWidget):
         self.paths_items = self.draw_points()
 
 
-class PScannerVisualizer3D(PScannerVisualizer):
-    def __init__(
-            self, scanner: PScanner, objects: PStorage, paths: PStorage
-    ):
-        super(PScannerVisualizer3D, self).__init__(name="Scanner visualizer")
-        self._widget = ScannerVisualizer(
-            scanner_signals=scanner.signals,
-            paths=paths,
-            objects=objects
+class xyzwWidget(BaseView[xyzwScannerVisualizer]):
+    def construct_widget(self) -> QWidgetType:
+        widget = QTabWidget()
+        view = Widget(model=self.model)
+        widget.addTab(view, "Scanner")
+        return widget
+
+
+class xyzwSettings(BaseView[xyzwScannerVisualizer]):
+    def __init__(self, *args, **kwargs):
+        super(xyzwSettings, self).__init__(*args, **kwargs)
+        self.settings_table = SettingsTableWidget(
+            settings=self.model.get_default_settings(),
+            apply=self.apply
         )
 
-    @property
-    def widget(self) -> QWidget:
-        return self._widget
+    def construct_widget(self) -> QWidgetType:
+        widget = QWidget()
+        widget.setLayout(QVBoxLayout())
+        splitter = QSplitter(orientation=Qt.Orientation.Vertical)
+        widget.layout().addWidget(splitter)
+        widget.layout().setContentsMargins(0, 0, 0, 0)
 
-    @classmethod
-    def reproduce(cls, name: str, project: ProjectType) -> 'PBaseTypes':
-        return cls(scanner=project.scanner, objects=project.objects, paths=project.paths)
+        splitter.addWidget(self.settings_table)
+        splitter.addWidget(QWidget())
+        splitter.setChildrenCollapsible(False)
+        splitter.setProperty('type', 'inner')
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 1)
+        return widget
+
+    def apply(self):
+        self.model.set_settings(self.settings_table.table.to_dict())

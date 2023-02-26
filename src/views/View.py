@@ -6,13 +6,15 @@ from ..icons import base_icon
 from abc import ABCMeta, abstractmethod
 
 QWidgetType = TypeVar("QWidgetType", bound=QWidget)
+# ModelType = Union[PBaseTypes, PScannerTypes, PAnalyzerTypes]
+ModelType = TypeVar("ModelType")
 
 
-class BaseView(metaclass=ABCMeta):
+class BaseView(Generic[ModelType], metaclass=ABCMeta):
     """Класс вьюшки"""
     def __init__(
             self,
-            model: Union[PBaseTypes, PScannerTypes, PAnalyzerTypes]
+            model: ModelType
     ):
         self.model = model
         self._widget: QWidgetType = None

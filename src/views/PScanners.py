@@ -12,10 +12,9 @@ import logging
 logger = logging.getLogger()
 
 
-class TRIMControl(BaseView):
+class TRIMControl(BaseView[TRIMPScanner]):
     def __init__(self, *args, **kwargs):
         super(TRIMControl, self).__init__(*args, **kwargs)
-        self.scanner = self.model
         states = self.model.states
 
         self.connect_button = StateDepPushButton(
@@ -50,10 +49,10 @@ class TRIMControl(BaseView):
         group_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         vbox.addWidget(group)
 
-        self.connect_button.clicked.connect(self.scanner.instrument.connect)
-        self.disconnect_button.clicked.connect(self.scanner.instrument.disconnect)
+        self.connect_button.clicked.connect(self.model.instrument.connect)
+        self.disconnect_button.clicked.connect(self.model.instrument.disconnect)
         self.home_button.clicked.connect(self.f_home)
-        self.abort_button.clicked.connect(self.scanner.instrument.abort)
+        self.abort_button.clicked.connect(self.model.instrument.abort)
 
         self.abort_button.setProperty('color', 'red')
         group_layout.addWidget(self.connect_button)
@@ -64,10 +63,10 @@ class TRIMControl(BaseView):
         return widget
 
     def _home(self):
-        self.scanner.instrument.home()
-        self.scanner.instrument.set_settings(position=Position(2262.92, 2137.09, 0, 0))
+        self.model.instrument.home()
+        self.model.instrument.set_settings(position=Position(2262.92, 2137.09, 0, 0))
         logger.debug("Scanner at home. Scanner position is:")
-        current_position = self.scanner.instrument.position()
+        current_position = self.model.instrument.position()
         logger.debug(f'x: {current_position.x}')
         logger.debug(f'y: {current_position.y}')
         logger.debug(f'z: {current_position.z}')
@@ -84,7 +83,7 @@ class TRIMControl(BaseView):
         return "Control"
 
 
-class TRIMSettings(BaseView):
+class TRIMSettings(BaseView[TRIMPScanner]):
     def __init__(self, *args, **kwargs):
         super(TRIMSettings, self).__init__(*args, **kwargs)
         self.signals = self.model.signals
@@ -112,7 +111,7 @@ class TRIMSettings(BaseView):
         return widget
 
     def apply(self):
-        self.model.instrument.set_settings(**self.settings_table.table.to_dict())
+        self.model.set_settings(**self.settings_table.table.to_dict())
         logger.info("Settings were applied")
 
     def display_name(self) -> str:

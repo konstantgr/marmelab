@@ -6,12 +6,12 @@ from src.views.Widgets.SettingsTable import QAbstractTableModel
 class ToyPath(PPath):
     def __init__(self, name: str):
         super(ToyPath, self).__init__(name=name)
-        self.x_min = None
-        self.y_min = None
-        self.p = None
-        self.y_max = None
-        self.x_points = None
-        self.y_points = None
+        self.x_min = 100
+        self.y_min = 100
+        self.x_max = 1100
+        self.y_max = 1100
+        self.x_points = 30
+        self.y_points = 30
 
     @classmethod
     def reproduce(cls, name: str, project: ProjectType) -> 'ToyPath':
@@ -36,9 +36,9 @@ class ToyPath(PPath):
         for i in range(len(xs)):
             for j in range(len(ys)):
                 if i % 2 == 0:
-                    res.append([xs[i], ys[j]])
+                    res.append([xs[i], ys[j], 0, 0])
                 else:
-                    res.append([xs[i], ys[-j-1]])
+                    res.append([xs[i], ys[-j-1], 0, 0])
         return np.array(res)
 
 

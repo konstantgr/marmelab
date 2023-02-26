@@ -1,5 +1,6 @@
 from .project import Project
-from .project.Project import PBaseTypes, PStorage, PScannerTypes, PAnalyzerTypes
+from .project.Project import PBaseTypes, PStorage, PScannerTypes, PAnalyzerTypes, PNamed
+from .project.Project import PScannerVisualizer, PAnalyzerVisualizer
 from PyQt6.QtGui import QIcon
 from .icons import base_icon
 from .views.View import BaseView
@@ -9,11 +10,11 @@ ModelView_ViewTreeType = Tuple[str, Union[None, BaseView, List[Tuple[str, BaseVi
 
 
 class ModelView:
-    """Класс, который хранит вьюшку и ее модель"""
+    """Класс, который хранит вьюшки и их модель"""
     def __init__(
             self,
             model: PBaseTypes,
-            views: Tuple[BaseView],
+            views: Tuple[BaseView, ...],
             storage: PStorage = None,
             connected_list: List = None,
             icon: QIcon = None,
@@ -54,13 +55,33 @@ class ModelView:
         del self.model
 
 
+class ModelViewVisualizer(ModelView):
+    """Класс, который хранит вьюшки, модель и виджет визуализатора"""
+    def __init__(
+            self,
+            model: PBaseTypes,
+            views: Tuple[BaseView, ...],
+            visualizer_widget: BaseView,
+            icon: QIcon = None,
+    ):
+        super(ModelViewVisualizer, self).__init__(
+            model=model,
+            views=views,
+            storage=None,
+            connected_list=None,
+            icon=icon,
+            removable=False
+        )
+        self.visualizer_widget = visualizer_widget
+
+
 class ModelViewFactory:
     """Фабрика экземпляров ModelView"""
     def __init__(
             self,
             view_types: Tuple[Type[BaseView], ...],
             model_type: Type[PBaseTypes] = None,
-            model: Union[PBaseTypes, PAnalyzerTypes, PScannerTypes] = None,
+            model: PNamed = None,
             icon: QIcon = base_icon,
             reproducible: bool = True,
             removable: bool = True,
@@ -76,7 +97,7 @@ class ModelViewFactory:
         """
         self.view_types = view_types
         self.model_type: Type[PBaseTypes] = model_type
-        self.model: Union[PBaseTypes, PAnalyzerTypes, PScannerTypes] = model
+        self.model: PNamed = model
         self.icon = icon
         self.reproducible = reproducible
         self.removable = removable
@@ -92,8 +113,7 @@ class ModelViewFactory:
             self.type: Union[PBaseTypes, PScannerTypes, PAnalyzerTypes] = type(self.model)
         self.connected_list = None
 
-    def create(self, project: Project, from_model: PBaseTypes = None) -> ModelView:
-        """Create ModelView instance and add its model to storage"""
+    def _get_model_storage_views(self, project: Project, from_model: PBaseTypes = None):
         if from_model is not None:
             storage = project.get_storage_by_class(type(from_model))
             model = from_model
@@ -112,6 +132,12 @@ class ModelViewFactory:
             view.construct()
             views.append(view)
 
+        return model, storage, views
+
+    def create(self, project: Project, from_model: PBaseTypes = None) -> ModelView:
+        """Create ModelView instance and add its model to storage"""
+        model, storage, views = self._get_model_storage_views(project, from_model)
+
         model_view = ModelView(
             model=model,
             views=tuple(views),
@@ -129,3 +155,37 @@ class ModelViewFactory:
     def connect_to_list(self, list_: List[ModelView]):
         """Connects factory to the list. Factory will add a new ModelViews to it"""
         self.connected_list = list_
+
+
+class ModelViewVisualizerFactory(ModelViewFactory):
+    def __init__(
+            self,
+            view_types: Tuple[Type[BaseView], ...],
+            visualizer_widget_type: Type[BaseView],
+            model: Union[PScannerVisualizer, PAnalyzerVisualizer],
+            icon: QIcon = base_icon,
+    ):
+        super(ModelViewVisualizerFactory, self).__init__(
+            view_types=view_types,
+            model_type=None,
+            model=model,
+            icon=icon,
+            reproducible=False,
+            removable=False
+        )
+        self.visualizer_widget_type = visualizer_widget_type
+
+    def create(self, project: Project, from_model: PBaseTypes = None) -> ModelViewVisualizer:
+        """Create ModelView instance and add its model to storage"""
+        model, storage, views = self._get_model_storage_views(project, from_model)
+        visualizer_widget = self.visualizer_widget_type(model)
+        visualizer_widget.construct()
+        model_view = ModelViewVisualizer(
+            model=model,
+            views=tuple(views),
+            icon=self.icon,
+            visualizer_widget=visualizer_widget
+        )
+        if self.connected_list is not None:
+            self.connected_list.append(model_view)
+        return model_view
