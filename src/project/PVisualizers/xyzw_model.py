@@ -80,7 +80,36 @@ DEFAULT_SETTINGS = [
         description='',
         default_value=200,
     ),
-
+    Setting(
+        name='pillar_x',
+        unit=Unit(m=1),
+        description='',
+        default_value=1500,
+    ),
+    Setting(
+        name='pillar_y',
+        unit=Unit(m=1),
+        description='',
+        default_value=0,
+    ),
+    Setting(
+        name='pillar_z',
+        unit=Unit(m=1),
+        description='',
+        default_value=4000,
+    ),
+    Setting(
+        name='pillar_h',
+        unit=Unit(m=1),
+        description='',
+        default_value=1000,
+    ),
+    Setting(
+        name='pillar_r',
+        unit=Unit(m=1),
+        description='',
+        default_value=300,
+    ),
 ]
 
 

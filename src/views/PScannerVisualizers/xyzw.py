@@ -1,3 +1,5 @@
+import OpenGL.GL
+
 from ..Widgets import SettingsTableWidget
 from ...project.PVisualizers.xyzw_model import xyzwScannerVisualizer
 from ..View import BaseView, QWidgetType
@@ -10,9 +12,10 @@ from stl import mesh
 from ...scanner import BaseAxes
 from ...project.Project import PPath
 import os
+import OpenGL.GL as GL
 from PyQt6.QtWidgets import QWidget
 from OpenGL.GL import GL_BLEND, GL_DEPTH_TEST, GL_ALPHA_TEST, GL_CULL_FACE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
-from .utils import TextItem
+from .utils import TextItem, Points3D
 
 import logging
 logger = logging.getLogger()
@@ -44,8 +47,13 @@ class Widget(gl.GLViewWidget):
         self.scanner_offsetX, self.scanner_offsetZ = 200, 300
         self.scanner_offsetY = (self.room_sizeY - self.scanner_zone_sizeY) / 2
 
-        points, faces = self._loadSTL(os.path.join(os.path.dirname(__file__), 'assets/cube.stl'))
-        self.point_meshdata = gl.MeshData(vertexes=points, faces=faces)
+        self.pillar_x = 4000
+        self.pillar_y = self.room_sizeY/2
+        self.pillar_z = 0
+        self.pillar_h = 1000
+        self.pillar_r = 100
+        points, faces = self._loadSTL(os.path.join(os.path.dirname(__file__), 'assets/cylinder.stl'))
+        self.pillar_meshdata = gl.MeshData(vertexes=points, faces=faces)
 
         self.setBackgroundColor(pg.mkColor('white'))
 
@@ -66,8 +74,8 @@ class Widget(gl.GLViewWidget):
         self.objects.signals.changed.connect(self.redraw_objects)
         self.paths.signals.changed.connect(self.redraw_paths)
         self.model.signals.settings_updated.connect(self.settings_updated)
-        # self.objects.signals.element_changed.connect(self.redraw_objects)
-        # self.paths.signals.element_changed.connect(self.redraw_paths)
+        
+        self.settings_updated()
 
     def set_room_size(self, x: float, y: float, z: float):
         """
@@ -129,6 +137,19 @@ class Widget(gl.GLViewWidget):
         if z is not None:
             self.scanner_LZ = z
 
+    def set_pillar(self, x: float, y: float, z: float, r: float, h: float):
+        x, y, z = coords_to_GL_coords(x, y, z)
+        if x is not None:
+            self.pillar_x = x
+        if y is not None:
+            self.pillar_y = y
+        if z is not None:
+            self.pillar_z = z
+        if h is not None:
+            self.pillar_h = h
+        if r is not None:
+            self.pillar_r = r
+
     def settings_updated(self):
         self.set_settings(**self.model.settings)
 
@@ -145,12 +166,18 @@ class Widget(gl.GLViewWidget):
             scanner_offset_z: float = None,
             scanner_L_x: float = None,
             scanner_L_y: float = None,
-            scanner_L_z: float = None
+            scanner_L_z: float = None,
+            pillar_x: float = None,
+            pillar_y: float = None,
+            pillar_z: float = None,
+            pillar_r: float = None,
+            pillar_h: float = None,
     ):
         self.set_room_size(x=room_size_x, y=room_size_y, z=room_size_z)
         self.set_scanner_zone_size(x=scanner_zone_size_x, y=scanner_zone_size_y, z=scanner_zone_size_z)
         self.set_offset(x=scanner_offset_x, y=scanner_offset_y, z=scanner_offset_z)
         self.set_scanner_L(x=scanner_L_x, y=scanner_L_y, z=scanner_L_z)
+        self.set_pillar(x=pillar_x, y=pillar_y, z=pillar_z, r=pillar_r, h=pillar_h)
         self.redraw_grid()
         self.redraw_scanner_zone()
         self.redraw_scanner()
@@ -272,6 +299,15 @@ class Widget(gl.GLViewWidget):
             self.removeItem(item)
         self.scanner_zone_items = self.draw_scanner_zone()
 
+    def pillar_transformation(self) -> np.ndarray:
+        res = np.eye(4)
+        res[0, 0] = res[1, 1] = self.pillar_r * 2
+        res[2, 2] = self.pillar_h
+        res[0, 3] = self.pillar_x
+        res[1, 3] = self.pillar_y
+        res[2, 3] = self.pillar_z + self.pillar_h/2
+        return res
+
     def draw_scanner(self):
         color1 = pg.mkColor((200, 0, 0, 200))
         color2 = pg.mkColor((0, 0, 200, 200))
@@ -328,17 +364,33 @@ class Widget(gl.GLViewWidget):
         for text in texts:
             self.addItem(text)
 
-        if len(self.objects.data) >= 1:
-            obj = self.objects.data[0]  # type: Object3d
-            tr = obj.transformation
-            pts = [
-                [tr[0, 3], tr[1, 3], 0],
-                [tr[0, 3]-500*np.cos(self.scanner_pos.w), tr[1, 3]-500*np.sin(self.scanner_pos.w), 0]
-            ]
-            linew = gl.GLLinePlotItem(pos=pts, antialias=True, width=2, color=color2)
-            self.addItem(linew)
-            return [linex, liney, linez, linew, lineL, *texts]
-        return [linex, liney, linez, lineL, *texts]
+        tr = self.pillar_transformation()
+        pts = [
+            [tr[0, 3], tr[1, 3], 0],
+            [tr[0, 3]-500*np.cos(self.scanner_pos.w), tr[1, 3]-500*np.sin(self.scanner_pos.w), 0]
+        ]
+        linew = gl.GLLinePlotItem(pos=pts, antialias=True, width=2, color=color2)
+        self.addItem(linew)
+
+        pillar = gl.GLMeshItem(
+            meshdata=self.pillar_meshdata,
+            smooth=True,
+            drawFaces=True,
+            drawEdges=False,
+            color=pg.mkColor((100, 100, 100, 230)),
+            glOptions={
+                GL_DEPTH_TEST: True,
+                GL_BLEND: True,
+                GL_ALPHA_TEST: True,
+                GL_CULL_FACE: True,
+                'glBlendFunc': (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA),
+            },  # or use one of str: translucent, opaque, additive
+        )
+        tr = pg.Transform3D(self.pillar_transformation())
+        pillar.applyTransform(tr, False)
+        self.addItem(pillar)
+
+        return [linex, liney, linez, linew, lineL, pillar, *texts]
 
     def redraw_scanner(self):
         for item in self.scanner_items:
@@ -396,31 +448,41 @@ class Widget(gl.GLViewWidget):
         paths_items = []
         for path in self.paths.data:  # type: PPath
             points = path.get_points_ndarray()
-            for i in range(points.shape[0]):
-                path_item = gl.GLMeshItem(
-                    meshdata=self.point_meshdata,
-                    smooth=True,
-                    drawFaces=True,
-                    color=pg.mkColor((100, 100, 255, 150)),
-                    glOptions={
-                        GL_DEPTH_TEST: True,
-                        GL_BLEND: True,
-                        GL_ALPHA_TEST: True,
-                        GL_CULL_FACE: True,
-                        'glBlendFunc': (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA),
-                    },  # or use one of str: translucent, opaque, additive
-                )
-                tt = np.eye(4)
-                tt[0, 0] = 1000 / 60
-                tt[1, 1] = 1000 / 60
-                tt[2, 2] = 1000 / 60
-                tt[0, 3] = points[i, 2] + self.scanner_offsetX + self.scanner_LX
-                tt[1, 3] = points[i, 0] + self.scanner_offsetY + self.scanner_LY
-                tt[2, 3] = points[i, 1] + self.scanner_offsetZ + self.scanner_LZ
-                tr = pg.Transform3D(tt)
-                path_item.applyTransform(tr, False)
-                paths_items.append(path_item)
-                self.addItem(path_item)
+            points_in_gl = np.zeros_like(points)
+            x, y, z = coords_to_GL_coords(points[:, 0], points[:, 1], points[:, 2])
+            points_in_gl[:, 0] = x + self.scanner_offsetX + self.scanner_LX
+            points_in_gl[:, 1] = y + self.scanner_offsetY + self.scanner_LY
+            points_in_gl[:, 2] = z + self.scanner_offsetZ + self.scanner_LZ
+
+            item = Points3D(
+                points=points_in_gl,
+                color=pg.mkColor((100, 100, 255, 200)),
+                size=4,
+                glOptions={
+                    GL_DEPTH_TEST: True,
+                    GL_BLEND: True,
+                    GL_ALPHA_TEST: True,
+                    GL_CULL_FACE: True,
+                    'glBlendFunc': (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA),
+                },
+            )
+            paths_items.append(item)
+            self.addItem(item)
+
+            item = gl.GLLinePlotItem(
+                pos=points_in_gl[:, [0, 1, 2]],
+                color=pg.mkColor((80, 120, 255, 200)),
+                width=1,
+                antialias=True,
+                glOptions={
+                    GL_DEPTH_TEST: True,
+                    GL_BLEND: True,
+                    GL_ALPHA_TEST: True,
+                    GL_CULL_FACE: True,
+                    'glBlendFunc': (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA),
+                },
+            )
+            self.addItem(item)
         return paths_items
 
     def redraw_paths(self):
