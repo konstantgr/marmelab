@@ -1,6 +1,6 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QVBoxLayout, QSizePolicy, QSplitter, QTextEdit
-
+from PyQt6.QtGui import QGuiApplication
 from .BasePanel import BasePanel
 from src.project import PScannerVisualizer, PAnalyzerVisualizer
 from src.ModelView import ModelViewVisualizer
@@ -29,4 +29,6 @@ class RightPanel(BasePanel):
         graphs_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
         graphs_splitter.insertWidget(0, self.scanner_widget)
         graphs_splitter.insertWidget(1, self.graph_widget)
+        max_height = QGuiApplication.primaryScreen().virtualSize().height()
+        graphs_splitter.setSizes([max_height/3, max_height/2])
         self.vbox.addWidget(graphs_splitter)
