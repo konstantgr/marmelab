@@ -10,7 +10,7 @@ from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from PyQt6.QtGui import QColor
 from src.Variable import Unit, Setting
 from src.views.Widgets import SettingsTableWidget, StateDepPushButton
-from ...analyzator.rohde_schwarz import RohdeSchwarzAnalyzer
+from ...analyzers.rohde_schwarz import RohdeSchwarzAnalyzer
 from pyqtgraph import PlotWidget, PlotItem, PlotDataItem
 import numpy as np
 

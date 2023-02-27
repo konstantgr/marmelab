@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..scanner import Scanner, ScannerSignals
-from ..analyzator import AnalyzerSignals, BaseAnalyzer
+from ..analyzers import AnalyzerSignals, BaseAnalyzer
 from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from dataclasses import dataclass

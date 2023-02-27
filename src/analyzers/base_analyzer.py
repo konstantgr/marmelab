@@ -1,6 +1,6 @@
 import abc
 from typing import List
-from .analyzator_parameters import SParameters, FrequencyParameters, AnalyzatorType, ResultsFormatType
+from .analyzer_parameters import SParameters, FrequencyParameters, AnalyzatorType, ResultsFormatType
 from ..utils import EmptySignal
 
 
