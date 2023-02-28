@@ -1,7 +1,7 @@
 from src.scanner.TRIM import TRIMScanner
 from src.project import Project, PScannerSignals, PAnalyzerSignals, PStorage
 from src.analyzers.rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulator
-from src.project.PScanners import ToyScanner
+from src.project.PScanners import ToyScanner, TRIMPScanner
 from src.project.PAnalyzers import ToyAnalyser, ToySparam
 from src.project.PExperiments import ToyExperiment
 from src.project.PPaths import ToyPath

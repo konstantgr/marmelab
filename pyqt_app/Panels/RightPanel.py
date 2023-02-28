@@ -30,5 +30,5 @@ class RightPanel(BasePanel):
         graphs_splitter.insertWidget(0, self.scanner_widget)
         graphs_splitter.insertWidget(1, self.graph_widget)
         max_height = QGuiApplication.primaryScreen().virtualSize().height()
-        graphs_splitter.setSizes([max_height/3, max_height/2])
+        graphs_splitter.setSizes([int(max_height/3), int(max_height/2)])
         self.vbox.addWidget(graphs_splitter)
