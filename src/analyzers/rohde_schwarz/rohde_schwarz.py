@@ -1,7 +1,7 @@
 import socket
 
 from typing import List, Union
-from ..base_analyzator import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
+from ..base_analyzer import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
 from ...utils import EmptySignal
 import RsInstrument
 import numpy as np
@@ -119,17 +119,17 @@ class RohdeSchwarzAnalyzer(BaseAnalyzer):
 
 
 # if __name__ == "__main__":
-#     analyzator = RohdeSchwarzAnalyzer(
+#     analyzers = RohdeSchwarzAnalyzer(
 #         ip="172.16.22.182",
 #         port="5025"
 #     )
-#     analyzator.connect()
+#     analyzers.connect()
 #
 #     sp = ['S11', 'S23']
 #     fp = FrequencyParameters(
 #         1000, 5000, FrequencyTypes.MHZ, 200
 #     )
-#     results = analyzator.get_scattering_parameters(
+#     results = analyzers.get_scattering_parameters(
 #         sp, [ResultsFormatType.DB, ResultsFormatType.REAL]
 #     )
 #     print(results['f'], results['S11'])

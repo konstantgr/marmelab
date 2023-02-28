@@ -3,7 +3,7 @@ import threading
 import time
 
 from typing import List, Union
-from src.analyzator.base_analyzator import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
+from src.analyzers.base_analyzer import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
 from src.utils import EmptySignal
 import numpy as np
 
@@ -147,10 +147,10 @@ class CeyearAnalyzer(BaseAnalyzer):
         pass
 
 
-if __name__ == "__main__":
-    analyzer = CeyearAnalyzer(ip="192.168.137.119", port=1024)
-    analyzer.connect()
-    analyzer.set_settings(sweep_type='LIN', freq_start=1000000000, freq_stop=3000000000,
-                          freq_num=200, bandwidth=3000, aver_fact=5, smooth_aper=20, power=5)
-    results = analyzer.get_scattering_parameters(['S22', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12'])
-    print(results['freq'], results['S22'])
+# if __name__ == "__main__":
+#     analyzer = CeyearAnalyzer(ip="192.168.137.119", port=1024)
+#     analyzer.connect()
+#     analyzer.set_settings(sweep_type='LIN', freq_start=1000000000, freq_stop=3000000000,
+#                           freq_num=200, bandwidth=3000, aver_fact=5, smooth_aper=20, power=5)
+#     results = analyzer.get_scattering_parameters(['S22', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12'])
+#     print(results['freq'], results['S22'])

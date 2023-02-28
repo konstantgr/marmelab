@@ -2,7 +2,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton
 
 from pyqt_app import analyzator
-from src.analyzator.analyzator_parameters import FrequencyParameters, FrequencyTypes
+from src.analyzers.analyzer_parameters import FrequencyParameters, FrequencyTypes
 
 #import matplotlib.pyplot as plt
 
