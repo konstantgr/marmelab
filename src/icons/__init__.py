@@ -10,4 +10,7 @@ arrow_circle = QIcon(os.path.join(os.path.dirname(__file__), 'arrow-circle-315-l
 arrow_circle_24 = QIcon(os.path.join(os.path.dirname(__file__), 'arrow-circle-double.png'))
 cross = QIcon(os.path.join(os.path.dirname(__file__), 'cross.png'))
 info = QIcon(os.path.join(os.path.dirname(__file__), 'information.png'))
+analyzer_icon = QIcon(os.path.join(os.path.dirname(__file__), 'analyzer.png'))
+scanner_icon = QIcon(os.path.join(os.path.dirname(__file__), 'scanner.png'))
+experiment_icon = QIcon(os.path.join(os.path.dirname(__file__), 'experiment.png'))
 

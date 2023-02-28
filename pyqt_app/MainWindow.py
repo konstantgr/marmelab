@@ -3,7 +3,7 @@ from PyQt6.QtCore import Qt
 from Panels import LogPanel, RightPanel, LeftPanel, CentralPanel, MenuPanel
 from Panels.BarPanel import BarPanel
 from Panels.ToolPanel import ToolPanel
-from pyqt_app import project
+from pyqt_app import project, builder
 
 
 class MainWindow(QMainWindow):
@@ -33,8 +33,8 @@ class MainWindow(QMainWindow):
         project.analyzer.signals.is_connected.emit(False)
 
         self.right_panel = RightPanel(
-            scanner_visualizer=project.scanner_visualizer,
-            analyzer_visualizer=project.analyzer_visualizer,
+            scanner_visualizer=builder.scanner_visualizer,
+            # analyzer_visualizer=project.analyzer_visualizer,
             parent=self.main_widget
         )  # graphics
 
@@ -64,7 +64,7 @@ class MainWindow(QMainWindow):
         main_splitter.insertWidget(1, self.right_panel)
 
         main_splitter.setStretchFactor(0, 1)
-        main_splitter.setStretchFactor(1, 1)
+        main_splitter.setStretchFactor(1, 2)
         main_splitter.setCollapsible(0, False)
         main_splitter.setCollapsible(1, False)
 

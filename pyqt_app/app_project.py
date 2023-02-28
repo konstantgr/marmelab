@@ -6,10 +6,19 @@ from src.project.PAnalyzers import ToyAnalyser, ToySparam
 from src.project.PExperiments import ToyExperiment
 from src.project.PPaths import ToyPath
 from src.scanner.TRIM import TRIM_emulator
-from src.builder import AppBuilder
+from src.builder import AppBuilder, FactoryGroups
+from src.ModelView import ModelViewFactory, ModelViewVisualizerFactory
+from src import icons
+from src.project.PVisualizers import xyzwScannerVisualizer
+from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl
+from src.views.PScannerVisualizers.xyzw import xyzwSettings, xyzwWidget
+from src.views.PScanners import TRIMControl, TRIMSettings
+from src.views.PAnalyzers import SocketAnalyzerControl
+import src.binds
 
 scanner_signals = PScannerSignals()
-scanner = ToyScanner(
+scanner = TRIMPScanner(
+    name="TRIM scanner",
     instrument=TRIMScanner(ip="127.0.0.1", port=9006, signals=scanner_signals),
     signals=scanner_signals,
 )
@@ -19,52 +28,84 @@ analyzer_signals = PAnalyzerSignals()
 analyzer = ToyAnalyser(
     # instrument=SocketAnalyzer(ip="192.168.5.168", port=9000, signals=analyzer_signals),
     instrument=RohdeSchwarzEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
-    signals=analyzer_signals
+    signals=analyzer_signals,
+    name="Toy analyzer"
 )
 
 objects = PStorage()
 paths = PStorage()
-measurands = PStorage()
 experiments = PStorage()
 
+scanner_visualizer = xyzwScannerVisualizer(
+    name="Scanner visualizer",
+    scanner=scanner,
+    objects=objects,
+    paths=paths,
+)
+
 paths.append(
     ToyPath(
-        name=f'Path 1',
+        name=f'path1',
     )
 )
 
 paths.append(
     ToyPath(
-        name=f'Path 2',
+        name=f'path2',
     )
 )
-
 
 experiments.append(
     ToyExperiment(
         scanner=scanner,
-        name='Experiment 1'
+        name='exp1'
     )
 )
-
-scanner_visualizer = None
-
-analyzer_visualizer = None
-
 
 project = Project(
     scanner=scanner,
     analyzer=analyzer,
-    scanner_visualizer=scanner_visualizer,
-    analyzer_visualizer=analyzer_visualizer,
     objects=objects,
     paths=paths,
     experiments=experiments,
-    measurands=measurands,
-    plots_1d=PStorage(),
-    plots_2d=PStorage(),
-    plots_3d=PStorage(),
-    results=PStorage()
+    measurands=PStorage(),
+    plots=PStorage(),
+    results=PStorage(),
+    scanner_visualizer=scanner_visualizer
 )
 
-builder = AppBuilder(project=project)
+AppBuilder.register_factory(
+    ModelViewFactory(
+        view_types=(TRIMControl, TRIMSettings,),
+        model=scanner,
+        icon=icons.scanner_icon,
+        removable=False,
+        reproducible=False
+    ),
+    group=FactoryGroups.scanners,
+)
+
+AppBuilder.register_factory(
+    factory=ModelViewFactory(
+        view_types=(SocketAnalyzerControl,),
+        model=analyzer,
+        icon=icons.analyzer_icon,
+        removable=False,
+        reproducible=False
+    ),
+    group=FactoryGroups.analyzers,
+)
+
+AppBuilder.register_scanner_visualizer_factory(
+    factory=ModelViewVisualizerFactory(
+        view_types=(xyzwSettings,),
+        model=scanner_visualizer,
+        visualizer_widget_type=xyzwWidget,
+    )
+)
+
+builder_ = AppBuilder(project=project)
+builder_.restore_model_views()
+builder_.load_instruments()
+builder_.load_visualizers()
+builder = builder_
