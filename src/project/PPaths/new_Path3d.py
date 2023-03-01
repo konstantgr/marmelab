@@ -1,4 +1,4 @@
-from ..Project import PPath
+from ..Project import PPath, ProjectType
 import numpy as np
 from src.views.Widgets.SettingsTable import QAbstractTableModel
 from ..Project import PPath, PScanner
@@ -158,9 +158,15 @@ class TableModel(QAbstractTableModel):
 
 
 class TablePathModel(PPath):
+    type_name = 'dsadsa'
+    base_name = 'sadsad'
     def __init__(self, name: str, scanner: PScanner):
         super(TablePathModel, self).__init__(name=name)
         self.table_model = TableModel(scanner)
+
+    @classmethod
+    def reproduce(cls, name: str, project: ProjectType) -> 'TablePathModel':
+        return cls(scanner=project.scanner, name=name)
 
     def set_relative(self, state: bool):
         self.table_model.set_relative(state)
@@ -172,7 +178,9 @@ class TablePathModel(PPath):
         pass
 
     def get_points_ndarray(self) -> np.ndarray:
-        pass
+        # TODO: реализовать функцию, иначе ниче не работает(
+        """маршрут (змейка)"""
+        return np.array([[2004, 1040, 3400, 4000], [1043, 2342, 3234, 4432]])
 
     def mesh_maker(self, lst: List):
         """

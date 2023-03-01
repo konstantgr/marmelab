@@ -4,7 +4,7 @@ from src.analyzers.rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulat
 from src.project.PScanners import ToyScanner, TRIMPScanner
 from src.project.PAnalyzers import ToyAnalyser, ToySparam
 from src.project.PExperiments import ToyExperiment
-from src.project.PPaths import ToyPath
+from src.project.PPaths import ToyPath, TablePathModel
 from src.scanner.TRIM import TRIM_emulator
 from src.builder import AppBuilder, FactoryGroups
 from src.ModelView import ModelViewFactory, ModelViewVisualizerFactory
@@ -42,12 +42,13 @@ scanner_visualizer = xyzwScannerVisualizer(
     objects=objects,
     paths=paths,
 )
-
 paths.append(
-    ToyPath(
+    TablePathModel(
         name=f'path1',
+        scanner=scanner
     )
 )
+
 
 paths.append(
     ToyPath(
