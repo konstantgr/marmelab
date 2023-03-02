@@ -65,6 +65,12 @@ class TableModel(QAbstractTableModel):
         else:
             raise RuntimeError("Wrong split type")
 
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        return len(self.h_headers)
+
+    def columnCount(self, parent: QModelIndex = ...) -> int:
+        return len(self.v_headers)
+
     def set_relative(self, state: bool):
         """
         реализовать вызов функции
@@ -72,7 +78,7 @@ class TableModel(QAbstractTableModel):
         :return:
         """
         self.relative = state
-        start_index = self.index(RowNumber.start, len(self.v_headers) - 1)
+        start_index = self.index(RowNumber.start, 0)
         end_index = self.index(RowNumber.end, len(self.v_headers) - 1)
         self.dataChanged.emit(start_index, end_index)
 
@@ -82,6 +88,12 @@ class TableModel(QAbstractTableModel):
         start_index = self.index(RowNumber.step_split, 0)
         end_index = self.index(RowNumber.step_split, len(self.v_headers) - 1)
         self.dataChanged.emit(start_index, end_index)
+
+    def set_current_coords(self):
+        # использовать сеттер
+        start_index = self.index(RowNumber.start, 0)
+        end_index = self.index(RowNumber.start, len(self.v_headers) - 1)
+        self.setData(start_index, self.scanner_position)
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         flags = Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
@@ -123,8 +135,11 @@ class TableModel(QAbstractTableModel):
         :param self:
         :return:
         """
-        self._data.end = self._data.end + self.scanner_position - self._data.start
+        self._data.end = self.scanner_position + self._data.end - self._data.start
         self._data.start = self.scanner_position
+        start_index = self.index(RowNumber.start, 0)
+        end_index = self.index(RowNumber.end, len(self.v_headers) - 1)
+        self.dataChanged.emit(start_index, end_index)
 
     def setData(self, index: QModelIndex, value: Any, role: int = ...) -> bool:
         if role == Qt.ItemDataRole.EditRole:
@@ -158,11 +173,13 @@ class TableModel(QAbstractTableModel):
 
 
 class TablePathModel(PPath):
-    type_name = 'dsadsa'
-    base_name = 'sadsad'
+    type_name = 'Table'
+    base_name = 'Table path '
+
     def __init__(self, name: str, scanner: PScanner):
         super(TablePathModel, self).__init__(name=name)
         self.table_model = TableModel(scanner)
+        self.scanner = scanner
 
     @classmethod
     def reproduce(cls, name: str, project: ProjectType) -> 'TablePathModel':
@@ -174,6 +191,9 @@ class TablePathModel(PPath):
     def set_split_type(self, split_type: str):
         self.table_model.set_split_type(split_type)
 
+    def set_current_coords(self):
+        self.table_model.match_positions()
+
     def get_points_axes(self) -> tuple[str, ...]:
         pass
 
@@ -182,18 +202,24 @@ class TablePathModel(PPath):
         """маршрут (змейка)"""
         return np.array([[2004, 1040, 3400, 4000], [1043, 2342, 3234, 4432]])
 
-    def mesh_maker(self, lst: List):
+    def set_trajectory_type(self, trajectory_type: str):
+        pass
+
+    def line_mesh_maker(self, lst: List):
         """
         функция, которая формирует набор значений, в которых будет производиться измерения
         она выдает либо с заданным шагом, либо с фиксированным количеством точек, возможно реализовать без списка
         :param lst:
         :return:
         """
-        if self.split_type == "step":
+        if self.table_model.split_type == "step":
             arr = int(abs(lst[0] - lst[1] - 1) / lst[2])
             mesh = np.linspace(lst[0], lst[1], arr)
-        elif self.split_type == "points":
+            return self.get_points_ndarray(mesh)
+        elif self.table_model.split_type == "points":
             mesh = np.linspace(lst[0], lst[1], int(lst[2]))
-        return mesh
+            return self.get_points_ndarray(mesh)
 
 
+    def snake_mesh_maker(self, lst: List):
+        pass

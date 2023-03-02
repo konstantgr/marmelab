@@ -44,7 +44,7 @@ scanner_visualizer = xyzwScannerVisualizer(
 )
 paths.append(
     TablePathModel(
-        name=f'path1',
+        name=f'Table path 1',
         scanner=scanner
     )
 )
