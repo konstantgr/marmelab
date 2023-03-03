@@ -180,6 +180,7 @@ class TablePathModel(PPath):
         super(TablePathModel, self).__init__(name=name)
         self.table_model = TableModel(scanner)
         self.scanner = scanner
+        self.trajectory_type = "Snake"
 
     @classmethod
     def reproduce(cls, name: str, project: ProjectType) -> 'TablePathModel':
@@ -200,23 +201,14 @@ class TablePathModel(PPath):
     def get_points_ndarray(self) -> np.ndarray:
         # TODO: реализовать функцию, иначе ниче не работает(
         """маршрут (змейка)"""
+        if self.trajectory_type == "Snake":
+            return self.snake_mesh_maker()
+        elif self.trajectory_type == "Lines":
+            return self.lines_mesh_maker()
         return np.array([[2004, 1040, 3400, 4000], [1043, 2342, 3234, 4432]])
 
-    def trajectory_mesh_maker(self, axis):
-        """
-        функция, которая формирует набор значений, в которых будет производиться измерения
-        она выдает либо с заданным шагом, либо с фиксированным количеством точек
-        :param lst:
-        :return:
-        """
-        if self.table_model.split_type == "step":
-            arr = int(abs(axis[0] - axis[1] - 1) / axis[2])
-            mesh = np.linspace(axis[0], axis[1], arr)
-            print(mesh)
-            return mesh
-        elif self.table_model.split_type == "points":
-            mesh = np.linspace(axis[0], axis[1], int(axis[2]))
-            return mesh
+    def set_trajectory_type(self, traj_type: str):
+            self.trajectory_type = traj_type
 
     def lines_mesh_maker(self, axes):
         pass
@@ -249,14 +241,4 @@ class TablePathModel(PPath):
         build_path_in(axes)
         return path
 
-    def print_trajectory(self, traj_type: str):
-        """ тестовая функця на правильность трактории.  необходимо взять данные из таблицы и напечатать"""
-        X, Y, Z = self.trajectory_mesh_maker(np.arange(0, 4)), \
-                  self.trajectory_mesh_maker(np.arange(10, 13)), \
-                  self.trajectory_mesh_maker(np.arange(20, 23))
-        # X, Y, Z = np.arange(0, 4), np.arange(10, 13), np.arange(20, 23)
-        print(traj_type)
-        if traj_type == 'Snake':
-            print(self.snake_mesh_maker([X, Y, Z]))
-        elif traj_type == 'Lines':
-            print(self.lines_mesh_maker([X, Y, Z]))
+
