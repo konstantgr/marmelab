@@ -40,12 +40,12 @@ class TablePathView(BaseView[TablePathModel]):
         step_split_box.currentTextChanged.connect(self.set_split_type)
         vbox_layout.addWidget(step_split_box)
 
-        snake_lines_box = QComboBox()
-        items = ["Snake", "Lines"]
-        snake_lines_box.addItem(items[0])
-        snake_lines_box.addItem(items[1])
-        snake_lines_box.currentTextChanged.connect(self.set_split_type)
-        vbox_layout.addWidget(snake_lines_box)
+        self.snake_lines_box = QComboBox()
+        items_ = ["Snake", "Lines"]
+        self.snake_lines_box.addItem(items_[0])
+        self.snake_lines_box.addItem(items_[1])
+        # snake_lines_box.currentTextChanged.connect(self.model.print_trajectory)
+        vbox_layout.addWidget(self.snake_lines_box)
 
         check_relative = StateDepCheckBox(
             state=self.states.is_connected,
@@ -54,6 +54,14 @@ class TablePathView(BaseView[TablePathModel]):
         )
         check_relative.stateChanged.connect(self.model.set_relative)
         vbox_layout.addWidget(check_relative)
+
+        print_tr_button = StateDepPushButton(
+            state=self.states.is_connected,
+            text="Print the trajectory",
+            parent=widget
+        )
+        print_tr_button.clicked.connect(self.trajectory_type)
+        vbox_layout.addWidget(print_tr_button)
 
         hbox_layout.addWidget(vbox)  # добавление вертикального виджета (содежит комбо и чек боксы) в гориз. слой
         group_layout.addWidget(hbox)  # создание отдельной группы для горизонтального слоя (отображение в рамке)
@@ -72,3 +80,6 @@ class TablePathView(BaseView[TablePathModel]):
 
     def set_split_type(self, split_type: str):
         self.model.set_split_type(split_type.lower())
+
+    def trajectory_type(self):
+        self.model.print_trajectory(self.snake_lines_box.currentText())

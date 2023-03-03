@@ -202,24 +202,61 @@ class TablePathModel(PPath):
         """маршрут (змейка)"""
         return np.array([[2004, 1040, 3400, 4000], [1043, 2342, 3234, 4432]])
 
-    def set_trajectory_type(self, trajectory_type: str):
-        pass
-
-    def line_mesh_maker(self, lst: List):
+    def trajectory_mesh_maker(self, axis):
         """
         функция, которая формирует набор значений, в которых будет производиться измерения
-        она выдает либо с заданным шагом, либо с фиксированным количеством точек, возможно реализовать без списка
+        она выдает либо с заданным шагом, либо с фиксированным количеством точек
         :param lst:
         :return:
         """
         if self.table_model.split_type == "step":
-            arr = int(abs(lst[0] - lst[1] - 1) / lst[2])
-            mesh = np.linspace(lst[0], lst[1], arr)
-            return self.get_points_ndarray(mesh)
+            arr = int(abs(axis[0] - axis[1] - 1) / axis[2])
+            mesh = np.linspace(axis[0], axis[1], arr)
+            print(mesh)
+            return mesh
         elif self.table_model.split_type == "points":
-            mesh = np.linspace(lst[0], lst[1], int(lst[2]))
-            return self.get_points_ndarray(mesh)
+            mesh = np.linspace(axis[0], axis[1], int(axis[2]))
+            return mesh
 
-
-    def snake_mesh_maker(self, lst: List):
+    def lines_mesh_maker(self, axes):
         pass
+
+    def snake_mesh_maker(self, axes):
+        """
+        функция осуществляет измерения с заданым разбиением по траектории змейка
+        :param axes:
+        :return:
+        """
+        cur_crd = []
+        path = []
+        trends = [1] * len(axes)
+
+        def build_path_in(axes):
+            nonlocal cur_crd
+            nonlocal path
+            cur_ax = axes[-1]
+            if trends[len(axes) - 1] == -1:
+                cur_ax = np.flip(cur_ax)
+            for crd in cur_ax:
+                cur_crd.append(crd)
+                if len(axes) > 1:
+                    build_path_in(axes[:-1])
+                    trends[len(axes) - 2] *= -1
+                else:
+                    path.append(np.flip(cur_crd))
+                cur_crd.pop(-1)
+
+        build_path_in(axes)
+        return path
+
+    def print_trajectory(self, traj_type: str):
+        """ тестовая функця на правильность трактории.  необходимо взять данные из таблицы и напечатать"""
+        X, Y, Z = self.trajectory_mesh_maker(np.arange(0, 4)), \
+                  self.trajectory_mesh_maker(np.arange(10, 13)), \
+                  self.trajectory_mesh_maker(np.arange(20, 23))
+        # X, Y, Z = np.arange(0, 4), np.arange(10, 13), np.arange(20, 23)
+        print(traj_type)
+        if traj_type == 'Snake':
+            print(self.snake_mesh_maker([X, Y, Z]))
+        elif traj_type == 'Lines':
+            print(self.lines_mesh_maker([X, Y, Z]))
