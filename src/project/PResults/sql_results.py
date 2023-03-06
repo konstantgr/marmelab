@@ -11,17 +11,26 @@ from db_structures import create_db, ResultsDb
 
 
 class SQLResults(PResults):
-    def __init__(self, results: np.ndarray, names: Tuple[str, ...], db_path, create_db_flag=False):
-        super(SQLResults, self).__init__(results=results, names=names, db_path=db_path)
-        self.results = results
-        self.names = names
-        self.db_path = db_path
-
-        if create_db_flag:
-            self.create_db()
+    def __init__(self, name):
+        super(SQLResults, self).__init__(name=name)
+        self.results = None
+        self.names = None
+        self.db_path = ''
 
         self.engine = db.create_engine(Path('sqlite://') / self.db_path)
         self.connection = None
+
+    def set_db(self):
+        self.create_db()
+
+    def set_db_path(self, db_path: Path):
+        self.db_path = db_path
+
+    def set_names(self, names: Tuple[str, ...]):
+        self.names = names
+
+    def set_results(self, results: np.ndarray):
+        self.results = results
 
     def create_db(self):
         create_db(self.db_path)
@@ -38,10 +47,10 @@ class SQLResults(PResults):
         Возвращает все сохраненные данные
         """
         if pandas:
-            sql = "SELECT * FROM Results "
+            sql = "SELECT * FROM Results"
             return pd.read_sql(sql, con=self.engine).to_numpy()
         else:
-            return ResultsDb.query.all()
+            return np.array(ResultsDb.query.all().fetchall())
 
     def get_data_names(self) -> Tuple[str, ...]:
         """
@@ -62,6 +71,6 @@ class SQLResults(PResults):
                 session.add(results)
                 session.commit()
 
-    # def to_csv(self, filepath: Path):
-    #     delimiter = ','
-    #     np.savetxt(filepath, self.results, delimiter=delimiter, header=delimiter.join(self.names))
+    @classmethod
+    def reproduce(cls, name: str, project) -> 'SQLResults':
+        return cls(name=name)
