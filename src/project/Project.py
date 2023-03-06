@@ -256,7 +256,7 @@ class PMeasurand(ABC):
         """
 
     @abstractmethod
-    def get_measure_names(self) -> Tuple[str, ...]:
+    def get_measure_names(self) -> Tuple[str]:
         """
         Возвращает кортеж названий измеренных величин, например (“freq”, “S11”)
         """
@@ -313,11 +313,15 @@ class PAnalyzer(ABC):
 
         self.signals.connect.connect(self.instrument.connect)
         self.signals.disconnect.connect(self.instrument.disconnect)
-        self.signals.set_settings.connect(self._set_settings)
+        self.signals.set_settings.connect(self.set_settings)
 
-    def _set_settings(self, d: dict):
-        self.current_measurand = None
-        self.instrument.set_settings(**d)
+    def set_settings(
+            self,
+            measurand: Union[PMeasurand, None] = None,
+            **settings
+    ):
+        self.instrument.set_settings(settings)
+        self.current_measurand = measurand
 
     def set_current_measurand(self, measurand: PMeasurand):
         """Объявить measurand, к которому подготовлен анализатор"""
