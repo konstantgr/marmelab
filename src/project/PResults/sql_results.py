@@ -4,10 +4,11 @@ import sqlalchemy as db
 
 from typing import Tuple
 from pathlib import Path
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import text
 
 from ..Project import PResults
-from db_structures import create_db, ResultsDb
+from .db_structures import create_db, ResultsDb
 
 
 class SQLResults(PResults):
@@ -15,16 +16,23 @@ class SQLResults(PResults):
         super(SQLResults, self).__init__(name=name)
         self.results = None
         self.names = None
-        self.db_path = ''
+        self.db_path = Path("")
 
-        self.engine = db.create_engine(Path('sqlite://') / self.db_path)
+        self.engine = None
         self.connection = None
+        self.session = None
 
-    def set_db(self):
-        self.create_db()
+    def set_engine(self):
+        self.engine = db.create_engine(str(self.db_path))
 
     def set_db_path(self, db_path: Path):
-        self.db_path = db_path
+        self.db_path = f'sqlite:///{db_path}'  # Path('sqlite://') / db_path
+
+    def set_db(self, existing=False, force_create=False):
+        if not existing or force_create:
+            create_db(self.db_path, force_create)
+
+        self.set_engine()
 
     def set_names(self, names: Tuple[str, ...]):
         self.names = names
@@ -32,11 +40,13 @@ class SQLResults(PResults):
     def set_results(self, results: np.ndarray):
         self.results = results
 
-    def create_db(self):
-        create_db(self.db_path)
-
     def connect(self):
         self.connection = self.engine.connect()
+        Session = sessionmaker()
+        Session.configure(bind=self.engine)
+
+        self.session = Session()
+        # session.add(ed_user)
 
     def disconnect(self):
         self.connection.close()
@@ -47,8 +57,9 @@ class SQLResults(PResults):
         Возвращает все сохраненные данные
         """
         if pandas:
-            sql = "SELECT * FROM Results"
-            return pd.read_sql(sql, con=self.engine).to_numpy()
+            sql = "SELECT * FROM Results;"
+            with self.engine.begin() as conn:
+                return pd.read_sql_query(text(sql), con=conn).to_numpy()
         else:
             return np.array(ResultsDb.query.all().fetchall())
 
@@ -62,15 +73,14 @@ class SQLResults(PResults):
         """
         Добавить новую строку в результаты
         """
-        if not self.connection:
-            self.connect()
+        # trans = self.connection.begin()
 
-        with Session(self.engine) as session:
-            for result_array in data:
-                results = ResultsDb(*result_array)
-                session.add(results)
-                session.commit()
+        for result_array in data:
+            d = dict(zip(self.names, result_array))
+            results = ResultsDb(**d)
+            self.session.add(results)
+            self.session.commit()
 
     @classmethod
-    def reproduce(cls, name: str, project) -> 'SQLResults':
+    def reproduce(cls, name: str, project) -> "SQLResults":
         return cls(name=name)

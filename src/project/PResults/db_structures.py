@@ -17,9 +17,9 @@ class ResultsDb(base):
     w = Column(Float)
 
 
-def create_db(db_path: Path):
+def create_db(db_path: Path, force_create=False):
     engine = create_engine(str(db_path), echo=False)
-    if not database_exists(engine.url):
+    if not database_exists(engine.url) or force_create:
         create_database(engine.url)
 
     base.metadata.drop_all(engine)
