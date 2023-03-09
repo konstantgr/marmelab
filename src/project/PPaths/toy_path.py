@@ -8,10 +8,10 @@ class ToyPath(PPath):
         super(ToyPath, self).__init__(name=name)
         self.x_min = 100
         self.y_min = 100
-        self.x_max = 1100
-        self.y_max = 1100
-        self.x_points = 30
-        self.y_points = 30
+        self.x_max = 2500
+        self.y_max = 2500
+        self.x_points = 10
+        self.y_points = 10
 
     @classmethod
     def reproduce(cls, name: str, project: ProjectType) -> 'ToyPath':
@@ -36,9 +36,9 @@ class ToyPath(PPath):
         for i in range(len(xs)):
             for j in range(len(ys)):
                 if i % 2 == 0:
-                    res.append([xs[i], ys[j], 0, 0])
+                    res.append([xs[i], ys[j], 500, 0])
                 else:
-                    res.append([xs[i], ys[-j-1], 0, 0])
+                    res.append([xs[i], ys[-j-1], 500, 0])
         return np.array(res)
 
 

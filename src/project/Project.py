@@ -36,26 +36,31 @@ class PBaseSignals(QObject):
     changed: pyqtBoundSignal = pyqtSignal()
     name_changed: pyqtBoundSignal = pyqtSignal()
     display_changed: pyqtBoundSignal = pyqtSignal()
+    data_changed: pyqtBoundSignal = pyqtSignal()
 
 
 SignalsTypes = TypeVar('SignalsTypes')
 ProjectType = TypeVar('ProjectType', bound='Project')
 
 
-class PBase(PNamed, metaclass=ABCMeta):
+class PBase(PNamed, Generic[SignalsTypes], metaclass=ABCMeta):
     """
     Базовый класс всех объектов в проекте
     """
     base_name = 'base'
     type_name = 'Base'
+    signals_type: Type[SignalsTypes] = PBaseSignals
 
     def __init__(
             self,
             name: str,
-            signals: SignalsTypes = None
     ):
         super(PBase, self).__init__(name=name)
-        self.signals = signals if signals is not None else PBaseSignals()
+        self.signals: SignalsTypes = self.signals_type()
+
+    # def __init_subclass__(cls, **kwargs):
+    #     # cls.signals_type = PBaseSignals
+    #     print(cls.signals_type)
 
     @classmethod
     @abstractmethod
@@ -261,7 +266,7 @@ class PMeasurandSignals(QObject):
     measured: pyqtBoundSignal = pyqtSignal()
 
 
-class PMeasurand(PNamed, metaclass=ABCMeta):
+class PMeasurand(PBase, metaclass=ABCMeta):
     """
     Физическая величина, которая может быть измерена анализатором
     """
@@ -408,10 +413,46 @@ class PExperiment(PBase):
         """
 
 
+class PRealTimePlot(metaclass=ABCMeta):
+    """График, который обновляется по времени"""
+
+    # @property
+    # @abstractmethod
+    # def auto_update(self) -> bool:
+    #     """Обновлять ли график автоматически"""
+    #
+    # @property
+    # @abstractmethod
+    # def auto_update_time_delay(self) -> float:
+    #     """Задержка между запросами на обновление"""
+
+    @property
+    @abstractmethod
+    def measurand(self) -> PMeasurand:
+        """Measurand для которого строится график"""
+
+
+class PResultsPlot(metaclass=ABCMeta):
+    """График, который обновляется, когда в PResults появились новые данные"""
+    # @property
+    # @abstractmethod
+    # def auto_update(self) -> bool:
+    #     """Обновлять ли график автоматически"""
+
+    @property
+    @abstractmethod
+    def results(self) -> PResults:
+        """Results для которого строится график"""
+
+
 class PPlot1D(PBase):
     """Класс графиков f(x)"""
     base_name = 'plt'
     type_name = 'Plot f(x)'
+
+    @abstractmethod
+    def update(self):
+        """Обновить data"""
 
     @abstractmethod
     def get_x(self) -> np.ndarray:
@@ -494,14 +535,16 @@ class PStorage(Generic[PBaseTypes]):
         self.signals.changed.emit()
 
 
-class PAnalyzerVisualizer(ABC):
+class PAnalyzerVisualizer(PNamed, metaclass=ABCMeta):
     """
     Класс визуализатора анализатора
     """
     def __init__(
             self,
+            name: str,
             plots: PStorage[PPlotTypes],
     ):
+        super(PAnalyzerVisualizer, self).__init__(name=name)
         self.plots = plots
 
 

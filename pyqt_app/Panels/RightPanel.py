@@ -13,7 +13,7 @@ class RightPanel(BasePanel):
     def __init__(
             self,
             scanner_visualizer: ModelViewVisualizer,
-            # analyzer_visualizer: PAnalyzerVisualizer,
+            plots_visualizer: ModelViewVisualizer,
             **kwargs
     ):
         super(RightPanel, self).__init__(**kwargs)
@@ -21,14 +21,13 @@ class RightPanel(BasePanel):
         self.vbox = QVBoxLayout(self)
         self.setLayout(self.vbox)
         self.scanner_widget = scanner_visualizer.visualizer_widget.widget
-        # self.graph_widget = analyzer_visualizer.widget
-        self.graph_widget = QTextEdit("12")
+        self.plots_widget = plots_visualizer.visualizer_widget.widget
 
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
         graphs_splitter = QSplitter(orientation=Qt.Orientation.Vertical)
         graphs_splitter.insertWidget(0, self.scanner_widget)
-        graphs_splitter.insertWidget(1, self.graph_widget)
+        graphs_splitter.insertWidget(1, self.plots_widget)
         max_height = QGuiApplication.primaryScreen().virtualSize().height()
         graphs_splitter.setSizes([int(max_height/3), int(max_height/2)])
         self.vbox.addWidget(graphs_splitter)

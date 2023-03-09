@@ -76,6 +76,7 @@ class LeftPanel(BasePanel):
 
         project.objects.signals.changed.connect(self.draw)
         project.paths.signals.changed.connect(self.draw)
+        project.plots.signals.changed.connect(self.draw)
         project.measurands.signals.changed.connect(self.draw)
         project.experiments.signals.changed.connect(self.draw)
 

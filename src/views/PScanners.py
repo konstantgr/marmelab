@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QSplitter
-from PyQt6.QtWidgets import QWidget, QSizePolicy, QGroupBox, QVBoxLayout
+from PyQt6.QtWidgets import QWidget, QSizePolicy, QLineEdit, QGroupBox, QLabel, QVBoxLayout, QFormLayout
 from .Widgets import SettingsTableWidget, StateDepPushButton
 from ..Variable import Setting
 from ..project.PScanners import TRIMPScanner
@@ -36,6 +36,15 @@ class TRIMControl(BaseView[TRIMPScanner]):
             text="Abort",
         )
 
+        self.x_text = QLineEdit()
+        self.y_text = QLineEdit()
+        self.z_text = QLineEdit()
+        self.w_text = QLineEdit()
+        self.goto_button = StateDepPushButton(
+            state=states.is_connected & ~states.is_in_use,
+            text="Go",
+        )
+
     def construct_widget(self) -> QWidgetType:
         widget = QWidget()
         vbox = QVBoxLayout(widget)
@@ -60,7 +69,36 @@ class TRIMControl(BaseView[TRIMPScanner]):
         group_layout.addWidget(self.home_button)
         group_layout.addWidget(self.abort_button)
 
+        group_control = QGroupBox(widget)
+        group_control_layout = QFormLayout(group_control)
+        group_control_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        vbox.addWidget(group_control)
+
+        group_control_layout.addRow(QLabel("x:"), self.x_text)
+        self.x_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        group_control_layout.addRow(QLabel("y:"), self.y_text)
+        self.y_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        group_control_layout.addRow(QLabel("z:"), self.z_text)
+        self.z_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        group_control_layout.addRow(QLabel("w:"), self.w_text)
+        self.w_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+
+        buttons_widget = QWidget()
+        buttons_widget.setLayout(QVBoxLayout())
+        group_control_layout.addRow(buttons_widget)
+        buttons_widget.layout().addWidget(self.goto_button)
+        self.goto_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        buttons_widget.layout().setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.goto_button.clicked.connect(self.goto)
         return widget
+
+    def goto(self):
+        x = float(self.x_text.text()) if self.x_text.text().strip() != '' else None
+        y = float(self.y_text.text()) if self.y_text.text().strip() != '' else None
+        z = float(self.z_text.text()) if self.z_text.text().strip() != '' else None
+        w = float(self.w_text.text()) if self.w_text.text().strip() != '' else None
+        new_pos = Position(x, y, z, w)
+        self.model.instrument.goto(new_pos)
 
     def _home(self):
         self.model.instrument.home()

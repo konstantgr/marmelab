@@ -12,6 +12,7 @@ class MainWindow(QMainWindow):
         self.main_widget = QWidget()
         hbox = QHBoxLayout(self.main_widget)  # layout of Main window
         self.main_widget.setLayout(hbox)
+        # self.main_widget.setStyleSheet("background-color: red")
 
         self.tool_panel = ToolPanel(self.main_widget)
         self.addToolBar(self.tool_panel)
@@ -34,7 +35,7 @@ class MainWindow(QMainWindow):
 
         self.right_panel = RightPanel(
             scanner_visualizer=builder.scanner_visualizer,
-            # analyzer_visualizer=project.analyzer_visualizer,
+            plots_visualizer=builder.plots_visualizer,
             parent=self.main_widget
         )  # graphics
 
@@ -71,7 +72,7 @@ class MainWindow(QMainWindow):
         hbox.addWidget(main_splitter)
 
         self.setGeometry(300, 300, 450, 400)
-        self.setWindowTitle('Scanner control')
+        self.setWindowTitle('MarMELAB v0.0')
         self.setCentralWidget(self.main_widget)
 
 

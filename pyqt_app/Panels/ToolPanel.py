@@ -56,7 +56,7 @@ class ToolPanel(QToolBar):
         )
         self.upd_button_action = StateDepQAction(
             state=project.scanner.states.is_connected,
-            set_icon=icons.arrow_circle_24,
+            set_icon=icons.update,
             text="Update\nposition",
             parent=self
         )
