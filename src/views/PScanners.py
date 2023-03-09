@@ -6,7 +6,8 @@ from ..project.PScanners import TRIMPScanner
 from ..scanner.scanner import Position
 from PyQt6.QtCore import Qt, QThreadPool
 from .View import BaseView, QWidgetType
-
+from PyQt6.QtCore import QRegularExpression
+from PyQt6.QtGui import QRegularExpressionValidator
 
 import logging
 logger = logging.getLogger()
@@ -36,10 +37,19 @@ class TRIMControl(BaseView[TRIMPScanner]):
             text="Abort",
         )
 
+        reg_ex = QRegularExpression("[+-]?([0-9]*[.])?[0-9]+")
         self.x_text = QLineEdit()
+        self.x_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        self.x_text.setValidator(QRegularExpressionValidator(reg_ex))
         self.y_text = QLineEdit()
+        self.y_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        self.y_text.setValidator(QRegularExpressionValidator(reg_ex))
         self.z_text = QLineEdit()
+        self.z_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        self.z_text.setValidator(QRegularExpressionValidator(reg_ex))
         self.w_text = QLineEdit()
+        self.w_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        self.w_text.setValidator(QRegularExpressionValidator(reg_ex))
         self.goto_button = StateDepPushButton(
             state=states.is_connected & ~states.is_in_use,
             text="Go",
@@ -60,7 +70,7 @@ class TRIMControl(BaseView[TRIMPScanner]):
 
         self.connect_button.clicked.connect(self.model.instrument.connect)
         self.disconnect_button.clicked.connect(self.model.instrument.disconnect)
-        self.home_button.clicked.connect(self.f_home)
+        self.home_button.clicked.connect(self._home)
         self.abort_button.clicked.connect(self.model.instrument.abort)
 
         self.abort_button.setProperty('color', 'red')
@@ -74,14 +84,10 @@ class TRIMControl(BaseView[TRIMPScanner]):
         group_control_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         vbox.addWidget(group_control)
 
-        group_control_layout.addRow(QLabel("x:"), self.x_text)
-        self.x_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        group_control_layout.addRow(QLabel("y:"), self.y_text)
-        self.y_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        group_control_layout.addRow(QLabel("z:"), self.z_text)
-        self.z_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        group_control_layout.addRow(QLabel("w:"), self.w_text)
-        self.w_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        group_control_layout.addRow(QLabel("x, mm:"), self.x_text)
+        group_control_layout.addRow(QLabel("y, mm:"), self.y_text)
+        group_control_layout.addRow(QLabel("z, mm:"), self.z_text)
+        group_control_layout.addRow(QLabel("w, mm:"), self.w_text)
 
         buttons_widget = QWidget()
         buttons_widget.setLayout(QVBoxLayout())
@@ -109,13 +115,6 @@ class TRIMControl(BaseView[TRIMPScanner]):
         logger.debug(f'y: {current_position.y}')
         logger.debug(f'z: {current_position.z}')
         logger.debug(f'w: {current_position.z}')
-
-    def f_home(self):
-        """
-        This function sets "home" current cords.
-        """
-        # self._thread_pool.start(Worker(self._home))
-        self._home()
 
     def display_name(self) -> str:
         return "Control"
