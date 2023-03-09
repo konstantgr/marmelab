@@ -171,6 +171,10 @@ class TableModel(QAbstractTableModel):
         #         # return
         #     return QColor('red')
 
+    # def get_data(self, ):
+
+
+
 
 class TablePathModel(PPath):
     type_name = 'Table'
@@ -201,10 +205,10 @@ class TablePathModel(PPath):
     def get_points_ndarray(self) -> np.ndarray:
         # TODO: реализовать функцию, иначе ниче не работает(
         """маршрут (змейка)"""
-        if self.trajectory_type == "Snake":
-            return self.snake_mesh_maker()
-        elif self.trajectory_type == "Lines":
-            return self.lines_mesh_maker()
+        # if self.trajectory_type == "Snake":
+        #     return self.snake_mesh_maker()
+        # elif self.trajectory_type == "Lines":
+        #     return self.lines_mesh_maker()
         return np.array([[2004, 1040, 3400, 4000], [1043, 2342, 3234, 4432]])
 
     def set_trajectory_type(self, traj_type: str):
@@ -219,26 +223,27 @@ class TablePathModel(PPath):
         :param axes:
         :return:
         """
-        cur_crd = []
-        path = []
-        trends = [1] * len(axes)
+        # axes = self._data
+        blck_sizes = [len(ax) for ax in axes]
+        crds = np.zeros((len(axes), np.prod(blck_sizes)))
+        crds[-1] = np.repeat(axes[-1], np.prod(blck_sizes[:-1]))
 
-        def build_path_in(axes):
-            nonlocal cur_crd
-            nonlocal path
-            cur_ax = axes[-1]
-            if trends[len(axes) - 1] == -1:
-                cur_ax = np.flip(cur_ax)
-            for crd in cur_ax:
-                cur_crd.append(crd)
-                if len(axes) > 1:
-                    build_path_in(axes[:-1])
-                    trends[len(axes) - 2] *= -1
-                else:
-                    path.append(np.flip(cur_crd))
-                cur_crd.pop(-1)
+        for i in range(len(axes) - 1):
+            rep_num = np.prod(blck_sizes[:i])
+            rep_el = np.repeat(axes[i], rep_num)
+            tile_num = np.prod(blck_sizes[i + 1:])
+            tile_el = np.concatenate((rep_el, np.flip(rep_el)))
+            if tile_num % 2 != 0:
+                crds[i] = np.concatenate((np.tile(tile_el, tile_num // 2), rep_el))
+            else:
+                crds[i] = np.tile(tile_el, tile_num // 2)
 
-        build_path_in(axes)
-        return path
+        return crds.T
 
 
+    def cur_cords(self):
+        role = Qt.ItemDataRole.DisplayRole
+        for i in range(2):
+            for j in range(2):
+                start_index = self.table_model.index(0, 0)
+                print(self.table_model.data(start_index, role))

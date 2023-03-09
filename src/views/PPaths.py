@@ -60,7 +60,7 @@ class TablePathView(BaseView[TablePathModel]):
             text="Print the trajectory",
             parent=widget
         )
-        print_tr_button.clicked.connect(self.trajectory_type)
+        print_tr_button.clicked.connect(self.model.cur_cords)
         vbox_layout.addWidget(print_tr_button)
 
         hbox_layout.addWidget(vbox)  # добавление вертикального виджета (содежит комбо и чек боксы) в гориз. слой
