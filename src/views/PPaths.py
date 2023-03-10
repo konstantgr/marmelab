@@ -44,7 +44,7 @@ class TablePathView(BaseView[TablePathModel]):
         items_ = ["Snake", "Lines"]
         self.snake_lines_box.addItem(items_[0])
         self.snake_lines_box.addItem(items_[1])
-        # snake_lines_box.currentTextChanged.connect(self.model.print_trajectory)
+        self.snake_lines_box.currentTextChanged.connect(self.set_trajectory_type)
         vbox_layout.addWidget(self.snake_lines_box)
 
         check_relative = StateDepCheckBox(
@@ -60,7 +60,7 @@ class TablePathView(BaseView[TablePathModel]):
             text="Print the trajectory",
             parent=widget
         )
-        print_tr_button.clicked.connect(self.model.cur_cords)
+        print_tr_button.clicked.connect(self.model.print_data) # должна вызываться ф-ия mesh_maker
         vbox_layout.addWidget(print_tr_button)
 
         hbox_layout.addWidget(vbox)  # добавление вертикального виджета (содежит комбо и чек боксы) в гориз. слой
@@ -81,5 +81,5 @@ class TablePathView(BaseView[TablePathModel]):
     def set_split_type(self, split_type: str):
         self.model.set_split_type(split_type.lower())
 
-    def trajectory_type(self):
-        self.model.print_trajectory(self.snake_lines_box.currentText())
+    def set_trajectory_type(self, trajectory_type: str):
+        self.model.set_trajectory_type(trajectory_type)

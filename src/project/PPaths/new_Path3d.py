@@ -15,12 +15,9 @@ from ...scanner import Position
 from dataclasses import dataclass, field
 import math
 from enum import IntEnum, auto
+import matplotlib.pyplot as plt
+import time
 
-# TODO: в классе TableModel реализовать вызов функции set_relative
-# TODO: в модели хранятся абсолютные координаты. при нажатии чекбокса данные меняются только во вьюшке. Когда пользоват.
-# TODO: вводит данные, их всегда надо переводить в абослютные координаты. реализовать в setData (в модели таблицы)
-# TODO: реализовать проверку в функции SetData на нажатый чекбокс(если галочка нажата, к конечным координатам прибавляем
-# TODO: то, что вбил пользователь, а начальные не меняем)
 # TODO: добавть во вьюшке кнопки: 1) устанавливает относительные координаты и одновременно перемещает точку начала
 # TODO: сканирования в позицию сканера, 2) просто перемещает точку сканирования в позицию сканера
 # TODO: траснпонировать заголовки
@@ -163,19 +160,6 @@ class TableModel(QAbstractTableModel):
         return True
 
 
-        #  использовать когда будет добавлена валидация, придумат способ проверки на координаты попроще
-        # elif role == Qt.ItemDataRole.BackgroundRole:
-        #     if self._data[row][column] == "":
-        #         return QColor('lightgrey')
-        #     # elif self._valid(self._data[row][column], self.variable):
-        #         # return
-        #     return QColor('red')
-
-    # def get_data(self, ):
-
-
-
-
 class TablePathModel(PPath):
     type_name = 'Table'
     base_name = 'Table path '
@@ -204,22 +188,16 @@ class TablePathModel(PPath):
 
     def get_points_ndarray(self) -> np.ndarray:
         # TODO: реализовать функцию, иначе ниче не работает(
-        """маршрут (змейка)"""
-        # if self.trajectory_type == "Snake":
-        #     return self.snake_mesh_maker()
-        # elif self.trajectory_type == "Lines":
-        #     return self.lines_mesh_maker()
+        """связать с функцией mesh_maker"""
+
         return np.array([[2004, 1040, 3400, 4000], [1043, 2342, 3234, 4432]])
 
     def set_trajectory_type(self, traj_type: str):
             self.trajectory_type = traj_type
 
-    def lines_mesh_maker(self, axes):
-        pass
-
-    def snake_mesh_maker(self, axes):
+    def mesh_maker(self, axes):
         """
-        функция осуществляет измерения с заданым разбиением по траектории змейка
+        функция осуществляет измерения с заданым разбиением по траектории змейка или линия
         :param axes:
         :return:
         """
@@ -232,7 +210,10 @@ class TablePathModel(PPath):
             rep_num = np.prod(blck_sizes[:i])
             rep_el = np.repeat(axes[i], rep_num)
             tile_num = np.prod(blck_sizes[i + 1:])
-            tile_el = np.concatenate((rep_el, np.flip(rep_el)))
+            if self.trajectory_type == 'Snake':
+                tile_el = np.concatenate((rep_el, np.flip(rep_el)))
+            elif self.trajectory_type == 'Lines':
+                tile_el = np.concatenate((rep_el, rep_el))
             if tile_num % 2 != 0:
                 crds[i] = np.concatenate((np.tile(tile_el, tile_num // 2), rep_el))
             else:
@@ -241,9 +222,32 @@ class TablePathModel(PPath):
         return crds.T
 
 
-    def cur_cords(self):
+    def print_data(self):
+        temp = []
         role = Qt.ItemDataRole.DisplayRole
-        for i in range(2):
-            for j in range(2):
-                start_index = self.table_model.index(0, 0)
-                print(self.table_model.data(start_index, role))
+
+        for i in range(4):
+            start_index = self.table_model.index(0, i)
+            end_index = self.table_model.index(1, i)
+            step_index = self.table_model.index(2, i)
+
+            start = self.table_model.data(start_index, role)
+            stop = self.table_model.data(end_index, role)
+            step = self.table_model.data(step_index, role)
+
+            if self.table_model.split_type == "points":
+                current_data = np.linspace(float(start), float(stop), int(step))
+
+            elif self.table_model.split_type == "step":
+                points_numbers = int(abs(start - stop - 1) / step)
+                current_data = np.linspace(float(start), float(stop), points_numbers)
+            print(current_data)
+            temp.append(current_data)
+        # print(temp)
+        s = time.time()
+        print(self.mesh_maker(temp))
+        print(time.time() - s)
+
+        # ax = plt.figure().add_subplot(projection='3d')
+        # ax.plot(*np.array(temp).T)
+        # plt.show()

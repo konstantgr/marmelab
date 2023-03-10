@@ -25,6 +25,7 @@ pandas = "^1.5.2"
 openpyxl = "^3.0.10"
 rsinstrument = "^1.53.0"
 pywin32 = "^305"
+matplotlib = "^3.7.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.3"
