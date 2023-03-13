@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QScrollArea, QWidget, QStackedWidget
 from .BasePanel import BasePanel
 from pyqt_app import project, builder
+from src.views.View import BaseView
 
 
 class CentralPanel(QScrollArea, BasePanel):
@@ -33,18 +34,19 @@ class CentralPanel(QScrollArea, BasePanel):
             w = self.stacked_widget.widget(i)
             self.stacked_widget.removeWidget(w)
 
-        project_tree = builder.tree()
+        project_tree = builder.view_tree()
         i = 0
         for tab in project_tree.keys():
-            for element in project_tree[tab]:
-                if not isinstance(element, list):
-                    self.stacked_widget.insertWidget(i, element)
+            for element_name, element in project_tree[tab]:
+                if element is None:
+                    continue
+                elif isinstance(element, BaseView):
+                    self.stacked_widget.insertWidget(i, element.widget)
                     i += 1
-                else:
-                    for el in element:
-                        self.stacked_widget.insertWidget(i, el)
+                elif isinstance(element, list):
+                    for el_name, el in element:
+                        self.stacked_widget.insertWidget(i, el.widget)
                         i += 1
-
 
     def display(self, tree_num: int) -> None:
         """

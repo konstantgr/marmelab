@@ -5,7 +5,7 @@ from src.project.PExperiments import ToyExperiment
 from src.project.PResults import ToyResults, SQLResults
 from src.project.Project import PAnalyzerSignals, PMeasurand, PScannerSignals
 import numpy as np
-from src.analyzator.rohde_schwarz.rohde_schwarz import RohdeSchwarzAnalyzer
+from src.analyzers.rohde_schwarz.rohde_schwarz import RohdeSchwarzAnalyzer
 from src.Variable import Setting
 from src.scanner.TRIM import TRIMScanner
 

@@ -1,72 +1,87 @@
 from src.views.Widgets import StateDepPushButton, StateDepQAction
-from PyQt6.QtWidgets import QToolBar, QPushButton
+from PyQt6.QtWidgets import QWidget, QToolBar, QPushButton, QTextEdit, QGroupBox, QHBoxLayout, QVBoxLayout
 from PyQt6.QtGui import QAction, QIcon
-from PyQt6.QtCore import QSize
-from pyqt_app import project
+from PyQt6.QtCore import QSize, Qt
+from pyqt_app import project, builder
+from src.builder import FactoryGroups
 import logging
-from pyqt_app.app_project import paths, objects
-from PyQt6.QtWidgets import QMainWindow
-from src.project.PPaths import Path3d
-from src.icons import arrow_circle_24
-from src.icons import cross
+from src import icons
+from functools import partial
 import numpy as np
 logger = logging.getLogger()
+
+
+class GroupToolBar(QToolBar):
+    def __init__(self, *args, **kwargs):
+        super(GroupToolBar, self).__init__(*args, **kwargs)
+        self.setIconSize(QSize(32, 32))
+        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+
+
+class ToolGroup(QGroupBox):
+    def __init__(self, *args, **kwargs):
+        super(ToolGroup, self).__init__(*args, **kwargs)
+        self.setProperty('type', 'toolbar')
+        self.setLayout(QHBoxLayout())
+        self.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+
+    def addQAction(self, action: QAction):
+        # ради выравнивания)))))
+        group_toolbar = GroupToolBar(parent=self)
+        group_toolbar.addAction(action)
+        w = QWidget()
+        w.setLayout(QVBoxLayout())
+        w.layout().setContentsMargins(0, 0, 0, 0)
+        w.layout().addWidget(group_toolbar)
+        w.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout().addWidget(w)
 
 
 class ToolPanel(QToolBar):
     def __init__(self, *args, **kwargs):
         super(QToolBar, self).__init__(*args, **kwargs)
-        self.path_counter = 1
-        self.obj_counter = 1
-        self.upd_button = QPushButton("Update current position")
-        self.add_path_button = QPushButton("Add path")
-        self.add_obj_button = QPushButton("Add object")
-        self.setIconSize(QSize(24, 24))
+        self.setIconSize(QSize(32, 32))
+        self.setMovable(False)
+
+        scanner_group_widget = ToolGroup("Scanner")
+        self.addWidget(scanner_group_widget)
+
         self.abort_button = StateDepQAction(
             state=project.scanner.states.is_connected,
-            set_icon=cross,
+            set_icon=icons.abort,
             text="Abort",
             parent=self
         )
-
         self.upd_button_action = StateDepQAction(
             state=project.scanner.states.is_connected,
-            set_icon=arrow_circle_24,
-            text="Update current position",
+            set_icon=icons.arrow_circle_24,
+            text="Update\nposition",
             parent=self
         )
-
-        self.upd_button_action.triggered.connect(self.upd_cur_pos)
-
-        self.addAction(self.upd_button_action)
-        self.addWidget(self.add_path_button)
-        self.addWidget(self.add_obj_button)
-        self.addAction(self.abort_button)
-
-
-        self.add_obj_button.clicked.connect(self.obj_adder)
-        self.add_path_button.clicked.connect(self.path_adder)
+        self.upd_button_action.triggered.connect(project.scanner.instrument.position)
         self.abort_button.triggered.connect(project.scanner.instrument.abort)
+        scanner_group_widget.addQAction(self.upd_button_action)
+        scanner_group_widget.addQAction(self.abort_button)
 
-    @staticmethod
-    def upd_cur_pos():
-        project.scanner.instrument.position()
+        self.addSeparator()
 
-    def path_adder(self):
-        self.path_counter += 1
-        paths.append(
-            Path3d(
-                name=f'Path {self.path_counter}',
-                points=np.array([[1000 * i, 0, 0] for i in range(5)]),
-                scanner=project.scanner
-            )
-        )
+        for group, factories in builder.factories.items():
+            group_widget = ToolGroup(group.value)
+            group_toolbar = GroupToolBar()
+            group_widget.layout().addWidget(group_toolbar)
 
-    def obj_adder(self):
-        self.obj_counter += 1
-        objects.append(
-            Object3d(
-                name=f'Object {self.obj_counter}'
-            )
-        )
+            i = 0
+            for factory in factories:
+                if factory.reproducible:
+                    i += 1
+                    button = QAction(factory.icon, factory.type.type_name, group_toolbar)
+                    group_toolbar.addAction(button)
+                    button.triggered.connect(
+                        partial(factory.create, project=project)
+                    )
 
+            if i > 0:
+                self.addWidget(group_widget)
+                self.addSeparator()

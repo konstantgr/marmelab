@@ -3,17 +3,17 @@ import threading
 import time
 
 from typing import List, Union
-from src.analyzator.base_analyzator import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
+from src.analyzers.base_analyzer import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
 from src.utils import EmptySignal
 import numpy as np
 
 
-class SocketAnalyzerSignals(AnalyzerSignals):
+class CeyearAnalyzerSignals(AnalyzerSignals):
     data = EmptySignal()
     is_connected = EmptySignal()
 
 
-class SocketAnalyzer(BaseAnalyzer):
+class CeyearAnalyzer(BaseAnalyzer):
     def __init__(
             self,
             ip: str,
@@ -29,15 +29,14 @@ class SocketAnalyzer(BaseAnalyzer):
         :param bufsize: размер чанка сообщения в байтах
         :param maxbufs: максимальное число чанков
         """
-        self.ip, self.port, self.conn = ip, port, socket.socket()
+        self.ip, self.port, self.instrument = ip, port, socket.socket()
         self.bufsize, self.maxbufs = bufsize, maxbufs
         self.tcp_lock = threading.Lock()
         self._is_connected = False
-        self.instrument = None
         self.channel = 1
 
         if signals is None:
-            self._signals = SocketAnalyzerSignals()
+            self._signals = CeyearAnalyzerSignals()
         else:
             self._signals = signals
 
@@ -59,9 +58,9 @@ class SocketAnalyzer(BaseAnalyzer):
                      freq_start: float = None,
                      freq_stop: float = None,
                      freq_num: int = None,
-                     bandwidth: float = None,
+                     bandwidth: int = None,
                      aver_fact: int = None,
-                     smooth_aper: int = None,
+                     smooth_aper: float = None,
                      power: int = None
                      ) -> None:
 
@@ -95,7 +94,6 @@ class SocketAnalyzer(BaseAnalyzer):
     def connect(self) -> None:
         if self._is_connected:
             return
-        self.instrument = self.conn
         self.instrument.connect((self.ip, self.port))
         self._set_is_connected(True)
 
@@ -134,7 +132,7 @@ class SocketAnalyzer(BaseAnalyzer):
             self._send_cmd(f"CALC{self.channel}:PAR:DEL 'Tr{num}'")
 
         freq_tup = tuple(map(str, freq_data.split(',')))
-        res[f'f'] = np.array(freq_tup).astype(float)
+        res[f'freq'] = np.array(freq_tup).astype(float)
 
         self._signals.data.emit(res)
         return res
@@ -149,10 +147,10 @@ class SocketAnalyzer(BaseAnalyzer):
         pass
 
 
-if __name__ == "__main__":
-    analyzer = SocketAnalyzer(ip="192.168.137.119", port=1024)
-    analyzer.connect()
-    analyzer.set_settings(sweep_type='LIN', freq_start=1000000000, freq_stop=3000000000,
-                          freq_num=200, bandwidth=3000, aver_fact=5, smooth_aper=20, power=5)
-    results = analyzer.get_scattering_parameters(['S22', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12'])
-    print(results['f'], results['S22'])
+# if __name__ == "__main__":
+#     analyzer = CeyearAnalyzer(ip="192.168.137.119", port=1024)
+#     analyzer.connect()
+#     analyzer.set_settings(sweep_type='LIN', freq_start=1000000000, freq_stop=3000000000,
+#                           freq_num=200, bandwidth=3000, aver_fact=5, smooth_aper=20, power=5)
+#     results = analyzer.get_scattering_parameters(['S22', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12', 'S12'])
+#     print(results['freq'], results['S22'])

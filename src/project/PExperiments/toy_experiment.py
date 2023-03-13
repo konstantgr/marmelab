@@ -1,4 +1,4 @@
-from ..Project import PExperiment, PPath, PMeasurand, PScanner
+from ..Project import PExperiment, PPath, PMeasurand, PScanner, ProjectType
 
 
 class ToyExperiment(PExperiment):
@@ -7,6 +7,10 @@ class ToyExperiment(PExperiment):
         self.path: PPath = None
         self.measurands: list[PMeasurand] = []
         self.scanner = scanner
+
+    @classmethod
+    def reproduce(cls, name: str, project: ProjectType) -> 'ToyExperiment':
+        return cls(scanner=project.scanner, name=name)
 
     def set_path(self, path: PPath):
         self.path = path

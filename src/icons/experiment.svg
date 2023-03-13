@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="32.0px"
+   height="32.0px"
+   viewBox="0 0 32.0 32.0"
+   version="1.1"
+   id="SVGRoot"
+   sodipodi:docname="experiment.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   inkscape:export-filename="experiment.png"
+   inkscape:export-xdpi="384"
+   inkscape:export-ydpi="384"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview13567"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:zoom="16.871996"
+     inkscape:cx="5.3935526"
+     inkscape:cy="21.514941"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="549"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g14411">
+    <inkscape:grid
+       type="xygrid"
+       id="grid13573" />
+  </sodipodi:namedview>
+  <defs
+     id="defs13562">
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect14121"
+       is_visible="true"
+       lpeversion="1" />
+    <inkscape:path-effect
+       effect="simplify"
+       id="path-effect14119"
+       is_visible="true"
+       lpeversion="1"
+       steps="1"
+       threshold="0.00243902"
+       smooth_angles="360"
+       helper_size="0"
+       simplify_individual_paths="false"
+       simplify_just_coalesce="false" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:#0bdbd9;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 13.053819,9.6017091 C 12.99455,9.3646298 9.0234724,4.3266961 9.0234724,4.3266961 L 6.2377914,2.7264112 5.3487442,3.0523952 4.4300622,3.8525376 5.0820301,5.3046479 8.4604092,7.3494563 Z"
+       id="path14406" />
+    <g
+       id="g14411"
+       transform="rotate(-10.27009,22.183669,5.8962679)">
+      <path
+         style="fill:#0bdb5d;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 15.440909,21.582667 -3.66139,6.926111 12.26885,-0.05927 -2.972966,-5.836128 z"
+         id="path14346"
+         sodipodi:nodetypes="ccccc" />
+      <path
+         style="fill:none;stroke:#525252;stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+         d="m 19.733077,13.770423 v 6.756758 l 4.595878,7.960296 H 11.316763 l 4.548436,-7.87812 0.02249,-6.838934 z"
+         id="path14123"
+         sodipodi:nodetypes="ccccccc" />
+    </g>
+    <g
+       id="g14338"
+       transform="rotate(118.51831,11.661279,11.646178)">
+      <path
+         style="fill:none;stroke:#525252;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="M 9.2202185,20.15875 V 7.6695454 H 6.2446025 V 20.15875"
+         id="path14159" />
+      <path
+         style="opacity:0.992;fill:none;fill-rule:evenodd;stroke:#525252;stroke-width:0.992954;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:1.00157;stroke-opacity:1;paint-order:markers fill stroke"
+         id="path14213"
+         sodipodi:type="arc"
+         sodipodi:cx="7.7219334"
+         sodipodi:cy="20.165901"
+         sodipodi:rx="1.4808547"
+         sodipodi:ry="1.5156126"
+         sodipodi:start="0"
+         sodipodi:end="3.1701563"
+         sodipodi:arc-type="arc"
+         d="M 9.2027881,20.165901 A 1.4808547,1.5156126 0 0 1 8.4501168,21.485616 1.4808547,1.5156126 0 0 1 6.9572206,21.463793 1.4808547,1.5156126 0 0 1 6.2416827,20.122616"
+         sodipodi:open="true" />
+    </g>
+  </g>
+</svg>

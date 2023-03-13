@@ -12,30 +12,52 @@ from typing import Any
 from src.views.Widgets import StateDepPushButton, StateDepCheckBox
 import re
 from ...scanner import Position
-from dataclasses import dataclass
-
+from dataclasses import dataclass, field
+import math
+from enum import IntEnum, auto
 
 # TODO: в классе TableModel реализовать вызов функции set_relative
+# TODO: в модели хранятся абсолютные координаты. при нажатии чекбокса данные меняются только во вьюшке. Когда пользоват.
+# TODO: вводит данные, их всегда надо переводить в абослютные координаты. реализовать в setData (в модели таблицы)
+# TODO: реализовать проверку в функции SetData на нажатый чекбокс(если галочка нажата, к конечным координатам прибавляем
+# TODO: то, что вбил пользователь, а начальные не меняем)
+# TODO: добавть во вьюшке кнопки: 1) устанавливает относительные координаты и одновременно перемещает точку начала
+# TODO: сканирования в позицию сканера, 2) просто перемещает точку сканирования в позицию сканера
+# TODO: траснпонировать заголовки
+# TODO: добавить чекбокс с выбором измеряемых осей
+
+
+class RowNumber(IntEnum):
+    start: int = 0
+    end: int = 1
+    step_split: int = 2
 
 
 @dataclass
-class Axis:
-    start: float = None
-    end: float = None
-    points: int = None
-    step: float = None
+class TableData:
+    start: Position = field(default_factory=Position)
+    end: Position = field(default_factory=Position)
+    points: Position = field(default_factory=Position)
+    step: Position = field(default_factory=Position)
 
 
 class TableModel(QAbstractTableModel):
-    def __init__(self):
+    def __init__(self, scanner: PScanner):
         super(TableModel, self).__init__()
         self.h_headers = ["x", "y", "z", "w"]
+        self.axes_names = ["x", "y", "z", "w"]
         self.relative = False
         self.split_type: str = "step"
-        self._data = [Axis(), Axis(), Axis(), Axis()]
+        self._data = TableData()
+        self.scanner_position = Position()
+        self.scanner = scanner
+        self.scanner.signals.position.connect(self.update_scanner_position)
+
+    def update_scanner_position(self, position: Position):
+        self.scanner_position = position
 
     @property
-    def v_header(self) -> list:
+    def v_headers(self) -> list:
         if self.split_type == "step":
             return ["Begin coordinates", "End coordinates", "Step", "Order"]
         elif self.split_type == "points":
@@ -50,10 +72,21 @@ class TableModel(QAbstractTableModel):
         :return:
         """
         self.relative = state
+        start_index = self.index(RowNumber.start, len(self.v_headers) - 1)
+        end_index = self.index(RowNumber.end, len(self.v_headers) - 1)
+        self.dataChanged.emit(start_index, end_index)
 
     def set_split_type(self, split_type: str):
         self.split_type = split_type
         self.headerDataChanged.emit(Qt.Orientation.Vertical, 0, 1)
+        start_index = self.index(RowNumber.step_split, 0)
+        end_index = self.index(RowNumber.step_split, len(self.v_headers) - 1)
+        self.dataChanged.emit(start_index, end_index)
+
+    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
+        flags = Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
+        flags |= Qt.ItemFlag.ItemIsEditable
+        return flags
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
@@ -62,39 +95,97 @@ class TableModel(QAbstractTableModel):
             else:
                 return self.v_headers[section]
 
+    def data(self, index: QModelIndex, role: int = ...) -> Any:
+        row = index.row()
+        column = index.column()
+        axis_name = self.axes_names[column]
+        if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.EditRole:
+            if row == RowNumber.start:
+                start = self._data.start
+                if self.relative:
+                    start -= self.scanner_position
+                return start.__getattribute__(axis_name)
+            elif row == RowNumber.end:
+                end = self._data.end
+                if self.relative:
+                    end -= self.scanner_position
+                return end.__getattribute__(axis_name)
+            elif row == RowNumber.step_split:
+                if self.split_type == "step":
+                    return self._data.step.__getattribute__(axis_name)
 
-class ToyPath(PPath):
-    def __init__(self, name: str):
-        super(ToyPath, self).__init__(name=name)
-        self.x_min = None
-        self.y_min = None
-        self.p = None
-        self.y_max = None
-        self.x_points = None
-        self.y_points = None
+                elif self.split_type == "points":
+                    return self._data.points.__getattribute__(axis_name)
 
-    def set_lims(self, x_min, x_max, y_min, y_max, x_points, y_points):
-        self.x_min = x_min
-        self.y_min = y_min
-        self.x_max = x_max
-        self.y_max = y_max
-        self.x_points = x_points
-        self.y_points = y_points
+    def match_positions(self):
+        """
+        функция, которая совмещает начало области измерения с положением сканера.
+        :param self:
+        :return:
+        """
+        self._data.end = self._data.end + self.scanner_position - self._data.start
+        self._data.start = self.scanner_position
+
+    def setData(self, index: QModelIndex, value: Any, role: int = ...) -> bool:
+        if role == Qt.ItemDataRole.EditRole:
+            row = index.row()
+            column = index.column()
+            axis_name = self.axes_names[column]
+            if row == RowNumber.start:
+                self._data.start.__setattr__(axis_name, float(value))
+            elif row == RowNumber.end:
+                self._data.end.__setattr__(axis_name, float(value))
+            elif row == RowNumber.step_split:
+                start = self._data.start.__getattribute__(axis_name)
+                end = self._data.end.__getattribute__(axis_name)
+                if self.split_type == "step":
+                    self._data.step.__setattr__(axis_name, float(value))
+                    self._data.points.__setattr__(axis_name, math.floor(abs(end - start) / float(value)))
+                elif self.split_type == "points":
+                    self._data.points.__setattr__(axis_name, int(value))
+                    self._data.step.__setattr__(axis_name, (abs(end - start) / int(value)))
+            self.dataChanged.emit(index, index)
+        return True
+
+
+        #  использовать когда будет добавлена валидация, придумат способ проверки на координаты попроще
+        # elif role == Qt.ItemDataRole.BackgroundRole:
+        #     if self._data[row][column] == "":
+        #         return QColor('lightgrey')
+        #     # elif self._valid(self._data[row][column], self.variable):
+        #         # return
+        #     return QColor('red')
+
+
+class TablePathModel(PPath):
+    def __init__(self, name: str, scanner: PScanner):
+        super(TablePathModel, self).__init__(name=name)
+        self.table_model = TableModel(scanner)
+
+    def set_relative(self, state: bool):
+        self.table_model.set_relative(state)
+
+    def set_split_type(self, split_type: str):
+        self.table_model.set_split_type(split_type)
 
     def get_points_axes(self) -> tuple[str, ...]:
-        return "y", "x"
+        pass
 
     def get_points_ndarray(self) -> np.ndarray:
-        res = []
-        xs = np.linspace(self.x_min, self.x_max, self.x_points, dtype=float)
-        ys = np.linspace(self.y_min, self.y_max, self.y_points, dtype=float)
+        pass
 
-        for i in range(len(xs)):
-            for j in range(len(ys)):
-                if i % 2 == 0:
-                    res.append([xs[i], ys[j]])
-                else:
-                    res.append([xs[i], ys[-j-1]])
-        return np.array(res)
+    def mesh_maker(self, lst: List):
+        """
+        функция, которая формирует набор значений, в которых будет производиться измерения
+        она выдает либо с заданным шагом, либо с фиксированным количеством точек, возможно реализовать без списка
+        :param lst:
+        :return:
+        """
+        if self.split_type == "step":
+            arr = int(abs(lst[0] - lst[1] - 1) / lst[2])
+            mesh = np.linspace(lst[0], lst[1], arr)
+        elif self.split_type == "points":
+            mesh = np.linspace(lst[0], lst[1], int(lst[2]))
+        return mesh
 
 

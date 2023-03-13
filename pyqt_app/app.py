@@ -1,5 +1,5 @@
 from MainWindow import MainWindow
-from pyqt_app import app
+from pyqt_app import app, builder
 
 
 STYLE_SHEET = """
@@ -24,6 +24,15 @@ QPushButton[color='red'] {
 }
 QSplitter[type='inner']::handle {
     image: url(assets/Untitled.png);
+}
+QGroupBox[type='toolbar'] {
+    border: none;
+    margin-bottom: 7px;
+}
+QGroupBox[type='toolbar']::title {
+    subcontrol-origin:  margin;
+    subcontrol-position: bottom center;
+    color: gray;
 }
 """
 

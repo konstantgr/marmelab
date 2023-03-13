@@ -10,7 +10,7 @@ from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from PyQt6.QtGui import QColor
 from src.Variable import Unit, Setting
 from src.views.Widgets import SettingsTableWidget, StateDepPushButton
-from ...analyzator.rohde_schwarz import RohdeSchwarzAnalyzer
+from ...analyzers.rohde_schwarz import RohdeSchwarzAnalyzer
 from pyqtgraph import PlotWidget, PlotItem, PlotDataItem
 import numpy as np
 
@@ -264,7 +264,7 @@ class SParams(PMeasurand):
 
     def measure(self) -> Any:
         res = self._model.measure()
-        self._plot_item.setData(res['f'], np.abs(res['S11']))
+        self._plot_item.setData(res['freq'], np.abs(res['S11']))
         return res
 
     def pre_measure(self) -> None:
