@@ -46,6 +46,10 @@ class TableModel(QAbstractTableModel):
         self.relative = False
         self.split_type: str = "step"
         self._data = TableData()
+        self._data.start.x = self._data.start.y = self._data.start.z = self._data.start.w = 0
+        self._data.end.x = self._data.end.y = self._data.end.z = self._data.end.w = 1000
+        self._data.step.x = self._data.step.y = self._data.step.z = self._data.step.w = 100
+        self._data.points.x = self._data.points.y = self._data.points.z = self._data.points.w = 10
         self.scanner_position = Position()
         self.scanner = scanner
         self.scanner.signals.position.connect(self.update_scanner_position)
@@ -189,8 +193,7 @@ class TablePathModel(PPath):
     def get_points_ndarray(self) -> np.ndarray:
         # TODO: реализовать функцию, иначе ниче не работает(
         """связать с функцией mesh_maker"""
-
-        return np.array([[2004, 1040, 3400, 4000], [1043, 2342, 3234, 4432]])
+        return self.get_path()
 
     def set_trajectory_type(self, traj_type: str):
             self.trajectory_type = traj_type
@@ -221,8 +224,11 @@ class TablePathModel(PPath):
 
         return crds.T
 
-
-    def print_data(self):
+    def get_path(self):
+        """
+        берет данные из таблицы и выдает путь в соответствии с заданными параметрами (змейка или линия и тд)
+        :return:
+        """
         temp = []
         role = Qt.ItemDataRole.DisplayRole
 
@@ -241,12 +247,13 @@ class TablePathModel(PPath):
             elif self.table_model.split_type == "step":
                 points_numbers = int(abs(start - stop - 1) / step)
                 current_data = np.linspace(float(start), float(stop), points_numbers)
-            print(current_data)
+            # print(current_data)
             temp.append(current_data)
-        # print(temp)
+        # print("temp", temp)
         s = time.time()
         print(self.mesh_maker(temp))
         print(time.time() - s)
+        return(self.mesh_maker(temp))
 
         # ax = plt.figure().add_subplot(projection='3d')
         # ax.plot(*np.array(temp).T)
