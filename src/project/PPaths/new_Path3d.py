@@ -1,4 +1,4 @@
-from ..Project import PPath
+from ..Project import PPath, ProjectType
 import numpy as np
 from src.views.Widgets.SettingsTable import QAbstractTableModel
 from ..Project import PPath, PScanner
@@ -15,12 +15,9 @@ from ...scanner import Position
 from dataclasses import dataclass, field
 import math
 from enum import IntEnum, auto
+import matplotlib.pyplot as plt
+import time
 
-# TODO: в классе TableModel реализовать вызов функции set_relative
-# TODO: в модели хранятся абсолютные координаты. при нажатии чекбокса данные меняются только во вьюшке. Когда пользоват.
-# TODO: вводит данные, их всегда надо переводить в абослютные координаты. реализовать в setData (в модели таблицы)
-# TODO: реализовать проверку в функции SetData на нажатый чекбокс(если галочка нажата, к конечным координатам прибавляем
-# TODO: то, что вбил пользователь, а начальные не меняем)
 # TODO: добавть во вьюшке кнопки: 1) устанавливает относительные координаты и одновременно перемещает точку начала
 # TODO: сканирования в позицию сканера, 2) просто перемещает точку сканирования в позицию сканера
 # TODO: траснпонировать заголовки
@@ -49,6 +46,10 @@ class TableModel(QAbstractTableModel):
         self.relative = False
         self.split_type: str = "step"
         self._data = TableData()
+        self._data.start.x = self._data.start.y = self._data.start.z = self._data.start.w = 0
+        self._data.end.x = self._data.end.y = self._data.end.z = self._data.end.w = 1000
+        self._data.step.x = self._data.step.y = self._data.step.z = self._data.step.w = 100
+        self._data.points.x = self._data.points.y = self._data.points.z = self._data.points.w = 10
         self.scanner_position = Position()
         self.scanner = scanner
         self.scanner.signals.position.connect(self.update_scanner_position)
@@ -65,6 +66,12 @@ class TableModel(QAbstractTableModel):
         else:
             raise RuntimeError("Wrong split type")
 
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        return len(self.h_headers)
+
+    def columnCount(self, parent: QModelIndex = ...) -> int:
+        return len(self.v_headers)
+
     def set_relative(self, state: bool):
         """
         реализовать вызов функции
@@ -72,7 +79,7 @@ class TableModel(QAbstractTableModel):
         :return:
         """
         self.relative = state
-        start_index = self.index(RowNumber.start, len(self.v_headers) - 1)
+        start_index = self.index(RowNumber.start, 0)
         end_index = self.index(RowNumber.end, len(self.v_headers) - 1)
         self.dataChanged.emit(start_index, end_index)
 
@@ -82,6 +89,12 @@ class TableModel(QAbstractTableModel):
         start_index = self.index(RowNumber.step_split, 0)
         end_index = self.index(RowNumber.step_split, len(self.v_headers) - 1)
         self.dataChanged.emit(start_index, end_index)
+
+    def set_current_coords(self):
+        # использовать сеттер
+        start_index = self.index(RowNumber.start, 0)
+        end_index = self.index(RowNumber.start, len(self.v_headers) - 1)
+        self.setData(start_index, self.scanner_position)
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         flags = Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
@@ -123,8 +136,11 @@ class TableModel(QAbstractTableModel):
         :param self:
         :return:
         """
-        self._data.end = self._data.end + self.scanner_position - self._data.start
+        self._data.end = self.scanner_position + self._data.end - self._data.start
         self._data.start = self.scanner_position
+        start_index = self.index(RowNumber.start, 0)
+        end_index = self.index(RowNumber.end, len(self.v_headers) - 1)
+        self.dataChanged.emit(start_index, end_index)
 
     def setData(self, index: QModelIndex, value: Any, role: int = ...) -> bool:
         if role == Qt.ItemDataRole.EditRole:
@@ -148,19 +164,19 @@ class TableModel(QAbstractTableModel):
         return True
 
 
-        #  использовать когда будет добавлена валидация, придумат способ проверки на координаты попроще
-        # elif role == Qt.ItemDataRole.BackgroundRole:
-        #     if self._data[row][column] == "":
-        #         return QColor('lightgrey')
-        #     # elif self._valid(self._data[row][column], self.variable):
-        #         # return
-        #     return QColor('red')
-
-
 class TablePathModel(PPath):
+    type_name = 'Table'
+    base_name = 'Table path '
+
     def __init__(self, name: str, scanner: PScanner):
         super(TablePathModel, self).__init__(name=name)
         self.table_model = TableModel(scanner)
+        self.scanner = scanner
+        self.trajectory_type = "Snake"
+
+    @classmethod
+    def reproduce(cls, name: str, project: ProjectType) -> 'TablePathModel':
+        return cls(scanner=project.scanner, name=name)
 
     def set_relative(self, state: bool):
         self.table_model.set_relative(state)
@@ -168,24 +184,77 @@ class TablePathModel(PPath):
     def set_split_type(self, split_type: str):
         self.table_model.set_split_type(split_type)
 
+    def set_current_coords(self):
+        self.table_model.match_positions()
+
     def get_points_axes(self) -> tuple[str, ...]:
         pass
 
     def get_points_ndarray(self) -> np.ndarray:
-        pass
+        # TODO: реализовать функцию, иначе ниче не работает(
+        """связать с функцией mesh_maker"""
+        return self.get_path()
 
-    def mesh_maker(self, lst: List):
+    def set_trajectory_type(self, traj_type: str):
+            self.trajectory_type = traj_type
+
+    def mesh_maker(self, axes):
         """
-        функция, которая формирует набор значений, в которых будет производиться измерения
-        она выдает либо с заданным шагом, либо с фиксированным количеством точек, возможно реализовать без списка
-        :param lst:
+        функция осуществляет измерения с заданым разбиением по траектории змейка или линия
+        :param axes:
         :return:
         """
-        if self.split_type == "step":
-            arr = int(abs(lst[0] - lst[1] - 1) / lst[2])
-            mesh = np.linspace(lst[0], lst[1], arr)
-        elif self.split_type == "points":
-            mesh = np.linspace(lst[0], lst[1], int(lst[2]))
-        return mesh
+        # axes = self._data
+        blck_sizes = [len(ax) for ax in axes]
+        crds = np.zeros((len(axes), np.prod(blck_sizes)))
+        crds[-1] = np.repeat(axes[-1], np.prod(blck_sizes[:-1]))
 
+        for i in range(len(axes) - 1):
+            rep_num = np.prod(blck_sizes[:i])
+            rep_el = np.repeat(axes[i], rep_num)
+            tile_num = np.prod(blck_sizes[i + 1:])
+            if self.trajectory_type == 'Snake':
+                tile_el = np.concatenate((rep_el, np.flip(rep_el)))
+            elif self.trajectory_type == 'Lines':
+                tile_el = np.concatenate((rep_el, rep_el))
+            if tile_num % 2 != 0:
+                crds[i] = np.concatenate((np.tile(tile_el, tile_num // 2), rep_el))
+            else:
+                crds[i] = np.tile(tile_el, tile_num // 2)
 
+        return crds.T
+
+    def get_path(self):
+        """
+        берет данные из таблицы и выдает путь в соответствии с заданными параметрами (змейка или линия и тд)
+        :return:
+        """
+        temp = []
+        role = Qt.ItemDataRole.DisplayRole
+
+        for i in range(4):
+            start_index = self.table_model.index(0, i)
+            end_index = self.table_model.index(1, i)
+            step_index = self.table_model.index(2, i)
+
+            start = self.table_model.data(start_index, role)
+            stop = self.table_model.data(end_index, role)
+            step = self.table_model.data(step_index, role)
+
+            if self.table_model.split_type == "points":
+                current_data = np.linspace(float(start), float(stop), int(step))
+
+            elif self.table_model.split_type == "step":
+                points_numbers = int(abs(start - stop - 1) / step)
+                current_data = np.linspace(float(start), float(stop), points_numbers)
+            # print(current_data)
+            temp.append(current_data)
+        # print("temp", temp)
+        s = time.time()
+        print(self.mesh_maker(temp))
+        print(time.time() - s)
+        return(self.mesh_maker(temp))
+
+        # ax = plt.figure().add_subplot(projection='3d')
+        # ax.plot(*np.array(temp).T)
+        # plt.show()

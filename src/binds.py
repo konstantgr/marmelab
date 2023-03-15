@@ -1,14 +1,24 @@
 from .ModelView import ModelViewFactory
 
-from .project.PPaths import ToyPath
+from .project.PPaths import ToyPath, TablePathModel
 from .project.PExperiments import ToyExperiment
 from .project.PPlots import PRTPlot1D
 from .project.Project import PPlot1D, PPlot2D    # TODO: убрать
 
 from .views.toy import ToyView
 from .views.PPlots import RTPlot1DView
+from .views.PPaths import TablePathView
 from .builder import AppBuilder, FactoryGroups
 from . import icons
+
+AppBuilder.register_factory(
+    ModelViewFactory(
+        view_types=(TablePathView,),
+        model_type=TablePathModel,
+        icon=icons.path_icon
+    ),
+    group=FactoryGroups.paths
+)
 
 AppBuilder.register_factory(
     ModelViewFactory(
@@ -19,14 +29,6 @@ AppBuilder.register_factory(
     group=FactoryGroups.paths
 )
 
-AppBuilder.register_factory(
-    ModelViewFactory(
-        view_types=(ToyView,),
-        model_type=ToyPath,
-        icon=icons.path_file
-    ),
-    group=FactoryGroups.paths
-)
 
 AppBuilder.register_factory(
     ModelViewFactory(

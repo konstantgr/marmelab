@@ -457,7 +457,7 @@ class Widget(gl.GLViewWidget):
             item = Points3D(
                 points=points_in_gl,
                 color=pg.mkColor((100, 100, 255, 200)),
-                size=4,
+                size=8,
                 glOptions={
                     GL_DEPTH_TEST: True,
                     GL_BLEND: True,
@@ -482,7 +482,9 @@ class Widget(gl.GLViewWidget):
                     'glBlendFunc': (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA),
                 },
             )
+            paths_items.append(item)
             self.addItem(item)
+        print(paths_items)
         return paths_items
 
     def redraw_paths(self):

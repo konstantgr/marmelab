@@ -1,5 +1,6 @@
 from ..Project import PPath, PScanner
-from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QSizePolicy, QGroupBox, QComboBox
+from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QSizePolicy, QGroupBox, \
+    QComboBox, QPushButton
 import numpy as np
 from typing import List
 from src.views.Widgets.SettingsTable import QSmartTableModel
@@ -10,12 +11,8 @@ from src.views.Widgets import StateDepPushButton, StateDepCheckBox
 import re
 from ...scanner import Position
 
-
-# TODO: split -> step с изменением метода формирования массива точек, в которых проводятся измерения
 # TODO: итого: 4 таблицы, которые надо связать QStacked Widget, signal (по аналогии с тем, что было с панелями раньше)
 # TODO: во вкладке эксперимент добавить связь с таблицей и с функцией do_table в частности, реализовать временный вектор,
-# TODO: хранящий реальные данные сканер
-
 
 class Path3dWidget(QWidget):
     """

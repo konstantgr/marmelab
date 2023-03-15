@@ -7,6 +7,7 @@ from src.project.PAnalyzers import ToyAnalyser, ToySparam
 from src.project.PExperiments import ToyExperiment
 from src.project.PPaths import ToyPath
 from src.project.PAnalyzers.ceyear import CeyearPAnalyzer, SParams
+from src.project.PPaths import ToyPath, TablePathModel
 from src.scanner.TRIM import TRIM_emulator
 from src.builder import AppBuilder, FactoryGroups
 from src.ModelView import ModelViewFactory, ModelViewVisualizerFactory
@@ -22,15 +23,15 @@ import src.binds
 scanner_signals = PScannerSignals()
 scanner = TRIMPScanner(
     name="TRIM scanner",
-    instrument=TRIMScanner(ip="127.0.0.1", port=9008, signals=scanner_signals),
+    instrument=TRIMScanner(ip="127.0.0.1", port=9006, signals=scanner_signals),
     signals=scanner_signals,
 )
-TRIM_emulator.run(blocking=False, motion_time=2, port=9008)  # use it only for emulating
+TRIM_emulator.run(blocking=False, motion_time=2, port=9006)  # use it only for emulating
 
 analyzer_signals = PAnalyzerSignals()
 analyzer = ToyAnalyser(
     # instrument=SocketAnalyzer(ip="192.168.5.168", port=9000, signals=analyzer_signals),
-    instrument=CeyearAnalyzerEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
+    instrument=RohdeSchwarzEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
     signals=analyzer_signals,
     name="Toy analyzer"
 )
@@ -56,10 +57,12 @@ analyzer_visualizer = PAnalyzerVisualizerModel(
 )
 
 paths.append(
-    ToyPath(
-        name=f'path1',
+    TablePathModel(
+        name=f'Table path 1',
+        scanner=scanner
     )
 )
+
 
 paths.append(
     ToyPath(
