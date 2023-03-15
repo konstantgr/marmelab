@@ -4,7 +4,7 @@ from src.analyzers.rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulat
 from src.analyzers.ceyear_analyzer.ceyear_emulator import CeyearAnalyzerEmulator
 from src.project.PScanners import ToyScanner, TRIMPScanner
 from src.project.PAnalyzers import ToyAnalyser, ToySparam
-from src.project.PExperiments import ToyExperiment
+from src.project.PExperiments import ToyExperiment, Experiment
 from src.project.PPaths import ToyPath
 from src.project.PAnalyzers.ceyear import CeyearPAnalyzer, SParams
 from src.project.PPaths import ToyPath, TablePathModel
@@ -40,6 +40,7 @@ objects = PStorage()
 paths = PStorage()
 experiments = PStorage()
 plots = PStorage()
+measurands = PStorage()
 
 scanner_visualizer = xyzwScannerVisualizer(
     name="Scanner visualizer",
@@ -58,7 +59,7 @@ analyzer_visualizer = PAnalyzerVisualizerModel(
 
 paths.append(
     TablePathModel(
-        name=f'Table path 1',
+        name=f'path1',
         scanner=scanner
     )
 )
@@ -77,13 +78,20 @@ experiments.append(
     )
 )
 
+experiments.append(
+    Experiment(name='exp2',
+               paths=paths,
+               measurands=measurands
+               )
+)
+
 project = Project(
     scanner=scanner,
     analyzer=analyzer,
     objects=objects,
     paths=paths,
     experiments=experiments,
-    measurands=PStorage(),
+    measurands=measurands,
     plots=plots,
     results=PStorage(),
     scanner_visualizer=scanner_visualizer

@@ -166,7 +166,7 @@ class TableModel(QAbstractTableModel):
 
 class TablePathModel(PPath):
     type_name = 'Table'
-    base_name = 'Table path '
+    base_name = 'path'
 
     def __init__(self, name: str, scanner: PScanner):
         super(TablePathModel, self).__init__(name=name)

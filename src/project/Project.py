@@ -534,6 +534,22 @@ class PStorage(Generic[PBaseTypes]):
         self.data.remove(x)
         self.signals.changed.emit()
 
+    def get(self, name: str) -> Union[None, PBaseTypes]:
+        if not isinstance(name, str):
+            raise TypeError(f"str expected, {type(name)} found")
+        for x in self.data:
+            if x.name == name:
+                return x
+        return None
+
+    def __contains__(self, name: str) -> bool:
+        try:
+            if self.get(name) is None:
+                return False
+            return True
+        except Exception as e:
+            raise e
+
 
 class PAnalyzerVisualizer(PNamed, metaclass=ABCMeta):
     """
