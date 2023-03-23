@@ -16,6 +16,7 @@ from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl
 from src.views.PScannerVisualizers.xyzw import xyzwSettings, xyzwWidget
 from src.views.PScanners import TRIMControl, TRIMSettings
 from src.views.PAnalyzers import SocketAnalyzerControl
+from src.views.PMeasurands.PMeasurands import SParamsView
 from src.views.PPlotVisualizer import PlotsView
 import src.binds
 
@@ -39,6 +40,7 @@ objects = PStorage()
 paths = PStorage()
 experiments = PStorage()
 plots = PStorage()
+measurands = PStorage()
 
 scanner_visualizer = xyzwScannerVisualizer(
     name="Scanner visualizer",
@@ -74,13 +76,21 @@ experiments.append(
     )
 )
 
+measurands.append(
+    SParams(
+        name='s_param1',
+        analyzer=CeyearAnalyzerEmulator(ip="192.168.5.168", port="9000"),
+
+    )
+)
+
 project = Project(
     scanner=scanner,
     analyzer=analyzer,
     objects=objects,
     paths=paths,
     experiments=experiments,
-    measurands=PStorage(),
+    measurands=measurands,
     plots=plots,
     results=PStorage(),
     scanner_visualizer=scanner_visualizer
@@ -126,7 +136,7 @@ AppBuilder.register_plots_visualizer_factory(
 
 AppBuilder.register_factory(
     factory=ModelViewFactory(
-        view_types=(ToyView,),
+        view_types=(SParamsView,),
         model_type=SParams,
         icon=icons.s_params,
     ),

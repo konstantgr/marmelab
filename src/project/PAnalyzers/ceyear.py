@@ -121,14 +121,12 @@ class SParams(PMeasurand):
             else:
                 raise TypeError("Sweep type should be string")
 
-    def set_freqs(
+    def set_freq_start(
             self,
-            freq_start: float = None,
-            freq_stop: float = None,
-            freq_num: int = None,
+            freq_start: float = None
     ):
         if freq_start is not None:
-            if isinstance(freq_stop, float):
+            if isinstance(freq_start, float):
                 if 100_000 <= freq_start <= 8_500_000_000:
                     self.freq_start = freq_start
                     self.signals.changed.emit()
@@ -136,6 +134,11 @@ class SParams(PMeasurand):
                     raise Exception("Stop frequency must be from 100 KHz to 8.5 MHz")
             else:
                 raise TypeError("Start frequency should be float")
+
+    def set_freq_stop(
+            self,
+            freq_stop: float = None
+    ):
         if freq_stop is not None:
             if isinstance(freq_stop, float):
                 if 100_000 <= freq_stop <= 8_500_000_000:
@@ -145,6 +148,11 @@ class SParams(PMeasurand):
                     raise Exception("Start frequency must be from 100 KHz to 8.5 MHz")
             else:
                 raise TypeError("Stop frequency should be float")
+
+    def set_freq_num(
+            self,
+            freq_num: int = None
+    ):
         if freq_num is not None:
             if isinstance(freq_num, int):
                 if 1 <= freq_num <= 16_001:
