@@ -1,6 +1,5 @@
 import abc
 from typing import List
-from .analyzer_parameters import SParameters, FrequencyParameters, AnalyzatorType, ResultsFormatType
 from ..utils import EmptySignal
 
 
@@ -49,15 +48,6 @@ class BaseAnalyzer(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_scattering_parameters(
-            self,
-            parameters: List[str],
-    ) -> dict[str: List[float]]:
-        """
-        Получить S параметры
-        """
-
-    @abc.abstractmethod
     def set_settings(self, *args, **kwargs) -> None:
         """
         Применение настроек
@@ -81,5 +71,5 @@ class BaseAnalyzer(abc.ABC):
         raise NotImplementedError('__enter__ method not implemented yet')
 
     @abc.abstractmethod
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):
         raise NotImplementedError('__exit__ method not implemented yet')
