@@ -1,8 +1,9 @@
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter, QTextEdit
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter, QTextEdit, QPushButton
 from PyQt6.QtCore import Qt
-from Panels import LogPanel, RightPanel, LeftPanel, CentralPanel
+from Panels import LogPanel, RightPanel, LeftPanel, CentralPanel, MenuPanel
 from Panels.BarPanel import BarPanel
-from pyqt_app import project
+from Panels.ToolPanel import ToolPanel
+from pyqt_app import project, builder
 
 
 class MainWindow(QMainWindow):
@@ -11,6 +12,11 @@ class MainWindow(QMainWindow):
         self.main_widget = QWidget()
         hbox = QHBoxLayout(self.main_widget)  # layout of Main window
         self.main_widget.setLayout(hbox)
+
+        self.tool_panel = ToolPanel(self.main_widget)
+        self.addToolBar(self.tool_panel)
+        self.menu_panel = MenuPanel()
+        self.setMenuBar(self.menu_panel)
 
         self.left_panel = LeftPanel(self.main_widget)  # settings selector
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
@@ -21,14 +27,14 @@ class MainWindow(QMainWindow):
         self.left_panel.signals.tree_num.connect(self.center_panel.display)
 
         project.scanner.signals.is_connected.connect(self.bar_panel.sc_status_msg)
-        project.scanner.signals.is_connected.emit(project.scanner.instrument.is_available)
+        project.scanner.signals.is_connected.emit(project.scanner.instrument.is_connected)
 
         project.analyzer.signals.is_connected.connect(self.bar_panel.an_status_msg)
         project.analyzer.signals.is_connected.emit(False)
 
         self.right_panel = RightPanel(
-            scanner_visualizer=project.scanner_visualizer,
-            analyzer_visualizer=project.analyzer_visualizer,
+            scanner_visualizer=builder.scanner_visualizer,
+            # analyzer_visualizer=project.analyzer_visualizer,
             parent=self.main_widget
         )  # graphics
 
@@ -58,7 +64,7 @@ class MainWindow(QMainWindow):
         main_splitter.insertWidget(1, self.right_panel)
 
         main_splitter.setStretchFactor(0, 1)
-        main_splitter.setStretchFactor(1, 1)
+        main_splitter.setStretchFactor(1, 2)
         main_splitter.setCollapsible(0, False)
         main_splitter.setCollapsible(1, False)
 

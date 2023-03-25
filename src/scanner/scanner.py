@@ -6,6 +6,7 @@ from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from numbers import Number
 from ..utils import EmptySignal
+from enum import Enum
 
 
 class ScannerConnectionError(Exception):
@@ -38,6 +39,17 @@ class ScannerMotionError(Exception):
         )
 
 
+class AxesTypes(Enum):
+    """Возможные наборы осей сканера"""
+    x = 'x'
+    xy = 'xy'
+    xyw = 'xyw'
+    xyz = 'xyz'
+    xyzw = 'xyzw'
+    rw = 'rw'
+    rzw = 'rzw'
+
+
 @dataclass
 class BaseAxes:
     """
@@ -47,6 +59,7 @@ class BaseAxes:
     y: float = None
     z: float = None
     w: float = None
+    # r: float = None
     # e: float = None
     # f: float = None
     # g: float = None
@@ -167,6 +180,13 @@ class ScannerSignals(metaclass=ABCMeta):
         Сигнал с состоянием сканера
         """
 
+    @property
+    @abstractmethod
+    def is_moving(self) -> EmptySignal:
+        """
+        Сигнал с состоянием сканера
+        """
+
 
 class Scanner(metaclass=ABCMeta):
     """
@@ -245,9 +265,18 @@ class Scanner(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def is_available(self) -> bool:
+    def is_connected(self) -> bool:
         """
         Доступность сканера для управления
+
+        :return: доступность
+        """
+
+    @property
+    @abstractmethod
+    def is_moving(self) -> bool:
+        """
+        Состояние движения сканера
 
         :return: доступность
         """

@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QScrollArea, QWidget, QStackedWidget
 from .BasePanel import BasePanel
-from pyqt_app import project
+from pyqt_app import project, builder
+from src.views.View import BaseView
 
 
 class CentralPanel(QScrollArea, BasePanel):
@@ -20,6 +21,11 @@ class CentralPanel(QScrollArea, BasePanel):
         self.setWidget(self.stacked_widget)
         self.setWidgetResizable(True)
 
+        project.objects.signals.changed.connect(self.draw)
+        project.paths.signals.changed.connect(self.draw)
+        project.measurands.signals.changed.connect(self.draw)
+        project.experiments.signals.changed.connect(self.draw)
+
     def draw(self) -> None:
         """
         Отрисовка всех возможныйх центральных виджетов
@@ -28,12 +34,19 @@ class CentralPanel(QScrollArea, BasePanel):
             w = self.stacked_widget.widget(i)
             self.stacked_widget.removeWidget(w)
 
-        project_tree = project.tree()
+        project_tree = builder.view_tree()
         i = 0
         for tab in project_tree.keys():
-            for pwidget in project_tree[tab]:
-                self.stacked_widget.insertWidget(i, pwidget.widget)
-                i += 1
+            for element_name, element in project_tree[tab]:
+                if element is None:
+                    continue
+                elif isinstance(element, BaseView):
+                    self.stacked_widget.insertWidget(i, element.widget)
+                    i += 1
+                elif isinstance(element, list):
+                    for el_name, el in element:
+                        self.stacked_widget.insertWidget(i, el.widget)
+                        i += 1
 
     def display(self, tree_num: int) -> None:
         """

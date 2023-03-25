@@ -1,3 +1,3 @@
-from .ScannerVisualizer import PScannerVisualizer3D, DEFAULT_SETTINGS
-from .Graphs import PAnalyzerVisualizerRS
+from .xyzw_model import xyzwScannerVisualizer
+# from .AnalyzerVisualizer import PAnalyzerVisualizerRS
 
