@@ -2,7 +2,7 @@ import dataclasses
 from typing import Type, Union, Tuple
 import numpy as np
 
-from src.project.Project import PAnalyzer
+from src.project.Project import PAnalyzer, ProjectType
 from src.project.Project import PAnalyzerSignals
 from src.analyzers.ceyear_analyzer.ceyear_analyzer import CeyearAnalyzer
 from src.project.Project import PMeasurand, PMeasurandType
@@ -28,11 +28,14 @@ class SParam:
 
 
 class SParams(PMeasurand):
+    type_name = 'S-parameters'
+
     def __init__(
             self,
+            name: str,
             analyzer: CeyearAnalyzer
     ):
-        super(SParams, self).__init__(name='S-parameters')
+        super(SParams, self).__init__(name=name)
         self.analyzer = analyzer
         self.s_size = 2
         self.channel = 1
@@ -195,6 +198,10 @@ class SParams(PMeasurand):
                     raise Exception("Power level must be from -85 dBm to 20 dBm")
             else:
                 raise TypeError("Soothing aperture should be integer")
+
+    @classmethod
+    def reproduce(cls, name: str, project: ProjectType) -> 'SParams':
+        return cls(name=name, analyzer=project.analyzer)
 
 
 class CeyearPAnalyzer(PAnalyzer):

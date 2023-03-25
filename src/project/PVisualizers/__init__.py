@@ -1,3 +1,3 @@
 from .xyzw_model import xyzwScannerVisualizer
-# from .AnalyzerVisualizer import PAnalyzerVisualizerRS
+from .AnalyzerVisualizer_model import PAnalyzerVisualizerModel
 

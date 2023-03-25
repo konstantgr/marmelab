@@ -85,7 +85,7 @@ class AppBuilder:
     def load_visualizers(self):
         """Load visualizers"""
         self._scanner_visualizer = AppBuilder.scanner_visualizer_factory.create(project=self.project)
-        # self._plots_visualizer = AppBuilder.plots_visualizer_factory.create(project=self.project)
+        self._plots_visualizer = AppBuilder.plots_visualizer_factory.create(project=self.project)
 
     @property
     def scanner_visualizer(self) -> ModelViewVisualizer:
