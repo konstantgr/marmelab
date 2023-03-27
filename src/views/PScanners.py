@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QSplitter
-from PyQt6.QtWidgets import QWidget, QSizePolicy, QLineEdit, QGroupBox, QLabel, QVBoxLayout, QFormLayout
+from PyQt6.QtWidgets import QWidget, QSizePolicy, QLineEdit, QGroupBox, QHBoxLayout, QVBoxLayout, QFormLayout
 from .Widgets import SettingsTableWidget, StateDepPushButton
 from ..Variable import Setting
 from ..project.PScanners import TRIMPScanner
@@ -8,6 +8,7 @@ from PyQt6.QtCore import Qt, QThreadPool
 from .View import BaseView, QWidgetType
 from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtGui import QRegularExpressionValidator
+from .Widgets import FormLikeInput
 
 import logging
 logger = logging.getLogger()
@@ -17,6 +18,7 @@ class TRIMControl(BaseView[TRIMPScanner]):
     def __init__(self, *args, **kwargs):
         super(TRIMControl, self).__init__(*args, **kwargs)
         states = self.model.states
+        self.coord_input_model = FormLikeInput.Model(keys=['x', 'y', 'z', 'w'])
 
         self.connect_button = StateDepPushButton(
             state=~states.is_connected & ~states.is_in_use,
@@ -37,23 +39,11 @@ class TRIMControl(BaseView[TRIMPScanner]):
             text="Abort",
         )
 
-        reg_ex = QRegularExpression("[+-]?([0-9]*[.])?[0-9]+")
-        self.x_text = QLineEdit()
-        self.x_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        self.x_text.setValidator(QRegularExpressionValidator(reg_ex))
-        self.y_text = QLineEdit()
-        self.y_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        self.y_text.setValidator(QRegularExpressionValidator(reg_ex))
-        self.z_text = QLineEdit()
-        self.z_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        self.z_text.setValidator(QRegularExpressionValidator(reg_ex))
-        self.w_text = QLineEdit()
-        self.w_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        self.w_text.setValidator(QRegularExpressionValidator(reg_ex))
         self.goto_button = StateDepPushButton(
             state=states.is_connected & ~states.is_in_use,
             text="Go",
         )
+        self.goto_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
 
     def construct_widget(self) -> QWidgetType:
         widget = QWidget()
@@ -80,29 +70,26 @@ class TRIMControl(BaseView[TRIMPScanner]):
         group_layout.addWidget(self.abort_button)
 
         group_control = QGroupBox(widget)
-        group_control_layout = QFormLayout(group_control)
-        group_control_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        group_control.setLayout(QVBoxLayout())
+        group_control.layout().setAlignment(Qt.AlignmentFlag.AlignLeft)
+        group_control.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
         vbox.addWidget(group_control)
 
-        group_control_layout.addRow(QLabel("x, mm:"), self.x_text)
-        group_control_layout.addRow(QLabel("y, mm:"), self.y_text)
-        group_control_layout.addRow(QLabel("z, mm:"), self.z_text)
-        group_control_layout.addRow(QLabel("w, mm:"), self.w_text)
-
-        buttons_widget = QWidget()
-        buttons_widget.setLayout(QVBoxLayout())
-        group_control_layout.addRow(buttons_widget)
-        buttons_widget.layout().addWidget(self.goto_button)
-        self.goto_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        buttons_widget.layout().setAlignment(Qt.AlignmentFlag.AlignRight)
+        coord_input_widget = FormLikeInput.View(
+            model=self.coord_input_model
+        )
+        coord_input_widget.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
+        group_control.layout().addWidget(coord_input_widget)
+        group_control.layout().addWidget(self.goto_button)
         self.goto_button.clicked.connect(self.goto)
+
         return widget
 
     def goto(self):
-        x = float(self.x_text.text()) if self.x_text.text().strip() != '' else None
-        y = float(self.y_text.text()) if self.y_text.text().strip() != '' else None
-        z = float(self.z_text.text()) if self.z_text.text().strip() != '' else None
-        w = float(self.w_text.text()) if self.w_text.text().strip() != '' else None
+        x = self.coord_input_model.get_parsed_value('x')
+        y = self.coord_input_model.get_parsed_value('y')
+        z = self.coord_input_model.get_parsed_value('z')
+        w = self.coord_input_model.get_parsed_value('w')
         new_pos = Position(x, y, z, w)
         self.model.instrument.goto(new_pos)
 
