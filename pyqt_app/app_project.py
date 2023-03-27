@@ -29,11 +29,10 @@ scanner = TRIMPScanner(
 TRIM_emulator.run(blocking=False, motion_time=2, port=9008)  # use it only for emulating
 
 analyzer_signals = PAnalyzerSignals()
-analyzer = ToyAnalyser(
+analyzer = CeyearPAnalyzer(
     # instrument=SocketAnalyzer(ip="192.168.5.168", port=9000, signals=analyzer_signals),
     instrument=CeyearAnalyzerEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
-    signals=analyzer_signals,
-    name="Toy analyzer"
+    signals=analyzer_signals
 )
 
 objects = PStorage()
@@ -79,8 +78,7 @@ experiments.append(
 measurands.append(
     SParams(
         name='s_param1',
-        analyzer=CeyearAnalyzerEmulator(ip="192.168.5.168", port="9000"),
-
+        panalyzer=analyzer
     )
 )
 

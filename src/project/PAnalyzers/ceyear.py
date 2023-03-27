@@ -24,7 +24,8 @@ class CeyearPAnalyzer(PAnalyzer):
     def __init__(self, signals: PAnalyzerSignals, instrument: CeyearAnalyzer):
         super(CeyearPAnalyzer, self).__init__(
             signals=signals,
-            instrument=instrument
+            instrument=instrument,
+            name='CeyearPanalyzer'
         )
 
     @staticmethod
@@ -59,8 +60,8 @@ class SParams(PMeasurand):
 
     def __init__(
             self,
-            name: str,
-            panalyzer: CeyearPAnalyzer
+            panalyzer: CeyearPAnalyzer,
+            name: str = "S-params"
     ):
         super(SParams, self).__init__(name=name)
         self.panalyzer = panalyzer
@@ -147,14 +148,15 @@ class SParams(PMeasurand):
         self.sweep_type = sweep_type
         self._clear()
 
-    def set_freqs(
-            self,
-            freq_start: float = None,
-            freq_stop: float = None,
-            freq_num: int = None,
-    ):
+    def set_freq_start(self, freq_start: float = None):
         self.freq_start = freq_start
+        self._clear()
+
+    def set_freq_stop(self, freq_stop: float = None):
         self.freq_stop = freq_stop
+        self._clear()
+
+    def set_freq_num(self, freq_num: int = None):
         self.freq_num = freq_num
         self._clear()
 
@@ -176,4 +178,4 @@ class SParams(PMeasurand):
 
     @classmethod
     def reproduce(cls, name: str, project: ProjectType) -> 'SParams':
-        return cls(name=name, analyzer=project.analyzer)
+        return cls(name=name, panalyzer=project.analyzer)

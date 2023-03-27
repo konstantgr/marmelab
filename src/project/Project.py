@@ -363,7 +363,7 @@ class PAnalyzer(PNamed, metaclass=ABCMeta):
             **settings
     ):
         self.instrument.set_settings(settings)
-        self.current_measurand = measurand
+        self.set_current_measurand(measurand)
 
     def set_current_measurand(self, measurand: PMeasurand):
         """Объявить measurand, к которому подготовлен анализатор"""

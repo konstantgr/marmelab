@@ -1,13 +1,17 @@
-from PyQt6.QtWidgets import QWidget, QGroupBox, QVBoxLayout, QCheckBox, QFormLayout, QLineEdit, QComboBox, QGridLayout
+from PyQt6.QtWidgets import QWidget, QGroupBox, QVBoxLayout, QCheckBox, QFormLayout, \
+    QLineEdit, QComboBox, QGridLayout, QPushButton
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIntValidator, QDoubleValidator
 from src.views.View import BaseView, QWidgetType
 from src.project.PAnalyzers.ceyear import SParams, CEYEAR_DEFAULT_SETTINGS
+from src.views.Widgets import StateDepPushButton
+from functools import partial
 
 
 class SParamsView(BaseView[SParams]):
     def __init__(self, *args, **kwargs):
         super(SParamsView, self).__init__(*args, **kwargs)
+        self.settings_to_apply = CEYEAR_DEFAULT_SETTINGS.copy()
 
     def construct_widget(self) -> QWidgetType:
         widget = QWidget()
@@ -22,6 +26,7 @@ class SParamsView(BaseView[SParams]):
         averaging_form = self._construct_averaging_widget(widget)
         power_form = self._construct_power_widget(widget)
         sweep_form = self._construct_sweep_type_widget(widget)
+        apply_button = self._construct_apply_button(widget)
 
         vbox.addWidget(group)
         vbox.addWidget(sweep_form)
@@ -30,7 +35,19 @@ class SParamsView(BaseView[SParams]):
         vbox.addWidget(power_form)
         vbox.addWidget(smoothing_form)
         vbox.addWidget(averaging_form)
+        vbox.addWidget(apply_button)
         return widget
+
+    def _construct_apply_button(self, parent_widget):
+        # apply_button = QPushButton(parent_widget)
+        apply_button = StateDepPushButton(
+            state=self.model.panalyzer.states.is_connected & ~self.model.panalyzer.states.is_in_use,
+            text="Apply",
+            parent=parent_widget
+        )
+        apply_button.setText("Apply")
+        apply_button.clicked.connect(self.model.pre_measure)
+        return apply_button
 
     def _construct_sparams_widget(self, parent_widget):
         def change_sparam(s_param):
@@ -75,7 +92,7 @@ class SParamsView(BaseView[SParams]):
         smoothing_form = QWidget(parent_widget)
         smoothing_form_layout = QFormLayout(parent_widget)
         smoothing_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['smooth_apert']}", smoothing_form)
-        smoothing_le.setValidator(QDoubleValidator())
+        smoothing_le.setValidator(QDoubleValidator())  # todo: не вводится число?!?!?!
         smoothing_form_layout.addRow("Smoothing aperture (%)", smoothing_le)
         smoothing_le.editingFinished.connect(lambda: self.model.set_smooth_apert(float(smoothing_le.text())))
         smoothing_form.setLayout(smoothing_form_layout)

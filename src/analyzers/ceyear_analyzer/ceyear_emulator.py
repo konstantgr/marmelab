@@ -1,6 +1,7 @@
 from typing import List, Union
 from src.analyzers.base_analyzer import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
 from src.utils import EmptySignal
+from .ceyear_analyzer import CeyearAnalyzer
 import numpy as np
 
 
@@ -9,7 +10,7 @@ class CeyearAnalyzerEmulatorSignals(AnalyzerSignals):
     is_connected = EmptySignal()
 
 
-class CeyearAnalyzerEmulator(BaseAnalyzer):
+class CeyearAnalyzerEmulator(CeyearAnalyzer):
     def __init__(
             self,
             ip: str,
@@ -86,10 +87,10 @@ class CeyearAnalyzerEmulator(BaseAnalyzer):
         return self._is_connected
 
     def __enter__(self):
-        pass
+        self.connect()
 
-    def __exit__(self, type, value, traceback):
-        pass
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.disconnect()
 
 
 # if __name__ == "__main__":
