@@ -1,6 +1,7 @@
 from ..Project import PScanner, PScannerSignals, PScannerTypes
 from src.Variable import Setting, Unit
 from ...scanner.TRIM import TRIMScanner, DEFAULT_SETTINGS
+from ...scanner.scanner import Position
 
 import logging
 logger = logging.getLogger()
@@ -45,6 +46,13 @@ class TRIMPScanner(PScanner):
     def axes_number(self) -> int:
         return 4
 
-
-
-
+    def custom_goto(self, x: float = None, y: float = None, z: float = None, w: float = None):
+        """Направить сканер в ручном режиме"""
+        if \
+                not (isinstance(x, (float, int)) or x is None) or\
+                not (isinstance(y, (float, int)) or y is None) or\
+                not (isinstance(z, (float, int)) or z is None) or\
+                not (isinstance(w, (float, int)) or w is None):
+            raise TypeError("float expected")
+        position = Position(x=x, y=y, z=z, w=w)
+        self.instrument.goto(position)

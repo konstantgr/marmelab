@@ -15,7 +15,6 @@ from ...scanner import Position
 from dataclasses import dataclass, field
 import math
 from enum import IntEnum, auto
-import matplotlib.pyplot as plt
 import time
 
 # TODO: добавть во вьюшке кнопки: 1) устанавливает относительные координаты и одновременно перемещает точку начала
@@ -250,9 +249,9 @@ class TablePathModel(PPath):
             # print(current_data)
             temp.append(current_data)
         # print("temp", temp)
-        s = time.time()
-        print(self.mesh_maker(temp))
-        print(time.time() - s)
+        # s = time.time()
+        # print(self.mesh_maker(temp))
+        # print(time.time() - s)
         return(self.mesh_maker(temp))
 
         # ax = plt.figure().add_subplot(projection='3d')

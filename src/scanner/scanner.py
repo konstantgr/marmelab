@@ -55,14 +55,14 @@ class BaseAxes:
     """
     Все координаты сканера в мм
     """
-    x: float = None
-    y: float = None
-    z: float = None
-    w: float = None
-    # r: float = None
-    # e: float = None
-    # f: float = None
-    # g: float = None
+    x: float or None = None
+    y: float or None = None
+    z: float or None = None
+    w: float or None = None
+    # r: float or None = None
+    # e: float or None = None
+    # f: float or None = None
+    # g: float or None = None
 
     def __add__(self, other):
         if not isinstance(other, BaseAxes):

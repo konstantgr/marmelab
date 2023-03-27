@@ -81,7 +81,8 @@ experiments.append(
 experiments.append(
     Experiment(name='exp2',
                paths=paths,
-               measurands=measurands
+               measurands=measurands,
+               scannner=scanner
                )
 )
 
