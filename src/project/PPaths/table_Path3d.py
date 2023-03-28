@@ -1,4 +1,5 @@
 from ..Project import PPath, ProjectType
+from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 import numpy as np
 from src.views.Widgets.SettingsTable import QAbstractTableModel
 from ..Project import PPath, PScanner
@@ -37,6 +38,10 @@ class TableData:
     step: Position = field(default_factory=Position)
 
 
+class TableModelSignals(QObject):
+    data_changed: pyqtBoundSignal = pyqtSignal()
+
+
 class TableModel(QAbstractTableModel):
     def __init__(self, scanner: PScanner):
         super(TableModel, self).__init__()
@@ -51,6 +56,7 @@ class TableModel(QAbstractTableModel):
         self._data.points.x = self._data.points.y = self._data.points.z = self._data.points.w = 10
         self.scanner_position = Position()
         self.scanner = scanner
+        self.signals = TableModelSignals()
         self.scanner.signals.position.connect(self.update_scanner_position)
 
     def update_scanner_position(self, position: Position):
@@ -160,6 +166,7 @@ class TableModel(QAbstractTableModel):
                     self._data.points.__setattr__(axis_name, int(value))
                     self._data.step.__setattr__(axis_name, (abs(end - start) / int(value)))
             self.dataChanged.emit(index, index)
+            self.signals.data_changed.emit()
         return True
 
 
@@ -172,6 +179,8 @@ class TablePathModel(PPath):
         self.table_model = TableModel(scanner)
         self.scanner = scanner
         self.trajectory_type = "Snake"
+
+        self.table_model.signals.data_changed.connect(self.signals.display_changed.emit)
 
     @classmethod
     def reproduce(cls, name: str, project: ProjectType) -> 'TablePathModel':
