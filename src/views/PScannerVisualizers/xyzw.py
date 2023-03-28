@@ -68,6 +68,7 @@ class Widget(gl.GLViewWidget):
         self.scanner_zone_items = self.draw_scanner_zone()
         self.scanner_items = self.draw_scanner()
         self.object_items = self.draw_objects()
+        self.connected_paths = []
         self.paths_items = self.draw_points()
 
         self.scanner_signals.position.connect(self.set_scanner_pos)
@@ -447,6 +448,11 @@ class Widget(gl.GLViewWidget):
     def draw_points(self):
         paths_items = []
         for path in self.paths.data:  # type: PPath
+
+            if path.name not in self.connected_paths:
+                path.signals.display_changed.connect(self.redraw_paths)
+                self.connected_paths.append(path.name)
+                
             points = path.get_points_ndarray()
             points_in_gl = np.zeros_like(points)
             x, y, z = coords_to_GL_coords(points[:, 0], points[:, 1], points[:, 2])
@@ -484,7 +490,6 @@ class Widget(gl.GLViewWidget):
             )
             paths_items.append(item)
             self.addItem(item)
-        print(paths_items)
         return paths_items
 
     def redraw_paths(self):

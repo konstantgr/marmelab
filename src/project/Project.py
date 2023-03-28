@@ -47,8 +47,6 @@ class PBase(PNamed, Generic[SignalsTypes], metaclass=ABCMeta):
     """
     Базовый класс всех объектов в проекте
     """
-    base_name = 'base'
-    type_name = 'Base'
     signals_type: Type[SignalsTypes] = PBaseSignals
 
     def __init__(
