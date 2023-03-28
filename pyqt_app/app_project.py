@@ -64,13 +64,6 @@ paths.append(
     )
 )
 
-
-paths.append(
-    ToyPath(
-        name=f'path2',
-    )
-)
-
 experiments.append(
     ToyExperiment(
         scanner=scanner,

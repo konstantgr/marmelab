@@ -15,15 +15,6 @@ AppBuilder.register_factory(
     ModelViewFactory(
         view_types=(TablePathView,),
         model_type=TablePathModel,
-        icon=icons.path_icon
-    ),
-    group=FactoryGroups.paths
-)
-
-AppBuilder.register_factory(
-    ModelViewFactory(
-        view_types=(ToyView,),
-        model_type=ToyPath,
         icon=icons.path_table
     ),
     group=FactoryGroups.paths
