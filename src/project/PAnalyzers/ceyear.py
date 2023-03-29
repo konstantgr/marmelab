@@ -1,12 +1,14 @@
 import dataclasses
 from typing import Type, Union, Tuple
 import numpy as np
+import logging
 
 from src.project.Project import PAnalyzer, ProjectType
 from src.project.Project import PAnalyzerSignals
 from src.analyzers.ceyear_analyzer.ceyear_analyzer import CeyearAnalyzer
 from src.project.Project import PMeasurand
 
+logger = logging.getLogger(__name__)
 
 CEYEAR_DEFAULT_SETTINGS = dict(
         channel=1,
@@ -117,6 +119,7 @@ class SParams(PMeasurand):
             if s_param.enable:
                 req.append(s_param.name)
         self._data = self.panalyzer.get_scattering_parameters(req)
+        logger.info("S-parameters have been measured")
         return np.array(list(self._data.values()))
 
     def get_measure_names(self) -> Tuple[str]:

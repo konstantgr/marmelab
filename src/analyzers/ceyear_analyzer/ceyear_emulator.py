@@ -3,6 +3,9 @@ from src.analyzers.base_analyzer import BaseAnalyzer, AnalyzerSignals, AnalyzerC
 from src.utils import EmptySignal
 from .ceyear_analyzer import CeyearAnalyzer
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class CeyearAnalyzerEmulatorSignals(AnalyzerSignals):
@@ -49,6 +52,7 @@ class CeyearAnalyzerEmulator(CeyearAnalyzer):
             self._freq_stop = freq_stop
         if freq_num is not None:
             self._freq_num = freq_num
+        logger.debug("Settings have been applied")
 
     def _set_is_connected(self, state: bool):
         self._is_connected = state
@@ -58,11 +62,13 @@ class CeyearAnalyzerEmulator(CeyearAnalyzer):
         if self._is_connected:
             return
         self._set_is_connected(True)
+        logger.info('CeyearEmulator is connected')
 
     def disconnect(self) -> None:
         if not self._is_connected:
             return
         self._set_is_connected(False)
+        logger.info('CeyearEmulator is disconnected')
 
     def get_scattering_parameters(
             self,
@@ -81,6 +87,7 @@ class CeyearAnalyzerEmulator(CeyearAnalyzer):
         res[f'freq'] = np.linspace(self._freq_start, self._freq_stop, self._freq_num)
 
         self._signals.data.emit(res)
+        logger.debug("S-parameters are received")
         return res
 
     def is_connected(self) -> bool:

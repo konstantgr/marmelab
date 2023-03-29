@@ -92,7 +92,7 @@ class SParamsView(BaseView[SParams]):
         smoothing_form = QWidget(parent_widget)
         smoothing_form_layout = QFormLayout(parent_widget)
         smoothing_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['smooth_apert']}", smoothing_form)
-        smoothing_le.setValidator(QDoubleValidator())  # todo: не вводится число?!?!?!
+        smoothing_le.setValidator(QDoubleValidator())
         smoothing_form_layout.addRow("Smoothing aperture (%)", smoothing_le)
         smoothing_le.editingFinished.connect(lambda: self.model.set_smooth_apert(float(smoothing_le.text())))
         smoothing_form.setLayout(smoothing_form_layout)

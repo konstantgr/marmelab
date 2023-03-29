@@ -6,6 +6,9 @@ from typing import List, Union
 from src.analyzers.base_analyzer import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
 from src.utils import EmptySignal
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class CeyearAnalyzerSignals(AnalyzerSignals):
@@ -37,6 +40,7 @@ class CeyearAnalyzer(BaseAnalyzer):
 
     def _send_cmd(self, cmd: str):
         self.instrument.sendall(str.encode(cmd+'\n'))
+        logger.debug(f">>> {cmd}")
         time.sleep(0.1)
         if '?' in cmd:
             response = bytearray()
@@ -66,6 +70,7 @@ class CeyearAnalyzer(BaseAnalyzer):
         self._set_aver_fact(aver_fact)
         self._set_smooth_apert(smooth_aper)
         self._set_power(power)
+        logger.debug("Settings have been applied")
 
     def _set_is_connected(self, state: bool):
         self._is_connected = state
@@ -74,9 +79,14 @@ class CeyearAnalyzer(BaseAnalyzer):
     def connect(self) -> None:
         if self._is_connected:
             return
-        self.instrument.connect((self.ip, self.port))
-        self._send_cmd("*RST")
-        self._set_is_connected(True)
+        try:
+            self.instrument.connect((self.ip, self.port))
+            self._send_cmd("*RST")
+            self._set_is_connected(True)
+            logger.info('Ceyear is connected and reset')
+        except Exception as e:
+            self._set_is_connected(False)
+            raise e
 
     def disconnect(self) -> None:
         if not self._is_connected:
@@ -87,11 +97,13 @@ class CeyearAnalyzer(BaseAnalyzer):
             raise e
         finally:
             self._set_is_connected(False)
+            logger.info('Ceyear is disconnected')
 
     def _set_channel(self, channel: int = None):
         if channel is not None:
             if isinstance(channel, int):
                 self.channel = channel
+                logger.debug(f"Channel {channel} is selected")
             else:
                 raise TypeError("Channel should be string")
 
@@ -100,6 +112,7 @@ class CeyearAnalyzer(BaseAnalyzer):
             if isinstance(sweep_type, str):
                 if sweep_type == 'LIN' or sweep_type == 'LOG':
                     self._send_cmd(f'SENS{self.channel}:SWE:TYPE {sweep_type}')
+                    logger.debug(f"{sweep_type} sweep type is selected")
                 else:
                     raise Exception("Unknown sweep type")
             else:
@@ -115,6 +128,7 @@ class CeyearAnalyzer(BaseAnalyzer):
             if isinstance(freq_stop, float):
                 if 100_000 <= freq_start <= 8_500_000_000:
                     self._send_cmd(f'SENS{self.channel}:FREQ:STAR {freq_start}Hz')
+                    logger.debug(f"Frequency start {freq_start} is selected")
                 else:
                     raise Exception("Stop frequency must be from 100 KHz to 8.5 MHz")
             else:
@@ -123,6 +137,7 @@ class CeyearAnalyzer(BaseAnalyzer):
             if isinstance(freq_stop, float):
                 if 100_000 <= freq_stop <= 8_500_000_000:
                     self._send_cmd(f'SENS{self.channel}:FREQ:STOP {freq_stop}Hz')
+                    logger.debug(f"Frequency stop {freq_stop} is selected")
                 else:
                     raise Exception("Start frequency must be from 100 KHz to 8.5 MHz")
             else:
@@ -131,6 +146,7 @@ class CeyearAnalyzer(BaseAnalyzer):
             if isinstance(freq_num, int):
                 if 1 <= freq_num <= 16_001:
                     self._send_cmd(f'SENS{self.channel}:SWE:POIN {freq_num}')
+                    logger.debug(f"Number of points {freq_num} is selected")
                 else:
                     raise Exception("Number of points must be from 1 to 16 001")
             else:
@@ -141,6 +157,7 @@ class CeyearAnalyzer(BaseAnalyzer):
             if isinstance(bandwidth, int):
                 if 1 <= bandwidth <= 40_000:
                     self._send_cmd(f'SENS{self.channel}:BAND {bandwidth}')
+                    logger.debug(f"Bandwidth {bandwidth} is selected")
                 else:
                     raise Exception("Bandwidth factor must be from 1 Hz to 40 kHz")
             else:
@@ -152,6 +169,7 @@ class CeyearAnalyzer(BaseAnalyzer):
                 if 1 <= aver_fact <= 1024:
                     self._send_cmd(f'SENS{self.channel}:AVER:STAT ON')
                     self._send_cmd(f'SENS{self.channel}:AVER:COUN  {aver_fact}')
+                    logger.debug(f"Average factor {aver_fact} is selected")
                 else:
                     raise Exception("Average factor must be from 1 to 1024")
             else:
@@ -163,6 +181,7 @@ class CeyearAnalyzer(BaseAnalyzer):
                 if 1 < smooth_apert < 25:
                     self._send_cmd(f'CALC{self.channel}:SMO:STAT ON')
                     self._send_cmd(f'CALC{self.channel}:SMO:APER {smooth_apert}')
+                    logger.debug(f"Smoothing aperture {smooth_apert} is selected")
                 else:
                     raise Exception("Smoothing aperture must be from 1% to 25%")
             else:
@@ -175,6 +194,7 @@ class CeyearAnalyzer(BaseAnalyzer):
                     number_of_ports = int(self._send_cmd(f'SERV:PORT:COUN?'))
                     for n_port in range(1, number_of_ports + 1):
                         self._send_cmd(f'SOUR{self.channel}:POW{n_port} {power}dBm')
+                        logger.debug(f"Power {power} is selected")
                 else:
                     raise Exception("Power level must be from -85 dBm to 20 dBm")
             else:
@@ -208,6 +228,7 @@ class CeyearAnalyzer(BaseAnalyzer):
         res[f'freq'] = np.array(freq_tup).astype(float)
 
         self._signals.data.emit(res)
+        logger.debug("S-parameters are received")
         return res
 
     def is_connected(self) -> bool:
