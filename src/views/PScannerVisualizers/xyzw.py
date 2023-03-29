@@ -447,12 +447,12 @@ class Widget(gl.GLViewWidget):
 
     def draw_points(self):
         paths_items = []
-        for path in self.paths.data:  # type: PPath
+        for path in self.paths.data:
 
             if path.name not in self.connected_paths:
                 path.signals.display_changed.connect(self.redraw_paths)
                 self.connected_paths.append(path.name)
-                
+
             points = path.get_points_ndarray()
             points_in_gl = np.zeros_like(points)
             x, y, z = coords_to_GL_coords(points[:, 0], points[:, 1], points[:, 2])

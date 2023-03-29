@@ -1,4 +1,4 @@
-from ..Project import PScannerVisualizer, PStorage, PScanner, ProjectType, PBaseTypes
+from ..Project import PScannerVisualizer, PStorage, PScanner, ProjectType, PBaseTypes, PPath
 from typing import List
 from PyQt6.QtWidgets import QWidget
 from src.Variable import Setting, Unit
@@ -119,7 +119,7 @@ class xyzwScannerVisualizerSignals(QObject):
 
 class xyzwScannerVisualizer(PScannerVisualizer):
     def __init__(
-            self, name: str, scanner: PScanner, objects: PStorage, paths: PStorage,
+            self, name: str, scanner: PScanner, objects: PStorage, paths: PStorage[PPath],
     ):
         super(xyzwScannerVisualizer, self).__init__(name=name)
         self.scanner = scanner

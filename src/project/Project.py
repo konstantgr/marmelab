@@ -39,7 +39,7 @@ class PBaseSignals(QObject):
     data_changed: pyqtBoundSignal = pyqtSignal()
 
 
-SignalsTypes = TypeVar('SignalsTypes')
+SignalsTypes = TypeVar('SignalsTypes', bound=PBaseSignals)
 ProjectType = TypeVar('ProjectType', bound='Project')
 
 
@@ -48,13 +48,14 @@ class PBase(PNamed, Generic[SignalsTypes], metaclass=ABCMeta):
     Базовый класс всех объектов в проекте
     """
     signals_type: Type[SignalsTypes] = PBaseSignals
+    signals: SignalsTypes
 
     def __init__(
             self,
             name: str,
     ):
         super(PBase, self).__init__(name=name)
-        self.signals: SignalsTypes = self.signals_type()
+        self.signals = self.signals_type()
 
     # def __init_subclass__(cls, **kwargs):
     #     # cls.signals_type = PBaseSignals
