@@ -34,7 +34,7 @@ analyzer = CeyearPAnalyzer(
     # instrument=SocketAnalyzer(ip="192.168.5.168", port=9000, signals=analyzer_signals),
     instrument=RohdeSchwarzEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
     signals=analyzer_signals,
-    name="Toy analyzer"
+    # name="Toy analyzer"
 )
 
 objects = PStorage()

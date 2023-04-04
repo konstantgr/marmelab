@@ -553,6 +553,14 @@ class PStorage(Generic[PBaseTypes]):
         except Exception as e:
             raise e
 
+    def keys(self) -> list[str]:
+        """
+        Возвращает имена хранящихся экземпляров
+
+        :return: list
+        """
+        return [i.name for i in self.data]
+
 
 class PAnalyzerVisualizer(PNamed, metaclass=ABCMeta):
     """
