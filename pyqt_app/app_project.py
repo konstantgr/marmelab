@@ -17,6 +17,7 @@ from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl
 from src.views.PScannerVisualizers.xyzw import xyzwSettings, xyzwWidget
 from src.views.PScanners import TRIMControl, TRIMSettings
 from src.views.PAnalyzers import SocketAnalyzerControl
+from src.views.PMeasurands.PMeasurands import SParamsView
 from src.views.PPlotVisualizer import PlotsView
 import src.binds
 
@@ -29,7 +30,7 @@ scanner = TRIMPScanner(
 TRIM_emulator.run(blocking=False, motion_time=2, port=9006)  # use it only for emulating
 
 analyzer_signals = PAnalyzerSignals()
-analyzer = ToyAnalyser(
+analyzer = CeyearPAnalyzer(
     # instrument=SocketAnalyzer(ip="192.168.5.168", port=9000, signals=analyzer_signals),
     instrument=RohdeSchwarzEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
     signals=analyzer_signals,
@@ -71,12 +72,11 @@ experiments.append(
     )
 )
 
-experiments.append(
-    Experiment(name='exp2',
-               paths=paths,
-               measurands=measurands,
-               scannner=scanner
-               )
+measurands.append(
+    SParams(
+        name='s_param1',
+        panalyzer=analyzer
+    )
 )
 
 project = Project(
@@ -131,7 +131,7 @@ AppBuilder.register_plots_visualizer_factory(
 
 AppBuilder.register_factory(
     factory=ModelViewFactory(
-        view_types=(ToyView,),
+        view_types=(SParamsView,),
         model_type=SParams,
         icon=icons.s_params,
     ),
