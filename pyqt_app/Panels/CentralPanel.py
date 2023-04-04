@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QScrollArea, QWidget, QStackedWidget
+from PyQt6.QtWidgets import QScrollArea, QWidget, QStackedWidget, QVBoxLayout, QLabel
 from .BasePanel import BasePanel
 from pyqt_app import project, builder
 from src.views.View import BaseView
@@ -14,11 +14,18 @@ class CentralPanel(QScrollArea, BasePanel):
         """
         super(CentralPanel, self).__init__(*args, **kwargs)
 
+        self.lst_model_names = []
+        self.main_widget = QWidget()
+        self.main_widget.setLayout(QVBoxLayout())
+
+        self.label_widget = QLabel("None")
         self.stacked_widget = QStackedWidget(self)
 
+        self.main_widget.layout().addWidget(self.label_widget)
+        self.main_widget.layout().addWidget(self.stacked_widget)
         self.draw()
 
-        self.setWidget(self.stacked_widget)
+        self.setWidget(self.main_widget)
         self.setWidgetResizable(True)
 
         project.objects.signals.changed.connect(self.draw)
@@ -37,6 +44,7 @@ class CentralPanel(QScrollArea, BasePanel):
 
         project_tree = builder.view_tree()
         i = 0
+        self.lst_model_names.clear()
         for tab in project_tree.keys():
             for element_name, element in project_tree[tab]:
                 if element is None:
@@ -44,10 +52,12 @@ class CentralPanel(QScrollArea, BasePanel):
                 elif isinstance(element, BaseView):
                     self.stacked_widget.insertWidget(i, element.widget)
                     i += 1
+                    self.lst_model_names.append(element_name)
                 elif isinstance(element, list):
                     for el_name, el in element:
                         self.stacked_widget.insertWidget(i, el.widget)
                         i += 1
+                        self.lst_model_names.append(el_name)
 
     def display(self, tree_num: int) -> None:
         """
@@ -57,3 +67,4 @@ class CentralPanel(QScrollArea, BasePanel):
         :return:
         """
         self.stacked_widget.setCurrentIndex(tree_num)
+        self.label_widget.setText(self.lst_model_names[tree_num])

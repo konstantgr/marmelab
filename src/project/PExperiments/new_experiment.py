@@ -18,8 +18,10 @@ class Experiment(PExperiment):
         self.paths_storage = paths
         self.measurands_storage = measurands
         self.scanner = scanner
-        self.current_path: None or str = None
+        self.current_path: str = ''
         self.current_measurands: list[str] = []
+        self.paths_storage.signals.changed.connect(self.on_paths_updated)
+        self.measurands_storage.signals.changed.connect(self.on_measurands_updated)
 
     @property
     def paths(self):
@@ -36,7 +38,7 @@ class Experiment(PExperiment):
 
     @classmethod
     def reproduce(cls, name: str, project: ProjectType) -> 'PBaseTypes':
-        pass
+        return cls(name=name, paths=project.paths, measurands=project.measurands, scanner=project.scanner)
 
     def on_measurands_updated(self):
         measurands = self.measurands
@@ -53,3 +55,4 @@ class Experiment(PExperiment):
 
     def set_current_path(self, path: str):
         self.current_path = path
+

@@ -76,7 +76,7 @@ experiments.append(
 
 measurands.append(
     SParams(
-        name='s_param1',
+        name='meas1',
         panalyzer=analyzer
     )
 )
