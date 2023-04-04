@@ -8,8 +8,10 @@ from .project.Project import PPlot1D, PPlot2D    # TODO: убрать
 from .views.toy import ToyView
 from .views.PPlots import RTPlot1DView
 from .views.PPaths import TablePathView
+from .views.PExperiment import ExperimentView
 from .builder import AppBuilder, FactoryGroups
 from . import icons
+
 
 AppBuilder.register_factory(
     ModelViewFactory(
@@ -41,21 +43,13 @@ AppBuilder.register_factory(
 
 AppBuilder.register_factory(
     ModelViewFactory(
-        view_types=(ToyView,),
-        model_type=ToyExperiment,
-        icon=icons.experiment_icon
-    ),
-    group=FactoryGroups.experiments
-)
-
-AppBuilder.register_factory(
-    ModelViewFactory(
-        view_types=(ToyView,),
+        view_types=(ExperimentView, ),
         model_type=Experiment,
         icon=icons.experiment_icon
     ),
     group=FactoryGroups.experiments
 )
+
 
 AppBuilder.register_factory(
     ModelViewFactory(

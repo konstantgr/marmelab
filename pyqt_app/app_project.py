@@ -66,9 +66,11 @@ paths.append(
 )
 
 experiments.append(
-    ToyExperiment(
+    Experiment(
         scanner=scanner,
-        name='exp1'
+        name='exp1',
+        paths=paths,
+        measurands=measurands
     )
 )
 

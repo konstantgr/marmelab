@@ -13,11 +13,11 @@ class Experiment(PExperiment):
     signals_type = ExperimentSignals
     signals: ExperimentSignals
 
-    def __init__(self, name: str, paths: PStorage[PPath], measurands: PStorage[PMeasurand], scannner: PScanner):
+    def __init__(self, name: str, paths: PStorage[PPath], measurands: PStorage[PMeasurand], scanner: PScanner):
         super(Experiment, self).__init__(name=name)
         self.paths_storage = paths
         self.measurands_storage = measurands
-        self.scanner = scannner
+        self.scanner = scanner
         self.current_path: None or str = None
         self.current_measurands: list[str] = []
 
