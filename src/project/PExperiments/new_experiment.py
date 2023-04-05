@@ -56,3 +56,6 @@ class Experiment(PExperiment):
     def set_current_path(self, path: str):
         self.current_path = path
 
+    def print_current_coords(self):
+        model_path = self.paths_storage.get(self.current_path)
+        print(model_path.get_points_ndarray())

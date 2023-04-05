@@ -61,7 +61,7 @@ class TablePathView(BaseView[TablePathModel]):
             parent=widget
         )
         print_tr_button.clicked.connect(self.model.get_path) # должна вызываться ф-ия mesh_maker
-        vbox_layout.addWidget(print_tr_button)
+        # vbox_layout.addWidget(print_tr_button)  #  тестовая кнопка, принтующая точки в консоль
 
         hbox_layout.addWidget(vbox)  # добавление вертикального виджета (содежит комбо и чек боксы) в гориз. слой
         group_layout.addWidget(hbox)  # создание отдельной группы для горизонтального слоя (отображение в рамке)

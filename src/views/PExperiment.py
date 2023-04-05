@@ -1,6 +1,6 @@
 from ..project.PExperiments import Experiment
 from .View import BaseView, QWidgetType
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QGroupBox, QComboBox, QListView, QLabel
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QGroupBox, QComboBox, QListView, QLabel, QPushButton
 from src.views.Widgets import StateDepPushButton, StateDepCheckBox
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QStandardItem, QStandardItemModel
@@ -11,7 +11,7 @@ class ExperimentView(BaseView[Experiment]):
         super(ExperimentView, self).__init__(*args, **kwargs)
         self.paths_q_box = QComboBox()
         self.measurands_item_model = QStandardItemModel()
-
+        self.states = self.model.scanner.states
         self.model.signals.path_changed.connect(self.upd_paths)
         self.paths_q_box.currentTextChanged.connect(self.model.set_current_path)
 
@@ -62,11 +62,20 @@ class ExperimentView(BaseView[Experiment]):
         group_layout.addWidget(QLabel('Path:'))
         group_layout.addWidget(self.paths_q_box)
 
-        listView = QListView()
-        listView.setModel(self.measurands_item_model)
-        listView.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        list_view = QListView()
+        list_view.setModel(self.measurands_item_model)
+        list_view.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         group_layout.addWidget(QLabel('Measurands:'))
-        group_layout.addWidget(listView)
+
+        go_button = StateDepPushButton(
+            state=self.states.is_connected,
+            text="Go (test button)",
+            parent=widget
+        )
+
+        go_button.clicked.connect(self.model.print_current_coords)
+        group_layout.addWidget(list_view)
+        group_layout.addWidget(go_button)
 
         layout.addWidget(group)
         self.upd_paths()
