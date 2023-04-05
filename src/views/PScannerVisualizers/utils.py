@@ -42,41 +42,26 @@ class Points3D(GLGraphicsItem):
         GLGraphicsItem.__init__(self)
         self.color: QColor = pg.mkColor(color)
         self.size = size
-        self.points = points
+        self.points = np.ascontiguousarray(points, dtype=np.float32)
         self.setGLOptions(glOptions)
         self.update()
 
     def paint(self):
         self.setupGLState()
-        points = np.ascontiguousarray(self.points[:, [0, 1, 2]], dtype=np.float32)
 
         GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
-        GL.glEnableClientState(GL.GL_COLOR_ARRAY)
+        try:
+            GL.glVertexPointerf(self.points)
 
-        GL.glEnable(GL.GL_POINT_SMOOTH)
-        GL.glPointSize(self.size)
+            GL.glEnable(GL.GL_POINT_SMOOTH)
+            GL.glColor4f(*self.color.getRgbF())
+            GL.glPointSize(self.size)
 
-        # first point
-        GL.glColor4f(0, 1, 0, self.color.getRgbF()[-1])
-        GL.glBegin(GL.GL_POINTS)
-        GL.glVertex3f(points[0, 0], points[0, 1], points[0, 2])
-        GL.glEnd()
+            GL.glDrawArrays(GL.GL_POINTS, 0, self.points.shape[0])
 
-        GL.glColor4f(*self.color.getRgbF())
-
-        GL.glBegin(GL.GL_POINTS)
-        for i in range(1, points.shape[0]-1):
-            GL.glVertex3f(points[i, 0], points[i, 1], points[i, 2])
-        GL.glEnd()
-
-        # last point
-        GL.glColor4f(1, 0, 0, self.color.getRgbF()[-1])
-        GL.glBegin(GL.GL_POINTS)
-        GL.glVertex3f(points[-1, 0], points[-1, 1], points[-1, 2])
-        GL.glEnd()
-
-        GL.glDisableClientState(GL.GL_COLOR_ARRAY)
-        GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
+        finally:
+            GL.glDisableClientState(GL.GL_COLOR_ARRAY)
+            GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
 
 
 # Own shader

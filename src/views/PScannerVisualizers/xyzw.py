@@ -461,7 +461,7 @@ class Widget(gl.GLViewWidget):
             points_in_gl[:, 2] = z + self.scanner_offsetZ + self.scanner_LZ
 
             item = Points3D(
-                points=points_in_gl,
+                points=points_in_gl[:, [0, 1, 2]],
                 color=pg.mkColor((100, 100, 255, 200)),
                 size=8,
                 glOptions={
