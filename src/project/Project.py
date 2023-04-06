@@ -259,9 +259,8 @@ class PScannerVisualizer(PNamed, metaclass=ABCMeta):
     """
 
 
-class PMeasurandSignals(QObject):
+class PMeasurandSignals(PBaseSignals):
     """Сигналы межеранда"""
-    changed: pyqtBoundSignal = pyqtSignal()
     measured: pyqtBoundSignal = pyqtSignal()
 
 
@@ -271,13 +270,14 @@ class PMeasurand(PBase, metaclass=ABCMeta):
     """
     base_name = 'meas'
     type_name = 'Measurand'
+    signals_type = PMeasurandSignals
+    signals: PMeasurandSignals
 
     def __init__(
             self,
             name: str,
     ):
         super(PMeasurand, self).__init__(name=name)
-        self.signals = PMeasurandSignals()
 
     @abstractmethod
     def measure(self) -> np.ndarray:
