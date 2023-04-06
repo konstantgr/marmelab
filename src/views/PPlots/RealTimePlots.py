@@ -1,8 +1,8 @@
 from ..View import BaseView, QWidgetType
 from ...project.PPlots import PRTPlot1D
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QFormLayout, QLabel
+from PyQt6.QtWidgets import QPushButton, QWidget, QVBoxLayout, QGroupBox, QComboBox, QFormLayout, QLabel
 from PyQt6.QtCore import Qt
-from typing import  Dict, Tuple, Union
+from typing import Dict, Tuple, Union
 
 
 class RTPlot1DView(BaseView[PRTPlot1D]):
@@ -11,16 +11,14 @@ class RTPlot1DView(BaseView[PRTPlot1D]):
         self.selector = QComboBox()
         self.selector_x = QComboBox()
         self.selector_f = QComboBox()
-        self.measurands: Dict[str, Tuple[str], ...] = {}
+        self.measurands: dict[str: list[str]] = {}
 
-        self.current_measurand: Union[str, None] = None
+        self.current_measurand_name: str = ''
 
         self.update_measurands()
         self.model.signals.measurands_changed.connect(self.update_measurands)
-
+        self.model.signals.current_measurand_changed.connect(self.update_measurands)
         self.selector.currentTextChanged.connect(self.set_measurand)
-        self.selector_x.currentTextChanged.connect(self.set_x)
-        self.selector_f.currentTextChanged.connect(self.set_f)
 
     def construct_widget(self) -> QWidgetType:
         widget = QWidget()
@@ -37,27 +35,53 @@ class RTPlot1DView(BaseView[PRTPlot1D]):
         group_layout.addRow(QLabel('x'), self.selector_x)
         group_layout.addRow(QLabel('f'), self.selector_f)
 
+        button = QPushButton('Apply')
+        group_layout.addRow(button)
+        button.clicked.connect(self.apply)
+
         return widget
 
     def update_measurands(self):
         measurands = self.model.get_measurands()
-        self.measurands = {}
-        for measurand in measurands:
-            self.measurands[measurand.name] = measurand.get_measure_names()
-
-        cur_i = self.selector.currentIndex()
+        self.measurands = measurands
+        current_name = self.current_measurand_name
         self.selector.clear()
-        self.selector.addItems(self.measurands.keys())
-        # if cur_i >= len(self.measurands.keys()):
-        #     self.selector.setCurrentIndex(len(self.measurands.keys())-1)
-        # else:
-        #     self.selector.setCurrentIndex(cur_i)
+        names = list(self.measurands.keys())
+        if current_name not in names:
+            names = [''] + names
+            current_name = ''
+            self.current_measurand_name = current_name
+        self.selector.addItems(names)
+        self.selector.setCurrentIndex(names.index(current_name))
+        self.update_data_names()
+
+    def update_data_names(self):
+        self.selector_x.clear()
+        self.selector_f.clear()
+        current_meas_name = self.current_measurand_name
+        if current_meas_name in self.measurands:
+            names_x = names_f = self.measurands[current_meas_name]
+            if current_meas_name == self.model.current_measurand_name:
+                x_name = self.model.x_data_name
+                f_name = self.model.f_data_name
+            else:
+                x_name = f_name = ''
+            if x_name == '':
+                names_x = [''] + names_x
+            if f_name == '':
+                names_f = [''] + names_f
+            self.selector_x.addItems(names_x)
+            self.selector_f.addItems(names_f)
+            self.selector_x.setCurrentText(x_name)
+            self.selector_f.setCurrentText(f_name)
 
     def set_measurand(self, name: str):
-        print(name)
+        self.current_measurand_name = name
+        self.update_data_names()
 
-    def set_f(self, name: str):
-        self.model.set_f_data_name(name)
-
-    def set_x(self, name: str):
-        self.model.set_x_data_name(name)
+    def apply(self):
+        self.model.set_settings(
+            self.current_measurand_name,
+            x_data_name=self.selector_x.currentText(),
+            f_data_name=self.selector_f.currentText()
+        )

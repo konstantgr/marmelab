@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QTabWidget, QLabel, QSizePolicy, QComboBox
+from PyQt6.QtWidgets import QWidget, QPushButton, QGroupBox, QVBoxLayout, QTabWidget, QLabel, QSizePolicy, QComboBox
 from .View import BaseView, QWidgetType
 from ..project.PVisualizers.AnalyzerVisualizer_model import PAnalyzerVisualizerModel
 import pyqtgraph as pg
@@ -12,8 +12,18 @@ class PlotsView(BaseView[PAnalyzerVisualizerModel]):
         super(PlotsView, self).__init__(*args, **kwargs)
         self.graphics = []
 
+        self.main_widget = QGroupBox()
+
         self.tab_widget = QTabWidget()
         self.model.plots.signals.changed.connect(self.update_plots)
+        self.main_widget.setLayout(QVBoxLayout())
+        self.main_widget.layout().addWidget(self.tab_widget)
+        button = QPushButton('Peek')
+        button.clicked.connect(self.peek)
+        self.main_widget.layout().addWidget(button)
+
+        self.tabs: list[str] = []
+        # self.tab_widget.layout().addWidget()
     #     self.measurables = measurables
     #     self.current_measurable_index = 0
     #     self._update_current_measurable()
@@ -52,15 +62,29 @@ class PlotsView(BaseView[PAnalyzerVisualizerModel]):
 
     def construct_widget(self) -> QWidgetType:
         self.update_plots()
-        return self.tab_widget
+        return self.main_widget
 
     def update_plots(self):
-        self.tab_widget.clear()
+        removed = 0
+        for i, name in enumerate(self.tabs):
+            if name not in self.model.plots.keys():
+                self.tab_widget.removeTab(i - removed)
+                self.tabs.pop(i - removed)
+                removed += 1
+
         for plot in self.model.plots.data:
+            if plot.name in self.tabs:
+                continue
             view = pg.PlotWidget()
             item = pg.PlotDataItem()
             view.addItem(item)
-            plot.update()
-            item.setData(plot.get_x(), plot.get_f())
+            # plot.update()
+            # item.setData(plot.get_x(), plot.get_f())
             self.tab_widget.addTab(view, plot.name)
+            self.tabs.append(plot.name)
 
+    def peek(self):
+        current_plot_index = self.tab_widget.currentIndex()
+        current_plot_name = self.tab_widget.tabText(current_plot_index)
+        current_plot = self.model.plots.get(current_plot_name)
+        current_plot.update()
