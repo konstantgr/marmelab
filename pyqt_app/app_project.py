@@ -7,6 +7,7 @@ from src.project.PAnalyzers import ToyAnalyser, ToySparam
 from src.project.PExperiments import ToyExperiment
 from src.project.PPaths import ToyPath
 from src.project.PAnalyzers.ceyear import CeyearPAnalyzer, SParams
+from src.project.PMeasurands.time_measurand import TimeMeas
 from src.scanner.TRIM import TRIM_emulator
 from src.builder import AppBuilder, FactoryGroups
 from src.ModelView import ModelViewFactory, ModelViewVisualizerFactory
@@ -16,7 +17,8 @@ from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl
 from src.views.PScannerVisualizers.xyzw import xyzwSettings, xyzwWidget
 from src.views.PScanners import TRIMControl, TRIMSettings
 from src.views.PAnalyzers import SocketAnalyzerControl
-from src.views.PMeasurands.PMeasurands import SParamsView
+from src.views.PMeasurands.SParams import SParamsView
+from src.views.PMeasurands.time_meas import TimeView
 from src.views.PPlotVisualizer import PlotsView
 import src.binds
 
@@ -82,6 +84,12 @@ measurands.append(
     )
 )
 
+measurands.append(
+    TimeMeas(
+        name='time1'
+    )
+)
+
 project = Project(
     scanner=scanner,
     analyzer=analyzer,
@@ -137,6 +145,14 @@ AppBuilder.register_factory(
         view_types=(SParamsView,),
         model_type=SParams,
         icon=icons.s_params,
+    ),
+    group=FactoryGroups.measurands,
+)
+
+AppBuilder.register_factory(
+    factory=ModelViewFactory(
+        view_types=(TimeView,),
+        model_type=TimeMeas
     ),
     group=FactoryGroups.measurands,
 )
