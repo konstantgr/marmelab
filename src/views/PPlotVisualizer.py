@@ -1,7 +1,11 @@
 from PyQt6.QtWidgets import QWidget, QPushButton, QGroupBox, QVBoxLayout, QTabWidget, QLabel, QSizePolicy, QComboBox
 from .View import BaseView, QWidgetType
 from ..project.PVisualizers.AnalyzerVisualizer_model import PAnalyzerVisualizerModel
+from ..project.Project import PPlot1D
 import pyqtgraph as pg
+from typing import  Union
+from functools import partial
+import numpy as np
 
 
 class PlotsView(BaseView[PAnalyzerVisualizerModel]):
@@ -23,42 +27,9 @@ class PlotsView(BaseView[PAnalyzerVisualizerModel]):
         self.main_widget.layout().addWidget(button)
 
         self.tabs: list[str] = []
-        # self.tab_widget.layout().addWidget()
-    #     self.measurables = measurables
-    #     self.current_measurable_index = 0
-    #     self._update_current_measurable()
-    #
-    #     self._update()
-    #     self.measurables.signals.changed.connect(self._update)
-    #     self.currentChanged.connect(self.set_current_measurable)
-    #
-    # def set_current_measurable(self, index):
-    #     self.current_measurable_index = index
-    #     self._update_current_measurable()
-    #
-    # def _update_current_measurable(self):
-    #     index = self.current_measurable_index
-    #     self.current_measurable = self.measurables.data[index]
-    #
-    # def _update(self):
-    #     self.clear()
-    #     for i, measurable in enumerate(self.measurables.data):
-    #         if measurable.plot_widget is not None:
-    #             self.addTab(measurable.plot_widget, measurable.name)
-    #         else:
-    #             self.addTab(QLabel('No plot'), measurable.name)
-    #
-    #         def _on_change(_index, _measurable):
-    #             def _w():
-    #                 self.removeTab(_index)
-    #                 if _measurable.plot_widget is not None:
-    #                     self.insertTab(_index, _measurable.plot_widget, _measurable.name)
-    #                 else:
-    #                     self.insertTab(_index, QLabel('No plot'), _measurable.name)
-    #                 self.setCurrentIndex(_index)
-    #             return _w
-    #
-    #         measurable.signals.changed.connect(_on_change(i, measurable))
+        self.current_plot: Union[PPlot1D, None] = None
+
+        # self.tab_widget.currentChanged.connect(self.tab_changed)
 
     def construct_widget(self) -> QWidgetType:
         self.update_plots()
@@ -79,12 +50,24 @@ class PlotsView(BaseView[PAnalyzerVisualizerModel]):
             item = pg.PlotDataItem()
             view.addItem(item)
             # plot.update()
+            plot.signals.current_measurand_measured.connect(partial(self.redraw, len(self.tabs), item))
             # item.setData(plot.get_x(), plot.get_f())
             self.tab_widget.addTab(view, plot.name)
             self.tabs.append(plot.name)
 
-    def peek(self):
+    def _get_current_plot(self):
         current_plot_index = self.tab_widget.currentIndex()
         current_plot_name = self.tab_widget.tabText(current_plot_index)
         current_plot = self.model.plots.get(current_plot_name)
+        return current_plot
+
+    def redraw(self, index, item: pg.PlotDataItem):
+        if index == self.tab_widget.currentIndex():
+            current_plot = self._get_current_plot()
+            item.setData(np.abs(current_plot.get_x()), np.abs(current_plot.get_f()))
+            # item: pg.PlotDataItem = view.
+            # item.setData()
+
+    def peek(self):
+        current_plot = self._get_current_plot()
         current_plot.update()

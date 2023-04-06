@@ -361,7 +361,7 @@ class PAnalyzer(PNamed, metaclass=ABCMeta):
             measurand: Union[PMeasurand, None] = None,
             **settings
     ):
-        self.instrument.set_settings(settings)
+        self.instrument.set_settings(**settings)
         self.set_current_measurand(measurand)
 
     def set_current_measurand(self, measurand: PMeasurand):
