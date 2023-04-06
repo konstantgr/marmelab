@@ -55,12 +55,12 @@ class TablePathView(BaseView[TablePathModel]):
         check_relative.stateChanged.connect(self.model.set_relative)
         vbox_layout.addWidget(check_relative)
 
-        print_tr_button = StateDepPushButton(
-            state=self.states.is_connected,
-            text="Print the trajectory",
-            parent=widget
-        )
-        print_tr_button.clicked.connect(self.model.get_path) # должна вызываться ф-ия mesh_maker
+        # print_tr_button = StateDepPushButton(
+        #     state=self.states.is_connected,
+        #     text="Print the trajectory",
+        #     parent=widget
+        # )
+        # print_tr_button.clicked.connect(self.model.get_path) # должна вызываться ф-ия mesh_maker
         # vbox_layout.addWidget(print_tr_button)  #  тестовая кнопка, принтующая точки в консоль
 
         hbox_layout.addWidget(vbox)  # добавление вертикального виджета (содежит комбо и чек боксы) в гориз. слой

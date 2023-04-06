@@ -87,6 +87,7 @@ class TableModel(QAbstractTableModel):
         start_index = self.index(RowNumber.start, 0)
         end_index = self.index(RowNumber.end, len(self.v_headers) - 1)
         self.dataChanged.emit(start_index, end_index)
+        self.signals.data_changed.emit()
 
     def set_split_type(self, split_type: str):
         self.split_type = split_type
@@ -94,12 +95,7 @@ class TableModel(QAbstractTableModel):
         start_index = self.index(RowNumber.step_split, 0)
         end_index = self.index(RowNumber.step_split, len(self.v_headers) - 1)
         self.dataChanged.emit(start_index, end_index)
-
-    def set_current_coords(self):
-        # использовать сеттер
-        start_index = self.index(RowNumber.start, 0)
-        end_index = self.index(RowNumber.start, len(self.v_headers) - 1)
-        self.setData(start_index, self.scanner_position)
+        self.signals.data_changed.emit()
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         flags = Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
@@ -141,11 +137,13 @@ class TableModel(QAbstractTableModel):
         :param self:
         :return:
         """
-        self._data.end = self.scanner_position + self._data.end - self._data.start
-        self._data.start = self.scanner_position
+        delta = self.scanner_position - self._data.start
+        self._data.end += delta
+        self._data.start += delta
         start_index = self.index(RowNumber.start, 0)
         end_index = self.index(RowNumber.end, len(self.v_headers) - 1)
         self.dataChanged.emit(start_index, end_index)
+        self.signals.data_changed.emit()
 
     def setData(self, index: QModelIndex, value: Any, role: int = ...) -> bool:
         if role == Qt.ItemDataRole.EditRole:
@@ -153,9 +151,15 @@ class TableModel(QAbstractTableModel):
             column = index.column()
             axis_name = self.axes_names[column]
             if row == RowNumber.start:
-                self._data.start.__setattr__(axis_name, float(value))
+                start = float(value)
+                if self.relative:
+                    start += self.scanner_position.__getattribute__(axis_name)
+                self._data.start.__setattr__(axis_name, start)
             elif row == RowNumber.end:
-                self._data.end.__setattr__(axis_name, float(value))
+                end = float(value)
+                if self.relative:
+                    end += self.scanner_position.__getattribute__(axis_name)
+                self._data.end.__setattr__(axis_name, end)
             elif row == RowNumber.step_split:
                 start = self._data.start.__getattribute__(axis_name)
                 end = self._data.end.__getattribute__(axis_name)
@@ -240,21 +244,12 @@ class TablePathModel(PPath):
         temp = []
         role = Qt.ItemDataRole.DisplayRole
 
-        for i in range(4):
-            start_index = self.table_model.index(0, i)
-            end_index = self.table_model.index(1, i)
-            step_index = self.table_model.index(2, i)
+        for axis in ['x', 'y', 'z', 'w']:
+            start = self.table_model._data.start.__getattribute__(axis)
+            stop = self.table_model._data.end.__getattribute__(axis)
+            points_numbers = self.table_model._data.points.__getattribute__(axis)
 
-            start = self.table_model.data(start_index, role)
-            stop = self.table_model.data(end_index, role)
-            step = self.table_model.data(step_index, role)
-
-            if self.table_model.split_type == "points":
-                current_data = np.linspace(float(start), float(stop), int(step))
-
-            elif self.table_model.split_type == "step":
-                points_numbers = int(abs(start - stop - 1) / step)
-                current_data = np.linspace(float(start), float(stop), points_numbers)
+            current_data = np.linspace(float(start), float(stop), points_numbers)
             # print(current_data)
             temp.append(current_data)
         # print("temp", temp)
