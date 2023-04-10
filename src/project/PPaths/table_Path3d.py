@@ -1,27 +1,18 @@
 from ..Project import PPath, ProjectType
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
+from typing import Union
 import numpy as np
 from src.views.Widgets.SettingsTable import QAbstractTableModel
 from ..Project import PPath, PScanner
-from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QSizePolicy, QGroupBox, QComboBox
-import numpy as np
-from typing import List
-from src.views.Widgets.SettingsTable import QSmartTableModel
 from PyQt6.QtCore import Qt, QObject, QModelIndex
-from PyQt6.QtGui import QColor
 from typing import Any
-from src.views.Widgets import StateDepPushButton, StateDepCheckBox
-import re
 from ...scanner import Position
 from dataclasses import dataclass, field
 import math
 from enum import IntEnum, auto
 import time
 
-# TODO: добавть во вьюшке кнопки: 1) устанавливает относительные координаты и одновременно перемещает точку начала
-# TODO: сканирования в позицию сканера, 2) просто перемещает точку сканирования в позицию сканера
 # TODO: траснпонировать заголовки
-# TODO: добавить чекбокс с выбором измеряемых осей
 
 
 class RowNumber(IntEnum):
@@ -206,15 +197,20 @@ class TablePathModel(PPath):
     def set_trajectory_type(self, traj_type: str):
             self.trajectory_type = traj_type
 
-    def mesh_maker(self, axes):
+    def mesh_maker(self, axes: list[np.ndarray],order: Union[None, list[int]] = None):
         """
         функция осуществляет измерения с заданым разбиением по траектории змейка или линия
         :param axes:
         :return:
         """
-        # axes = self._data
+        if order is None:
+            order = [i for i in range(len(axes))]
+        axes_ordered = axes.copy()
+        for i, j in enumerate(order):
+            axes[i] = axes_ordered[j]
+
         blck_sizes = [len(ax) for ax in axes]
-        crds = np.zeros((len(axes), np.prod(blck_sizes)))
+        crds = np.zeros((len(axes), np.prod(blck_sizes)), dtype=np.float32)
         crds[-1] = np.repeat(axes[-1], np.prod(blck_sizes[:-1]))
 
         for i in range(len(axes) - 1):
@@ -230,7 +226,11 @@ class TablePathModel(PPath):
             else:
                 crds[i] = np.tile(tile_el, tile_num // 2)
 
-        return crds.T
+        crds_ordered = np.empty(crds.shape, dtype=np.float32)
+        for i, j in enumerate(order):
+            crds_ordered[j] = crds[i]
+
+        return crds_ordered.T
 
     def get_path(self):
         """
