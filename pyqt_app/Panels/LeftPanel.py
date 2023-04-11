@@ -7,7 +7,7 @@ from src.project.Project import PScanner, PAnalyzer
 from src.views.View import BaseView
 from src.ModelView import ModelView
 from typing import Union
-from PyQt6.QtGui import QCursor, QAction
+from PyQt6.QtGui import QCursor, QAction, QBrush, QColor
 
 
 class TreeSignal(QObject):
@@ -59,13 +59,18 @@ class LeftPanel(BasePanel):
         """
         super().__init__(*args, **kwargs)
         self.signals = TreeSignal()
+
+        self.current_item = None
+        self.current_item_name = None
+        self.SELECT_COLOR = QColor(255, 128, 0, 101)
+
         self.tree = QTreeWidget(self)
         self.tree.setColumnCount(1)
         self.tree.setHeaderLabel('Project')
 
         self.draw()
 
-        self.tree.itemClicked.connect(self.select_widget)
+        self.tree.itemActivated.connect(self.select_widget)
         self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self.context_menu)
 
@@ -90,6 +95,7 @@ class LeftPanel(BasePanel):
 
         project_tree = builder.model_views
         i = 0
+        self.current_item = None
         for group in project_tree.keys():
             group_item = TreeGroupItem(self.tree, name=group.value)
             for element in project_tree[group]:
@@ -100,12 +106,20 @@ class LeftPanel(BasePanel):
                 elif len(views) == 1:
                     item = TreeModelViewItem(group_item, model_view=element, name=views[0].display_name(), tree_num=i)
                     item.setIcon(0, element.icon)
+                    if self.current_item_name == item.name:
+                        self.current_item = item
+                    color = QBrush(self.SELECT_COLOR) if item.name == self.current_item_name else QBrush()
+                    item.setBackground(0, color)
                     i += 1
                 elif len(views) > 1:
                     item = TreeModelItem(group_item, model_view=element, name=element.model.name, tree_num=-1)
                     item.setIcon(0, element.icon)
                     for view in views:
-                        TreeViewItem(item, model_view=element, name=view.display_name(), tree_num=i)
+                        el_item = TreeViewItem(item, model_view=element, name=view.display_name(), tree_num=i)
+                        if self.current_item_name == el_item.name:
+                            self.current_item = el_item
+                        color = QBrush(self.SELECT_COLOR) if el_item.name == self.current_item_name else QBrush()
+                        el_item.setBackground(0, color)
                         i += 1
 
         self.tree.expandAll()
@@ -116,6 +130,12 @@ class LeftPanel(BasePanel):
         """
         if isinstance(item, (TreeViewItem, TreeModelViewItem)):
             self.signals.tree_num.emit(item.tree_num)
+            old_item = self.current_item
+            if old_item is not None:
+                old_item.setBackground(0, QBrush())
+            self.current_item = item
+            self.current_item_name = item.name
+            item.setBackground(0, QBrush(self.SELECT_COLOR))
 
     def context_menu(self, pos: QPoint):
         item = self.tree.itemAt(pos)

@@ -9,7 +9,7 @@ class ExperimentSignals(PBaseSignals):
 
 
 class Experiment(PExperiment):
-    type_name = 'True\nexperiment'
+    type_name = 'Experiment'
     signals_type = ExperimentSignals
     signals: ExperimentSignals
 

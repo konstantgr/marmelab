@@ -70,7 +70,7 @@ class CeyearAnalyzer(BaseAnalyzer):
         self._set_aver_fact(aver_fact)
         self._set_smooth_apert(smooth_aper)
         self._set_power(power)
-        logger.debug("Settings have been applied")
+        logger.info("Settings have been applied")
 
     def _set_is_connected(self, state: bool):
         self._is_connected = state
@@ -217,6 +217,7 @@ class CeyearAnalyzer(BaseAnalyzer):
             self._send_cmd(f"CALC{self.channel}:PAR:DEF 'Tr{num}',{s_param}")
             self._send_cmd(f"DISPlay:WINDow1:TRACe2:FEED 'Tr{num}'")
             # print(self._send_cmd(f"CALC{self.channel}:PAR:CAT?"))
+            self._send_cmd(f"DISPlay:WINDow1:TRACe2:Y:SCALe:AUTO")
             self._send_cmd(f"CALC{self.channel}:PAR:SEL 'Tr{num}'")
             trace_data = self._send_cmd(f'CALC{self.channel}:DATA? SDATA')
             trace_tup = tuple(map(str, trace_data.split(',')))

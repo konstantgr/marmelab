@@ -32,7 +32,7 @@ TRIM_emulator.run(blocking=False, motion_time=2, port=9006)  # use it only for e
 analyzer_signals = PAnalyzerSignals()
 analyzer = CeyearPAnalyzer(
     # instrument=SocketAnalyzer(ip="192.168.5.168", port=9000, signals=analyzer_signals),
-    instrument=RohdeSchwarzEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
+    instrument=CeyearAnalyzerEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
     signals=analyzer_signals,
     # name="Toy analyzer"
 )

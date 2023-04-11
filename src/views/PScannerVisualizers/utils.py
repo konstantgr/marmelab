@@ -42,41 +42,28 @@ class Points3D(GLGraphicsItem):
         GLGraphicsItem.__init__(self)
         self.color: QColor = pg.mkColor(color)
         self.size = size
-        self.points = points
+        self.points = np.ascontiguousarray(points, dtype=np.float32)
         self.setGLOptions(glOptions)
         self.update()
 
     def paint(self):
         self.setupGLState()
-        points = np.ascontiguousarray(self.points[:, [0, 1, 2]], dtype=np.float32)
 
         GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
-        GL.glEnableClientState(GL.GL_COLOR_ARRAY)
+        try:
+            GL.glVertexPointerf(self.points)
 
-        GL.glEnable(GL.GL_POINT_SMOOTH)
-        GL.glPointSize(self.size)
+            # GL.glEnable(GL.GL_POINT_SMOOTH)
+            GL.glEnable(GL.GL_PROGRAM_POINT_SIZE)
+            GL.glColor4f(*self.color.getRgbF())
+            GL.glPointSize(self.size)
 
-        # first point
-        GL.glColor4f(0, 1, 0, self.color.getRgbF()[-1])
-        GL.glBegin(GL.GL_POINTS)
-        GL.glVertex3f(points[0, 0], points[0, 1], points[0, 2])
-        GL.glEnd()
+            with point_shader:
+                GL.glDrawArrays(GL.GL_POINTS, 0, self.points.shape[0])
 
-        GL.glColor4f(*self.color.getRgbF())
-
-        GL.glBegin(GL.GL_POINTS)
-        for i in range(1, points.shape[0]-1):
-            GL.glVertex3f(points[i, 0], points[i, 1], points[i, 2])
-        GL.glEnd()
-
-        # last point
-        GL.glColor4f(1, 0, 0, self.color.getRgbF()[-1])
-        GL.glBegin(GL.GL_POINTS)
-        GL.glVertex3f(points[-1, 0], points[-1, 1], points[-1, 2])
-        GL.glEnd()
-
-        GL.glDisableClientState(GL.GL_COLOR_ARRAY)
-        GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
+        finally:
+            GL.glDisableClientState(GL.GL_COLOR_ARRAY)
+            GL.glDisableClientState(GL.GL_VERTEX_ARRAY)
 
 
 # Own shader
@@ -108,3 +95,35 @@ lights_shader = pg.opengl.shaders.ShaderProgram('light_shader', [
         }
     """)
 ])
+
+# Shader for size changing point
+point_shader = pg.opengl.shaders.ShaderProgram('point_shader', [
+    pg.opengl.shaders.VertexShader("""
+        varying vec3 normal;
+        varying vec4 pos;
+        void main() {
+            // compute here for use in fragment shader
+            normal = normalize(gl_NormalMatrix * gl_Normal);
+            gl_FrontColor = gl_Color;
+            gl_BackColor = gl_Color;
+            gl_Position = ftransform();
+            pos = gl_Vertex;
+            gl_PointSize = 500000.0/gl_Position.w;
+        }
+    """),
+    pg.opengl.shaders.FragmentShader("""
+        varying vec3 normal;
+        varying vec4 pos;
+        void main() {
+            vec3 lightSource = gl_NormalMatrix * vec3(10000.0, 10000.0, 10000.0);
+            vec3 lightVector = normalize(lightSource - pos.xyz);
+            float diff = max(dot(normal, lightVector), 0.0);
+            vec4 color = gl_Color;
+            color.x = color.x * (0.6 + 0.4*diff);
+            color.y = color.y * (0.6 + 0.4*diff);
+            color.z = color.z * (0.6 + 0.4*diff);
+            gl_FragColor = color;
+        }
+    """)
+])
+

@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter, QTextEdit, QPushButton
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon
 from Panels import LogPanel, RightPanel, LeftPanel, CentralPanel, MenuPanel
 from Panels.BarPanel import BarPanel
 from Panels.ToolPanel import ToolPanel
@@ -73,6 +74,7 @@ class MainWindow(QMainWindow):
 
         self.setGeometry(300, 300, 450, 400)
         self.setWindowTitle('MarMELAB v0.0')
+        self.setWindowIcon(QIcon("assets/logo.png"))
         self.setCentralWidget(self.main_widget)
 
 

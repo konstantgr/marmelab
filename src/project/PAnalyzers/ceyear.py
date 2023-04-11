@@ -120,6 +120,7 @@ class SParams(PMeasurand):
                 req.append(s_param.name)
         self._data = self.panalyzer.get_scattering_parameters(req)
         logger.info("S-parameters have been measured")
+        self.signals.measured.emit()
         return np.array(list(self._data.values()))
 
     def get_measure_names(self) -> Tuple[str]:
@@ -177,6 +178,19 @@ class SParams(PMeasurand):
 
     def set_power(self, power: int = None):
         self.power = power
+        self._clear()
+
+    def set_default_settings(self):
+        self.channel = CEYEAR_DEFAULT_SETTINGS['channel']
+        self.power = CEYEAR_DEFAULT_SETTINGS['power']
+        self.smooth_apert = CEYEAR_DEFAULT_SETTINGS['smooth_apert']
+        self.bandwidth = CEYEAR_DEFAULT_SETTINGS['bandwidth']
+        self.freq_start = CEYEAR_DEFAULT_SETTINGS['freq_start']
+        self.freq_stop = CEYEAR_DEFAULT_SETTINGS['freq_stop']
+        self.freq_num = CEYEAR_DEFAULT_SETTINGS['freq_num']
+        self.aver_fact = CEYEAR_DEFAULT_SETTINGS['aver_fact']
+        self.sweep_type = CEYEAR_DEFAULT_SETTINGS['sweep_type']
+        self.signals.display_changed.emit()
         self._clear()
 
     @classmethod
