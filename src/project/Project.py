@@ -85,7 +85,8 @@ class PPath(PBase, metaclass=ABCMeta):
     @abstractmethod
     def get_points_axes(self) -> Tuple[str, ...]:
         """
-        Возвращает оси координат в том порядке, в котором они измеряются, например ("x", "z")
+        Возвращает оси координат в том порядке, в котором они возвращаются из get_points_ndarray
+
         """
 
     def get_points(self) -> list[Position]:
@@ -552,6 +553,12 @@ class PStorage(Generic[PBaseTypes]):
             return True
         except Exception as e:
             raise e
+
+    def __getitem__(self, name: str):
+        item = self.get(name)
+        if self.get(name) is None:
+            raise KeyError
+        return item
 
     def keys(self) -> list[str]:
         """

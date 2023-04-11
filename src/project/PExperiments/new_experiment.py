@@ -32,9 +32,7 @@ class Experiment(PExperiment):
         return self.measurands_storage.keys()
 
     def run(self):
-        self.paths.data[0].get_points_ndarray()
-        self.paths.get(self.current_path)
-        self.current_path in self.paths
+        pass
 
     @classmethod
     def reproduce(cls, name: str, project: ProjectType) -> 'PBaseTypes':
@@ -57,5 +55,12 @@ class Experiment(PExperiment):
         self.current_path = path
 
     def print_current_coords(self):
+        res = None # сделать переменную рабочей
         model_path = self.paths_storage.get(self.current_path)
-        print(model_path.get_points_ndarray())
+        for i in model_path.get_points():
+            self.scanner.instrument.goto(i)
+            for meas_name in self.current_measurands:
+                res = self.measurands_storage[meas_name].measure()
+
+        # print(model_path.get_points_ndarray())
+        print(model_path.get_points())

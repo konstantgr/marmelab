@@ -187,7 +187,7 @@ class TablePathModel(PPath):
         self.table_model.match_positions()
 
     def get_points_axes(self) -> tuple[str, ...]:
-        pass
+        return 'x', 'y', 'z', 'w'
 
     def get_points_ndarray(self) -> np.ndarray:
         # TODO: реализовать функцию, иначе ниче не работает(
@@ -197,7 +197,7 @@ class TablePathModel(PPath):
     def set_trajectory_type(self, traj_type: str):
             self.trajectory_type = traj_type
 
-    def mesh_maker(self, axes: list[np.ndarray],order: Union[None, list[int]] = None):
+    def mesh_maker(self, axes: list[np.ndarray], order: Union[None, list[int]] = None):
         """
         функция осуществляет измерения с заданым разбиением по траектории змейка или линия
         :param axes:
