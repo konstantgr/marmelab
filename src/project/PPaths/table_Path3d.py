@@ -50,8 +50,10 @@ class TableModel(QAbstractTableModel):
 
         self._data.start.x = self._data.start.y = self._data.start.z = self._data.start.w = 0
         self._data.end.x = self._data.end.y = self._data.end.z = self._data.end.w = 1000
-        self._data.step.x = self._data.step.y = self._data.step.z = self._data.step.w = 100
-        self._data.points.x = self._data.points.y = self._data.points.z = self._data.points.w = 10
+        self._data.step.x = self._data.step.y = self._data.step.z = 100
+        self._data.step.w = 1000
+        self._data.points.x = self._data.points.y = self._data.points.z = 10
+        self._data.points.w = 1
 
 
         self.scanner_position = Position()
