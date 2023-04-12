@@ -1,9 +1,10 @@
 from ..project.PPaths import TablePathModel
 from .View import BaseView, QWidgetType
 from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QSizePolicy, QGroupBox, \
-    QComboBox, QPushButton
+    QComboBox, QPushButton, QWidgetAction
 from src.views.Widgets import StateDepPushButton, StateDepCheckBox
 from PyQt6.QtCore import Qt
+from PyQt6 import QtGui
 
 
 class TablePathView(BaseView[TablePathModel]):
@@ -34,7 +35,7 @@ class TablePathView(BaseView[TablePathModel]):
         hbox_layout.addWidget(set_button)
 
         step_split_box = QComboBox()
-        items = ["Step", "Points"]
+        items = ["Points", "Step"]
         step_split_box.addItem(items[0])
         step_split_box.addItem(items[1])
         step_split_box.currentTextChanged.connect(self.set_split_type)
@@ -59,8 +60,12 @@ class TablePathView(BaseView[TablePathModel]):
         group_layout.addWidget(hbox)  # создание отдельной группы для горизонтального слоя (отображение в рамке)
         layout.addWidget(group)
 
+        # move_down = QWidgetAction(QtGui.QAction.)
+
         table_widget = QTableView()
         table_widget.setModel(self.model.table_model)
+
+        # table_widget.addAction(move_down)
         table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         table_widget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         table_widget.setFixedHeight(200)

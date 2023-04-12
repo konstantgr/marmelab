@@ -19,10 +19,12 @@ class RowNumber(IntEnum):
     start: int = 0
     end: int = 1
     step_split: int = 2
+    order: int = 3
 
 
 @dataclass
 class TableData:
+    order: Position = field(default_factory=Position)
     start: Position = field(default_factory=Position)
     end: Position = field(default_factory=Position)
     points: Position = field(default_factory=Position)
@@ -39,12 +41,19 @@ class TableModel(QAbstractTableModel):
         self.h_headers = ["x", "y", "z", "w"]
         self.axes_names = ["x", "y", "z", "w"]
         self.relative = False
-        self.split_type: str = "step"
+        self.split_type: str = "points"
         self._data = TableData()
+        self._data.order.x = 0
+        self._data.order.y = 1
+        self._data.order.z = 2
+        self._data.order.w = 3
+
         self._data.start.x = self._data.start.y = self._data.start.z = self._data.start.w = 0
         self._data.end.x = self._data.end.y = self._data.end.z = self._data.end.w = 1000
         self._data.step.x = self._data.step.y = self._data.step.z = self._data.step.w = 100
         self._data.points.x = self._data.points.y = self._data.points.z = self._data.points.w = 10
+
+
         self.scanner_position = Position()
         self.scanner = scanner
         self.signals = TableModelSignals()
@@ -121,6 +130,8 @@ class TableModel(QAbstractTableModel):
 
                 elif self.split_type == "points":
                     return self._data.points.__getattribute__(axis_name)
+            elif row == RowNumber.order:
+                return self._data.order.__getattribute__(axis_name)
 
     def match_positions(self):
         """
@@ -160,6 +171,8 @@ class TableModel(QAbstractTableModel):
                 elif self.split_type == "points":
                     self._data.points.__setattr__(axis_name, int(value))
                     self._data.step.__setattr__(axis_name, (abs(end - start) / int(value)))
+            elif row == RowNumber.order:
+                self._data.order.__setattr__(axis_name, int(value))
             self.dataChanged.emit(index, index)
             self.signals.data_changed.emit()
         return True
@@ -208,7 +221,7 @@ class TablePathModel(PPath):
         :return:
         """
         if order is None:
-            order = [i for i in range(len(axes))]
+            order = [0, 1, 2, 3]
         axes_ordered = axes.copy()
         for i, j in enumerate(order):
             axes[i] = axes_ordered[j]
@@ -242,22 +255,16 @@ class TablePathModel(PPath):
         :return:
         """
         temp = []
+        order = []
         role = Qt.ItemDataRole.DisplayRole
 
         for axis in ['x', 'y', 'z', 'w']:
             start = self.table_model._data.start.__getattribute__(axis)
             stop = self.table_model._data.end.__getattribute__(axis)
             points_numbers = self.table_model._data.points.__getattribute__(axis)
-
+            order.append(self.table_model._data.order.__getattribute__(axis))
             current_data = np.linspace(float(start), float(stop), points_numbers)
-            # print(current_data)
             temp.append(current_data)
-        # print("temp", temp)
-        # s = time.time()
-        # print(self.mesh_maker(temp))
-        # print(time.time() - s)
-        return(self.mesh_maker(temp))
+        return self.mesh_maker(temp, order)
 
-        # ax = plt.figure().add_subplot(projection='3d')
-        # ax.plot(*np.array(temp).T)
-        # plt.show()
+
