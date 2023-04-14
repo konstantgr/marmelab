@@ -20,11 +20,12 @@ class RowNumber(IntEnum):
     end: int = 1
     step_split: int = 2
     order: int = 3
-
+    enable_disable_status: int = 4
 
 @dataclass
 class TableData:
     order: Position = field(default_factory=Position)
+    enable_disable_status: Position = field(default_factory=Position)
     start: Position = field(default_factory=Position)
     end: Position = field(default_factory=Position)
     points: Position = field(default_factory=Position)
@@ -55,6 +56,8 @@ class TableModel(QAbstractTableModel):
         self._data.points.x = self._data.points.y = self._data.points.z = 10
         self._data.points.w = 1
 
+        self._data.enable_disable_status.x = self._data.enable_disable_status.y = self._data.enable_disable_status.z = 1
+        self._data.enable_disable_status.w = 1
 
         self.scanner_position = Position()
         self.scanner = scanner
@@ -67,17 +70,17 @@ class TableModel(QAbstractTableModel):
     @property
     def v_headers(self) -> list:
         if self.split_type == "step":
-            return ["Begin coordinates", "End coordinates", "Step", "Order"]
+            return ["Begin coordinates", "End coordinates", "Step", "Order", "Status"]
         elif self.split_type == "points":
-            return ["Begin coordinates", "End coordinates", "Points", "Order"]
+            return ["Begin coordinates", "End coordinates", "Points", "Order", "Status"]
         else:
             raise RuntimeError("Wrong split type")
 
     def rowCount(self, parent: QModelIndex = ...) -> int:
-        return len(self.h_headers)
+        return len(self.v_headers)
 
     def columnCount(self, parent: QModelIndex = ...) -> int:
-        return len(self.v_headers)
+        return len(self.h_headers)
 
     def set_relative(self, state: bool):
         """
@@ -134,6 +137,8 @@ class TableModel(QAbstractTableModel):
                     return self._data.points.__getattribute__(axis_name)
             elif row == RowNumber.order:
                 return self._data.order.__getattribute__(axis_name)
+            elif row == RowNumber.enable_disable_status:
+                return self._data.enable_disable_status.__getattribute__(axis_name)
 
     def match_positions(self):
         """
@@ -175,6 +180,9 @@ class TableModel(QAbstractTableModel):
                     self._data.step.__setattr__(axis_name, (abs(end - start) / int(value)))
             elif row == RowNumber.order:
                 self._data.order.__setattr__(axis_name, int(value))
+            elif row == RowNumber.enable_disable_status:
+                self._data.enable_disable_status.__setattr__(axis_name, int(value))
+
             self.dataChanged.emit(index, index)
             self.signals.data_changed.emit()
         return True
@@ -213,6 +221,19 @@ class TablePathModel(PPath):
         """связать с функцией mesh_maker"""
         return self.get_path()
 
+    def get_points(self) -> list[Position]:
+        """
+        Возвращает массив точек, в которых необходимо провести измерения.
+        """
+        res = []
+        points = self.get_points_ndarray()
+        for point in points:
+            position = Position(
+                **{name: value for name, value in zip(self.get_points_axes(), point)}
+            )
+            res.append(position)
+        return res
+
     def set_trajectory_type(self, traj_type: str):
             self.trajectory_type = traj_type
 
@@ -226,6 +247,8 @@ class TablePathModel(PPath):
             order = [0, 1, 2, 3]
         axes_ordered = axes.copy()
         for i, j in enumerate(order):
+            if j < 0 or j > 3:
+                raise ValueError(f'order must be in range(0, 4) {j} got')
             axes[i] = axes_ordered[j]
 
         blck_sizes = [len(ax) for ax in axes]
@@ -263,7 +286,15 @@ class TablePathModel(PPath):
         for axis in ['x', 'y', 'z', 'w']:
             start = self.table_model._data.start.__getattribute__(axis)
             stop = self.table_model._data.end.__getattribute__(axis)
-            points_numbers = self.table_model._data.points.__getattribute__(axis)
+            status = self.table_model._data.enable_disable_status.__getattribute__(axis)
+
+            if status == 1:
+                points_numbers = self.table_model._data.points.__getattribute__(axis)
+            elif status == 0:
+                points_numbers = 1
+            else:
+                raise ValueError(f'0 or 1 acceptable got {status}')
+
             order.append(self.table_model._data.order.__getattribute__(axis))
             current_data = np.linspace(float(start), float(stop), points_numbers)
             temp.append(current_data)

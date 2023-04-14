@@ -453,7 +453,11 @@ class Widget(gl.GLViewWidget):
                 path.signals.display_changed.connect(self.redraw_paths)
                 self.connected_paths.append(path.name)
 
-            points = path.get_points_ndarray()
+            try:
+                points = path.get_points_ndarray()
+            except ValueError as e:
+                logger.error(e)
+                continue
             points_in_gl = np.zeros_like(points)
             x, y, z = coords_to_GL_coords(points[:, 0], points[:, 1], points[:, 2])
             points_in_gl[:, 0] = x + self.scanner_offsetX + self.scanner_LX
