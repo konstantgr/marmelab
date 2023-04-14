@@ -4,10 +4,11 @@ from src.analyzers.rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulat
 from src.analyzers.ceyear_analyzer.ceyear_emulator import CeyearAnalyzerEmulator
 from src.project.PScanners import ToyScanner, TRIMPScanner
 from src.project.PAnalyzers import ToyAnalyser, ToySparam
-from src.project.PExperiments import ToyExperiment, Experiment
+from src.project.PExperiments import ToyExperiment
 from src.project.PPaths import ToyPath
 from src.project.PAnalyzers.ceyear import CeyearPAnalyzer, SParams
 from src.project.PPaths import ToyPath, TablePathModel
+from src.project.PMeasurands.time_measurand import TimeMeas
 from src.scanner.TRIM import TRIM_emulator
 from src.builder import AppBuilder, FactoryGroups
 from src.ModelView import ModelViewFactory, ModelViewVisualizerFactory
@@ -24,17 +25,16 @@ import src.binds
 scanner_signals = PScannerSignals()
 scanner = TRIMPScanner(
     name="TRIM scanner",
-    instrument=TRIMScanner(ip="127.0.0.1", port=9006, signals=scanner_signals),
+    instrument=TRIMScanner(ip="127.0.0.1", port=9008, signals=scanner_signals),
     signals=scanner_signals,
 )
-TRIM_emulator.run(blocking=False, motion_time=2, port=9006)  # use it only for emulating
+TRIM_emulator.run(blocking=False, motion_time=2, port=9008)  # use it only for emulating
 
 analyzer_signals = PAnalyzerSignals()
 analyzer = CeyearPAnalyzer(
     # instrument=SocketAnalyzer(ip="192.168.5.168", port=9000, signals=analyzer_signals),
     instrument=CeyearAnalyzerEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
-    signals=analyzer_signals,
-    # name="Toy analyzer"
+    signals=analyzer_signals
 )
 
 objects = PStorage()
@@ -59,24 +59,27 @@ analyzer_visualizer = PAnalyzerVisualizerModel(
 )
 
 paths.append(
-    TablePathModel(
+    ToyPath(
         name=f'path1',
-        scanner=scanner
+    )
+)
+
+paths.append(
+    ToyPath(
+        name=f'path2',
     )
 )
 
 experiments.append(
-    Experiment(
+    ToyExperiment(
         scanner=scanner,
-        name='exp1',
-        paths=paths,
-        measurands=measurands
+        name='exp1'
     )
 )
 
 measurands.append(
     SParams(
-        name='meas1',
+        name='s_param1',
         panalyzer=analyzer
     )
 )
