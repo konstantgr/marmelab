@@ -90,18 +90,10 @@ class TRIMControl(BaseView[TRIMPScanner]):
         y = self.coord_input_model.get_parsed_value('y')
         z = self.coord_input_model.get_parsed_value('z')
         w = self.coord_input_model.get_parsed_value('w')
-        new_pos = Position(x, y, z, w)
-        self.model.instrument.goto(new_pos)
+        self.model.custom_goto(x, y, z, w)
 
     def _home(self):
-        self.model.instrument.home()
-        self.model.instrument.set_settings(position=Position(2262.92, 2137.09, 0, 0))
-        logger.debug("Scanner at home. Scanner position is:")
-        current_position = self.model.instrument.position()
-        logger.debug(f'x: {current_position.x}')
-        logger.debug(f'y: {current_position.y}')
-        logger.debug(f'z: {current_position.z}')
-        logger.debug(f'w: {current_position.z}')
+        self.model.custom_home()
 
     def display_name(self) -> str:
         return "Control"

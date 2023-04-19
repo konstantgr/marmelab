@@ -28,7 +28,7 @@ class Model:
         """Возвращает наименования полей"""
         return self._keys
 
-    def get_parsed_value(self, key: str) -> str:
+    def get_parsed_value(self, key: str) -> float or None:
         """Возвращает пропаршенные значения"""
         try:
             res = float(self._user_inputs[key])

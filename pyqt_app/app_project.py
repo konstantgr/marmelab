@@ -1,3 +1,4 @@
+from src.project.PExperiments import Experiment
 from src.scanner.TRIM import TRIMScanner
 from src.project import Project, PScannerSignals, PAnalyzerSignals, PStorage
 from src.analyzers.rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulator
@@ -18,7 +19,7 @@ from src.views.toy import ToyView, ToyScannerSettings, ToyScannerControl
 from src.views.PScannerVisualizers.xyzw import xyzwSettings, xyzwWidget
 from src.views.PScanners import TRIMControl, TRIMSettings
 from src.views.PAnalyzers import SocketAnalyzerControl
-from src.views.PMeasurands.PMeasurands import SParamsView
+from src.views.PMeasurands import SParamsView, TimeView
 from src.views.PPlotVisualizer import PlotsView
 import src.binds
 
@@ -59,27 +60,26 @@ analyzer_visualizer = PAnalyzerVisualizerModel(
 )
 
 paths.append(
-    ToyPath(
+    TablePathModel(
         name=f'path1',
+        scanner=scanner
     )
 )
 
-paths.append(
-    ToyPath(
-        name=f'path2',
-    )
-)
+
 
 experiments.append(
-    ToyExperiment(
+    Experiment(
         scanner=scanner,
-        name='exp1'
+        name='exp1',
+        paths=paths,
+        measurands=measurands
     )
 )
 
 measurands.append(
     SParams(
-        name='s_param1',
+        name='meas1',
         panalyzer=analyzer
     )
 )
@@ -138,6 +138,15 @@ AppBuilder.register_factory(
     factory=ModelViewFactory(
         view_types=(SParamsView,),
         model_type=SParams,
+        icon=icons.s_params,
+    ),
+    group=FactoryGroups.measurands,
+)
+
+AppBuilder.register_factory(
+    factory=ModelViewFactory(
+        view_types=(TimeView,),
+        model_type=TimeMeas,
         icon=icons.s_params,
     ),
     group=FactoryGroups.measurands,

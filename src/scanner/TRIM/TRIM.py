@@ -455,6 +455,7 @@ class TRIMScanner(Scanner):
         self._send_cmds(cmds)
 
         while not self._is_stopped():
+            self.position()
             time.sleep(0.1)
 
     def _set_is_moving(self, state: bool):
