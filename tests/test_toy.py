@@ -2,11 +2,14 @@ from src.project.PAnalyzers import ToySparam, ToyAnalyser
 from src.project.PScanners import ToyScanner
 from src.project.PPaths import ToyPath
 from src.project.PExperiments import ToyExperiment
+from src.project.PResults import ToyResults, SQLResults
 from src.project.Project import PAnalyzerSignals, PMeasurand, PScannerSignals
 import numpy as np
 from src.analyzers.rohde_schwarz.rohde_schwarz import RohdeSchwarzAnalyzer
 from src.Variable import Setting
 from src.scanner.TRIM import TRIMScanner
+
+from pathlib import Path
 
 
 def test_toy_sparams():
@@ -43,7 +46,7 @@ def test_toy_paths():
     path.set_lims(x_min, x_max, y_min, y_max, x_points, y_points)
     res = path.get_points_ndarray()
     assert np.array_equal(res[0:y_points, 1], np.linspace(y_min, y_max, y_points, dtype=float))
-    assert np.array_equal(res[y_points:2*y_points, 1], np.linspace(y_min, y_max, y_points, dtype=float)[::-1])
+    assert np.array_equal(res[y_points:2 * y_points, 1], np.linspace(y_min, y_max, y_points, dtype=float)[::-1])
 
 
 def test_toy_experiment(TRIM_Scanner_emulator: TRIMScanner):
@@ -63,3 +66,42 @@ def test_toy_experiment(TRIM_Scanner_emulator: TRIMScanner):
     experiment.set_path(path)
     experiment.set_measurands([s_para])
     experiment.run()
+
+
+def test_toy_results():
+    np.random.seed(42)
+
+    results = ToyResults("results")
+
+    names = ('x', 'y', 'w')
+    res_array = np.random.rand(10, 3)
+    results.set_names(names)
+    results.set_results(res_array)
+
+    assert (results.get_data() == res_array).all()
+    assert results.get_data_names() == names
+
+
+def test_sql_results():
+    np.random.seed(42)
+
+    results = SQLResults("sql_results")
+
+    names = ('z', 'w')
+    data = np.array([[1, 2], [2, 4]])
+    db_path = Path("test_db.db")
+
+    results.set_db_path(db_path)
+    results.set_names(names)
+
+    results.set_db(force_create=True)
+    results.connect()
+
+    results.append_data(data)
+    data_out = results.get_data()
+
+    data_out_true = np.array(
+        [[1, None, None, None, 1.0, 2.0],
+         [2, None, None, None, 2.0, 4.0]])
+
+    assert (data_out_true == data_out).all()
