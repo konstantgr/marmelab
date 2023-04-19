@@ -40,7 +40,7 @@ class TRIMControl(BaseView[TRIMPScanner]):
         )
 
         self.goto_button = StateDepPushButton(
-            state=states.is_connected & ~states.is_in_use,
+            state=m_state,
             text="Go",
         )
         self.goto_button.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)

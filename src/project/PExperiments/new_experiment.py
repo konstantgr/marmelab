@@ -1,6 +1,7 @@
 from ..Project import PExperiment, PPath, PMeasurand, PScanner, ProjectType, PStorage
 from ..Project import PBaseSignals
-from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
+from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject, QThreadPool
+from ..Worker import Worker
 
 
 class ExperimentSignals(PBaseSignals):
@@ -15,6 +16,7 @@ class Experiment(PExperiment):
 
     def __init__(self, name: str, paths: PStorage[PPath], measurands: PStorage[PMeasurand], scanner: PScanner):
         super(Experiment, self).__init__(name=name)
+        self.thread_pool = QThreadPool()
         self.paths_storage = paths
         self.measurands_storage = measurands
         self.scanner = scanner
@@ -31,9 +33,18 @@ class Experiment(PExperiment):
     def measurands(self):
         return self.measurands_storage.keys()
 
-    def run(self):
-        pass
+    def run_push(self):
+        worker = Worker(self.run)
+        self.thread_pool.start(worker)
 
+    def run(self):
+        res = None  # сделать переменную рабочей
+        model_path = self.paths_storage.get(self.current_path)
+        for i in model_path.get_points():
+            self.scanner.instrument.goto(i)
+            for meas_name in self.current_measurands:
+                res = self.measurands_storage[meas_name].measure()
+        print(model_path.get_points())
     @classmethod
     def reproduce(cls, name: str, project: ProjectType) -> 'PBaseTypes':
         return cls(name=name, paths=project.paths, measurands=project.measurands, scanner=project.scanner)
@@ -54,13 +65,3 @@ class Experiment(PExperiment):
     def set_current_path(self, path: str):
         self.current_path = path
 
-    def print_current_coords(self):
-        res = None # сделать переменную рабочей
-        model_path = self.paths_storage.get(self.current_path)
-        for i in model_path.get_points():
-            self.scanner.instrument.goto(i)
-            for meas_name in self.current_measurands:
-                res = self.measurands_storage[meas_name].measure()
-
-        # print(model_path.get_points_ndarray())
-        print(model_path.get_points())

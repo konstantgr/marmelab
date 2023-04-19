@@ -69,11 +69,11 @@ class ExperimentView(BaseView[Experiment]):
 
         go_button = StateDepPushButton(
             state=self.states.is_connected,
-            text="Go (test button)",
+            text="Run experiment",
             parent=widget
         )
 
-        go_button.clicked.connect(self.model.print_current_coords)
+        go_button.clicked.connect(self.model.run_push)
         group_layout.addWidget(list_view)
         group_layout.addWidget(go_button)
 

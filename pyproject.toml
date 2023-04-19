@@ -26,6 +26,8 @@ openpyxl = "^3.0.10"
 rsinstrument = "^1.53.0"
 pywin32 = "^305"
 matplotlib = "^3.7.1"
+SQLAlchemy = "^2.0.9"
+SQLAlchemy-Utils = "^0.41.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.3"
