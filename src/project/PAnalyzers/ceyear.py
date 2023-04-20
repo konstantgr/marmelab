@@ -124,7 +124,7 @@ class SParams(PMeasurand):
         return np.array(list(self._data.values()))
 
     def get_measure_names(self) -> Tuple[str]:
-        return tuple(["freq"] + [s_param.name for s_param in self.s_params])
+        return tuple(["freq"] + [s_param.name for s_param in self.s_params if s_param.enable])
 
     def get_data(self) -> Union[None, np.ndarray]:
         if self._data is not None:

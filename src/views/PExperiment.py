@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QGroupBox, QCombo
 from src.views.Widgets import StateDepPushButton, StateDepCheckBox
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QStandardItem, QStandardItemModel
+from ..builder import AppBuilder, FactoryGroups
 
 
 class ExperimentView(BaseView[Experiment]):
@@ -68,19 +69,20 @@ class ExperimentView(BaseView[Experiment]):
         group_layout.addWidget(QLabel('Measurands:'))
 
         m_state = self.states.is_connected & ~self.states.is_moving & ~self.states.is_in_use
-        go_button = StateDepPushButton(
+        run_button = StateDepPushButton(
             state=m_state,
             text="Run experiment",
             parent=widget
         )
 
-        go_button.clicked.connect(self.model.run_push)
+        run_button.clicked.connect(self.run_button_clicked)
         group_layout.addWidget(list_view)
-        group_layout.addWidget(go_button)
+        group_layout.addWidget(run_button)
 
         layout.addWidget(group)
         self.upd_paths()
         self.upd_measurands()
         return widget
 
-
+    def run_button_clicked(self):
+        self.model.run_push()

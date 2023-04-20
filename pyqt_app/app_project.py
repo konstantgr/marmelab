@@ -65,17 +65,6 @@ paths.append(
     )
 )
 
-
-
-experiments.append(
-    Experiment(
-        scanner=scanner,
-        name='exp1',
-        paths=paths,
-        measurands=measurands
-    )
-)
-
 measurands.append(
     SParams(
         name='meas1',
@@ -92,7 +81,18 @@ project = Project(
     measurands=measurands,
     plots=plots,
     results=PStorage(),
-    scanner_visualizer=scanner_visualizer
+    scanner_visualizer=scanner_visualizer,
+    app_builder=AppBuilder
+)
+experiments.append(
+    Experiment(
+        scanner=scanner,
+        name='exp1',
+        paths=paths,
+        measurands=measurands,
+        app_builder=AppBuilder,
+        project=project
+    )
 )
 
 AppBuilder.register_factory(

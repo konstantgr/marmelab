@@ -51,6 +51,7 @@ class CentralPanel(QScrollArea, BasePanel):
         project.plots.signals.changed.connect(self.draw)
         project.measurands.signals.changed.connect(self.draw)
         project.experiments.signals.changed.connect(self.draw)
+        project.results.signals.changed.connect(self.draw)
 
     def draw(self) -> None:
         """

@@ -1,5 +1,5 @@
 from .ModelView import ModelViewFactory
-
+from .project.PResults.toy_results import ToyResults
 from .project.PPaths import ToyPath, TablePathModel
 from .project.PExperiments import Experiment
 from .project.PPlots import PRTPlot1D
@@ -69,5 +69,13 @@ AppBuilder.register_factory(
     group=FactoryGroups.resplots
 )
 
+AppBuilder.register_factory(
+    ModelViewFactory(
+        view_types=(ToyView,),
+        model_type=ToyResults,
+        icon=icons.base_icon
+    ),
+    group=FactoryGroups.results
+)
 
 

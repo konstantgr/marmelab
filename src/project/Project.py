@@ -601,10 +601,11 @@ class Project:
             results: PStorage[PResults],
             plots: PStorage[PPlotTypes],
             scanner_visualizer: PScannerVisualizer,
+            app_builder
     ):
         self.scanner = scanner
         self.analyzer = analyzer
-
+        self.app_builder = app_builder
         self.objects = objects
         self.paths = paths
         self.measurands = measurands
