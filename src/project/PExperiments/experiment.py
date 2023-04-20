@@ -1,3 +1,5 @@
+import time
+
 from ..Project import PExperiment, PPath, PMeasurand, PScanner, ProjectType, PStorage
 from ..Project import PBaseSignals
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject, QThreadPool
@@ -40,11 +42,19 @@ class Experiment(PExperiment):
     def run(self):
         res = None  # сделать переменную рабочей
         model_path = self.paths_storage.get(self.current_path)
-        for i in model_path.get_points():
-            self.scanner.instrument.goto(i)
-            for meas_name in self.current_measurands:
-                res = self.measurands_storage[meas_name].measure()
+        try:
+            self.scanner.states.is_in_use.set(True)
+            for i in model_path.get_points():
+                self.scanner.instrument.goto(i)
+                for meas_name in self.current_measurands:
+                    res = self.measurands_storage[meas_name].measure()
+        except Exception as e:
+            raise e
+        finally:
+            self.scanner.states.is_in_use.set(False)
+
         print(model_path.get_points())
+
     @classmethod
     def reproduce(cls, name: str, project: ProjectType) -> 'PBaseTypes':
         return cls(name=name, paths=project.paths, measurands=project.measurands, scanner=project.scanner)

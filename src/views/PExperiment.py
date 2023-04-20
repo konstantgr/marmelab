@@ -67,8 +67,9 @@ class ExperimentView(BaseView[Experiment]):
         list_view.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         group_layout.addWidget(QLabel('Measurands:'))
 
+        m_state = self.states.is_connected & ~self.states.is_moving & ~self.states.is_in_use
         go_button = StateDepPushButton(
-            state=self.states.is_connected,
+            state=m_state,
             text="Run experiment",
             parent=widget
         )

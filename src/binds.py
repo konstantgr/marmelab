@@ -1,7 +1,7 @@
 from .ModelView import ModelViewFactory
 
 from .project.PPaths import ToyPath, TablePathModel
-from .project.PExperiments import ToyExperiment, Experiment
+from .project.PExperiments import Experiment
 from .project.PPlots import PRTPlot1D
 from .project.Project import PPlot1D, PPlot2D    # TODO: убрать
 
