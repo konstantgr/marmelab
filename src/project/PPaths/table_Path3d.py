@@ -235,7 +235,8 @@ class TablePathModel(PPath):
         return res
 
     def set_trajectory_type(self, traj_type: str):
-            self.trajectory_type = traj_type
+        self.trajectory_type = traj_type
+        self.signals.display_changed.emit()
 
     def mesh_maker(self, axes: list[np.ndarray], order: Union[None, list[int]] = None):
         """
