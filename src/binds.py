@@ -5,7 +5,7 @@ from .project.PExperiments import Experiment
 from .project.PPlots import PRTPlot1D
 from .project.Project import PPlot1D, PPlot2D    # TODO: убрать
 
-from .views.toy import ToyView
+from .views.PResults import ToyView
 from .views.PPlots import RTPlot1DView
 from .views.PPaths import TablePathView
 from .views.PExperiment import ExperimentView

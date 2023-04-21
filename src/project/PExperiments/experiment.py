@@ -1,5 +1,5 @@
 import time
-
+import datetime
 import numpy as np
 
 from ..PResults.toy_results import ToyResults
@@ -75,7 +75,7 @@ class Experiment(PExperiment):
                     res = self.measurands_storage[meas_name].measure()
                     temp.append_data(res.T)
             for meas, res in res_dic.items():
-                res.to_csv(f"{meas}.csv")
+                res.to_csv(f"{meas}_{datetime.date.today()}.csv")
 
         except Exception as e:
             raise e
