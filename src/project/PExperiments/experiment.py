@@ -75,7 +75,7 @@ class Experiment(PExperiment):
                     res = self.measurands_storage[meas_name].measure()
                     temp.append_data(res.T)
             for meas, res in res_dic.items():
-                res.to_csv(f"{meas}_{datetime.date.today()}.csv")
+                res.to_csv(fr"../Results/{meas}_{datetime.date.today()}.csv")
 
         except Exception as e:
             raise e

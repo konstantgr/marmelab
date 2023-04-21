@@ -39,6 +39,7 @@ class ToyView(BaseView):
         shutil.move(file_path, new_path[0])
 
     def fined_csv_files(self):
+        # переделать
         all_files = []
         for root, dirs, files in os.walk('pyqt_app'):
             for file in files:
