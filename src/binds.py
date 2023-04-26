@@ -5,11 +5,12 @@ from .project.PExperiments import Experiment
 from .project.PPlots import PRTPlot1D
 from .project.Project import PPlot1D, PPlot2D    # TODO: убрать
 
-from .views.PResults import ToyView
+from .views.PResults import ResultsView
 from .views.PPlots import RTPlot1DView
 from .views.PPaths import TablePathView
 from .views.PExperiment import ExperimentView
 from .builder import AppBuilder, FactoryGroups
+from .views.toy import ToyView
 from . import icons
 
 
@@ -71,9 +72,10 @@ AppBuilder.register_factory(
 
 AppBuilder.register_factory(
     ModelViewFactory(
-        view_types=(ToyView,),
+        view_types=(ResultsView,),
         model_type=ToyResults,
-        icon=icons.base_icon
+        icon=icons.base_icon,
+        reproducible=False
     ),
     group=FactoryGroups.results
 )

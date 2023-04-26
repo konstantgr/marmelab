@@ -26,7 +26,6 @@ class ExperimentView(BaseView[Experiment]):
         if current_path == '':
             lst_paths = [''] + lst_paths
         self.paths_q_box.addItems(lst_paths)
-        print(current_path)
         self.paths_q_box.setCurrentIndex(lst_paths.index(current_path))
 
     def upd_measurands(self):
@@ -48,7 +47,7 @@ class ExperimentView(BaseView[Experiment]):
         for i in range(self.measurands_item_model.rowCount()):
             if (a := self.measurands_item_model.item(i, 0)).checkState() == Qt.CheckState.Checked:
                 lst_checked.append(a.text())
-        print(lst_checked)
+
         self.model.set_current_measurands(lst_checked)
 
     def construct_widget(self) -> QWidgetType:

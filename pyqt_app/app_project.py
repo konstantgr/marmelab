@@ -14,7 +14,7 @@ from src.builder import AppBuilder, FactoryGroups
 from src.ModelView import ModelViewFactory, ModelViewVisualizerFactory
 from src import icons
 from src.project.PVisualizers import xyzwScannerVisualizer, PAnalyzerVisualizerModel
-from src.views.PResults import ToyView, ToyScannerSettings, ToyScannerControl
+from src.views.PResults import ResultsView, ToyScannerSettings, ToyScannerControl
 from src.views.PScannerVisualizers.xyzw import xyzwSettings, xyzwWidget
 from src.views.PScanners import TRIMControl, TRIMSettings
 from src.views.PAnalyzers import SocketAnalyzerControl

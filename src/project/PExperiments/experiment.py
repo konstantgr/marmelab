@@ -13,6 +13,7 @@ from ...builder import FactoryGroups
 class ExperimentSignals(PBaseSignals):
     path_changed: pyqtBoundSignal = pyqtSignal()
     measurands_changed: pyqtBoundSignal = pyqtSignal()
+    create_res: pyqtBoundSignal = pyqtSignal()
 
 
 class Experiment(PExperiment):
@@ -38,7 +39,9 @@ class Experiment(PExperiment):
         self.current_measurands: list[str] = []
         self.paths_storage.signals.changed.connect(self.on_paths_updated)
         self.measurands_storage.signals.changed.connect(self.on_measurands_updated)
+        self.signals.create_res.connect(self.res_create)
         self.project = project
+        self.current_date = datetime.date.today()
 
     @property
     def paths(self):
@@ -53,16 +56,17 @@ class Experiment(PExperiment):
         self.thread_pool.start(worker)
 
     def run(self):
-        res = None  # сделать переменную рабочей
+        res = None
         model_path = self.paths_storage.get(self.current_path)
         try:
             res_dic ={}
 
             for meas_name in self.current_measurands:
-                factories = self.app_builder.factories.get(FactoryGroups.results)
-                factories[0].create(project=self.project)
+                self.signals.create_res.emit()
+                time.sleep(1.1)
                 results: ToyResults = self.project.results.data[-1]
                 measurand_names = self.measurands_storage[meas_name].get_measure_names()
+                measurand_names = ('x', 'y', 'z', 'w', *measurand_names)
                 results.set_names(measurand_names)
                 results.set_results(np.empty((0, len(measurand_names))))
                 res_dic[meas_name] = results
@@ -72,17 +76,23 @@ class Experiment(PExperiment):
                 self.scanner.instrument.goto(i)
                 for meas_name in self.current_measurands:
                     temp = res_dic[meas_name]
-                    res = self.measurands_storage[meas_name].measure()
+                    res = list(self.measurands_storage[meas_name].measure())
+                    res = np.array([i.x, i.y, i.z, i.w] + res)
+
                     temp.append_data(res.T)
             for meas, res in res_dic.items():
-                res.to_csv(fr"../Results/{meas}_{datetime.date.today()}.csv")
+                res.to_csv(fr"../Results/{res.name}_{datetime.date.today()}.csv")
 
         except Exception as e:
             raise e
         finally:
             self.scanner.states.is_in_use.set(False)
 
-        print(model_path.get_points())
+    def res_create(self):
+        factories = self.app_builder.factories.get(FactoryGroups.results)
+        print(self.project.results.data)
+        factories[0].create(project=self.project)
+
 
     @classmethod
     def reproduce(cls, name: str, project: ProjectType) -> 'PBaseTypes':

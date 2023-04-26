@@ -250,7 +250,7 @@ class TablePathModel(PPath):
         for i, j in enumerate(order):
             if j < 0 or j > 3:
                 raise ValueError(f'order must be in range(0, 4) {j} got')
-            axes[i] = axes_ordered[j]
+            axes[j] = axes_ordered[i]
 
         blck_sizes = [len(ax) for ax in axes]
         crds = np.zeros((len(axes), np.prod(blck_sizes)), dtype=np.float32)
@@ -271,7 +271,7 @@ class TablePathModel(PPath):
 
         crds_ordered = np.empty(crds.shape, dtype=np.float32)
         for i, j in enumerate(order):
-            crds_ordered[j] = crds[i]
+            crds_ordered[i] = crds[j]
 
         return crds_ordered.T
 
