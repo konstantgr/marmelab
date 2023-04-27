@@ -74,7 +74,7 @@ AppBuilder.register_factory(
     ModelViewFactory(
         view_types=(ResultsView,),
         model_type=ToyResults,
-        icon=icons.base_icon,
+        icon=icons.results,
         reproducible=False
     ),
     group=FactoryGroups.results

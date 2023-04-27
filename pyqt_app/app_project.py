@@ -121,6 +121,7 @@ AppBuilder.register_scanner_visualizer_factory(
     factory=ModelViewVisualizerFactory(
         view_types=(xyzwSettings,),
         model=scanner_visualizer,
+        icon=icons.visualiser,
         visualizer_widget_type=xyzwWidget,
     )
 )
@@ -129,6 +130,7 @@ AppBuilder.register_plots_visualizer_factory(
     factory=ModelViewVisualizerFactory(
         view_types=(),
         model=analyzer_visualizer,
+        icon=icons.base_icon,
         visualizer_widget_type=PlotsView,
     )
 )
@@ -146,7 +148,7 @@ AppBuilder.register_factory(
     factory=ModelViewFactory(
         view_types=(TimeView,),
         model_type=TimeMeas,
-        icon=icons.s_params,
+        icon=icons.time,
     ),
     group=FactoryGroups.measurands,
 )
