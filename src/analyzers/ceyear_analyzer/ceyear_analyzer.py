@@ -211,7 +211,8 @@ class CeyearAnalyzer(BaseAnalyzer):
             raise AnalyzerConnectionError
 
         freq_data = self._send_cmd(f'SENS{self.channel}:FREQ:DATA?')
-
+        freq_tup = tuple(map(str, freq_data.split(',')))
+        res[f'freq'] = np.array(freq_tup).astype(float)
         for num, s_param in enumerate(parameters):
             num += 1
             self._send_cmd(f"CALC{self.channel}:PAR:DEF 'Tr{num}',{s_param}")
@@ -224,9 +225,6 @@ class CeyearAnalyzer(BaseAnalyzer):
             trace_array = np.array(trace_tup).astype(float)
             res[f'{s_param}'] = trace_array[:-1:2] + 1j * trace_array[1::2]
             self._send_cmd(f"CALC{self.channel}:PAR:DEL 'Tr{num}'")
-
-        freq_tup = tuple(map(str, freq_data.split(',')))
-        res[f'freq'] = np.array(freq_tup).astype(float)
 
         self._signals.data.emit(res)
         logger.debug("S-parameters are received")

@@ -68,7 +68,7 @@ class Experiment(PExperiment):
                 measurand_names = self.measurands_storage[meas_name].get_measure_names()
                 measurand_names = ('x', 'y', 'z', 'w', *measurand_names)
                 results.set_names(measurand_names)
-                results.set_results(np.empty((0, len(measurand_names))))
+                results.set_results(np.empty((0, len(measurand_names)), dtype=object))
                 res_dic[meas_name] = results
 
             self.scanner.states.is_in_use.set(True)
@@ -77,8 +77,10 @@ class Experiment(PExperiment):
                 for meas_name in self.current_measurands:
                     temp = res_dic[meas_name]
                     res = list(self.measurands_storage[meas_name].measure())
-                    res = np.array([i.x, i.y, i.z, i.w] + res)
-
+                    print('asd', self.measurands_storage[meas_name].measure())
+                    res = [np.full(len(res[0]), i.x), np.full(len(res[0]), i.y), np.full(len(res[0]), i.z), np.full(len(res[0]), i.w)] + res
+                    print(res)
+                    res = np.array(res, dtype=object)
                     temp.append_data(res.T)
             for meas, res in res_dic.items():
                 res.to_csv(fr"../Results/{res.name}_{datetime.date.today()}.csv")

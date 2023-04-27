@@ -28,7 +28,7 @@ scanner = TRIMPScanner(
     instrument=TRIMScanner(ip="127.0.0.1", port=9008, signals=scanner_signals),
     signals=scanner_signals,
 )
-TRIM_emulator.run(blocking=False, motion_time=2, port=9008)  # use it only for emulating
+TRIM_emulator.run(blocking=False, motion_time=0.5, port=9008)  # use it only for emulating
 
 analyzer_signals = PAnalyzerSignals()
 analyzer = CeyearPAnalyzer(

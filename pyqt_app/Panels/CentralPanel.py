@@ -70,7 +70,7 @@ class CentralPanel(QScrollArea, BasePanel):
                     continue
                 elif isinstance(element, BaseView):
                     element.widget.setParent(self.stacked_widget)
-                    print(element_name)
+
                     self.stacked_widget.insertWidget(i, element.widget)
                     self.model_names[i] = element_name
                     i += 1

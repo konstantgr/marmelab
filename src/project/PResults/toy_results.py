@@ -3,6 +3,7 @@ import numpy as np
 from typing import Tuple
 from pathlib import Path
 from ..Project import PResults
+import pandas as pd
 
 
 class ToyResults(PResults):
@@ -36,8 +37,11 @@ class ToyResults(PResults):
         self.results = np.append(self.results, data, axis=0)
 
     def to_csv(self, filepath: Path):
-        delimiter = ','
-        np.savetxt(filepath, self.results, delimiter=delimiter, header=delimiter.join(self.names))
+        fmt = '%c'
+        DATA = pd.DataFrame(self.results, columns=self.names)
+        # delimiter = ','
+        # np.savetxt(filepath, self.results, delimiter=delimiter, header=delimiter.join(self.names), fmt=fmt)
+        DATA.to_csv(filepath)
 
     @classmethod
     def reproduce(cls, name: str, project) -> 'ToyResults':

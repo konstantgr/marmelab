@@ -38,7 +38,7 @@ class TimeMeas(PMeasurand):
             )
             logger.info("times have been measured")
             self.signals.measured.emit()
-            return np.array(list(self._data.values()))
+            return np.array([list(self._data.values())])
         else:
             raise TypeError("No time format selected")
 
