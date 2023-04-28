@@ -80,11 +80,11 @@ class CeyearAnalyzerEmulator(CeyearAnalyzer):
         if not self.is_connected:
             raise AnalyzerConnectionError
 
+        res[f'freq'] = np.linspace(self._freq_start, self._freq_stop, self._freq_num)
+
         for num, s_param in enumerate(parameters):
             num += 1
             res[f'{s_param}'] = np.random.random(self._freq_num) + 1j * np.random.random(self._freq_num)
-
-        res[f'freq'] = np.linspace(self._freq_start, self._freq_stop, self._freq_num)
 
         self._signals.data.emit(res)
         logger.debug("S-parameters are received")

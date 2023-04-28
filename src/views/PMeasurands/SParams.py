@@ -6,6 +6,7 @@ from src.views.View import BaseView, QWidgetType
 from src.project.PAnalyzers.ceyear import SParams, CEYEAR_DEFAULT_SETTINGS
 from src.views.Widgets import StateDepPushButton
 from functools import partial
+from PyQt6 import QtCore
 
 
 class SParamsView(BaseView[SParams]):
@@ -92,10 +93,16 @@ class SParamsView(BaseView[SParams]):
             s_param.enable = not s_param.enable
         group = QGroupBox(parent_widget)
         group_layout = QGridLayout(group)
-        for s_param in self.model.s_params:
-            s_param_cb = QCheckBox(s_param.name, group)
-            group_layout.addWidget(s_param_cb)
-            s_param_cb.stateChanged.connect(lambda: change_sparam(s_param))
+        check_boxes = []
+        for i, s_param in enumerate(self.model.s_params):
+            check_boxes.append(QCheckBox(s_param.name, group))
+            if s_param.enable:
+                check_boxes[i].setChecked(True)
+            group_layout.addWidget(check_boxes[i])
+        check_boxes[0].stateChanged.connect(lambda: self.model.set_s_param(0, check_boxes[0].isChecked()))
+        check_boxes[1].stateChanged.connect(lambda: self.model.set_s_param(1, check_boxes[1].isChecked()))
+        check_boxes[2].stateChanged.connect(lambda: self.model.set_s_param(2, check_boxes[2].isChecked()))
+        check_boxes[3].stateChanged.connect(lambda: self.model.set_s_param(3, check_boxes[3].isChecked()))
         return group
 
     def _construct_sweep_type_widget(self, parent_widget):
@@ -104,8 +111,8 @@ class SParamsView(BaseView[SParams]):
         sweep_box = QComboBox(sweep_form)
         sweep_box.addItems(["LIN", "LOG"])
         sweep_form_layout.addRow("Sweep type", sweep_box)
-        sweep_slot = partial(self.model.set_sweep_type, sweep_box.currentText())
-        sweep_box.activated.connect(sweep_slot)
+        # sweep_slot = partial(self.model.set_sweep_type, sweep_box.currentText())
+        sweep_box.activated.connect(lambda: self.model.set_sweep_type(sweep_box.currentText()))
         sweep_form.setLayout(sweep_form_layout)
         return sweep_form
 
@@ -117,21 +124,21 @@ class SParamsView(BaseView[SParams]):
         freq_stop_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['freq_stop']}", freq_form)
         freq_points_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['freq_num']}", freq_form)
 
-        freq_start_le.setValidator(QDoubleValidator())
-        freq_stop_le.setValidator(QDoubleValidator())
-        freq_points_le.setValidator(QIntValidator())
+        freq_start_le.setValidator(QDoubleValidator().setLocale(QtCore.QLocale("en_US")))
+        freq_stop_le.setValidator(QDoubleValidator().setLocale(QtCore.QLocale("en_US")))
+        freq_points_le.setValidator(QDoubleValidator().setLocale(QtCore.QLocale("en_US")))
 
         freq_form_layout.addRow("Start (Hz)", freq_start_le)
         freq_form_layout.addRow("Stop (Hz)", freq_stop_le)
         freq_form_layout.addRow("N points", freq_points_le)
 
-        freq_start_slot = partial(self.model.set_freq_start, float(freq_start_le.text()))
-        freq_stop_slot = partial(self.model.set_freq_stop, float(freq_stop_le.text()))
-        freq_points_slot = partial(self.model.set_freq_num, int(freq_points_le.text()))
+        # freq_start_slot = partial(self.model.set_freq_start, float(freq_start_le.text()))
+        # freq_stop_slot = partial(self.model.set_freq_stop, float(freq_stop_le.text()))
+        # freq_points_slot = partial(self.model.set_freq_num, int(freq_points_le.text()))
 
-        freq_start_le.editingFinished.connect(freq_start_slot)
-        freq_stop_le.editingFinished.connect(freq_stop_slot)
-        freq_points_le.editingFinished.connect(freq_points_slot)
+        freq_start_le.editingFinished.connect(lambda: self.model.set_freq_start(float(freq_start_le.text())))
+        freq_stop_le.editingFinished.connect(lambda: self.model.set_freq_stop(float(freq_stop_le.text())))
+        freq_points_le.editingFinished.connect(lambda: self.model.set_freq_num(int(freq_points_le.text())))
         freq_form.setLayout(freq_form_layout)
         return freq_form
 
@@ -139,10 +146,10 @@ class SParamsView(BaseView[SParams]):
         smoothing_form = QWidget(parent_widget)
         smoothing_form_layout = QFormLayout(parent_widget)
         smoothing_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['smooth_apert']}", smoothing_form)
-        smoothing_le.setValidator(QDoubleValidator())
+        smoothing_le.setValidator(QDoubleValidator().setLocale(QtCore.QLocale("en_US")))
         smoothing_form_layout.addRow("Smoothing aperture (%)", smoothing_le)
-        smoothing_slot = partial(self.model.set_smooth_apert, float(smoothing_le.text()))
-        smoothing_le.editingFinished.connect(smoothing_slot)
+        # smoothing_slot = partial(self.model.set_smooth_apert, float(smoothing_le.text()))
+        smoothing_le.editingFinished.connect(lambda: self.model.set_smooth_apert(float(smoothing_le.text())))
         smoothing_form.setLayout(smoothing_form_layout)
         return smoothing_form
 
@@ -150,11 +157,12 @@ class SParamsView(BaseView[SParams]):
         bandwidth_form = QWidget(parent_widget)
         bandwidth_form_layout = QFormLayout(parent_widget)
         bandwidth_box = QComboBox(bandwidth_form)
-        bandwidth_box.addItems(map(str, [1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 70, 100, 150, 200, 300, 500, 700, 1000,
-                                         1500, 2000, 5000, 7000, 10_000, 15_000, 20_000, 30_000, 35_000, 40_000]))
+        bandwidth_box.addItems(list(map(str, [1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 70, 100, 150, 200, 300, 500, 700, 1000,
+                                              1500, 2000, 5000, 7000, 10_000, 15_000, 20_000, 30_000, 35_000, 40_000])))
         bandwidth_form_layout.addRow("Bandwidth (Hz)", bandwidth_box)
-        bandwidth_slot = partial(self.model.set_bandwidth, int(bandwidth_box.currentText()))
-        bandwidth_box.activated.connect(bandwidth_slot)
+        # bandwidth_slot = partial(self.model.set_bandwidth, int(bandwidth_box.currentText()))
+        bandwidth_box.setCurrentText(str(CEYEAR_DEFAULT_SETTINGS["bandwidth"]))
+        bandwidth_box.currentTextChanged.connect(lambda: self.model.set_bandwidth(int(bandwidth_box.currentText())))
         bandwidth_form.setLayout(bandwidth_form_layout)
         return bandwidth_form
 
@@ -164,20 +172,20 @@ class SParamsView(BaseView[SParams]):
         averaging_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['aver_fact']}", averaging_form)
         averaging_le.setValidator(QIntValidator())
         averaging_form_layout.addRow("Average factor:", averaging_le)
-        averaging_slot = partial(self.model.set_aver_fact, int(averaging_le.text()))
-        averaging_le.editingFinished.connect(averaging_slot)
+        # averaging_slot = partial(self.model.set_aver_fact, int(averaging_le.text()))
+        averaging_le.editingFinished.connect(lambda: self.model.set_aver_fact(int(averaging_le.text())))
         averaging_form.setLayout(averaging_form_layout)
         return averaging_form
 
     def _construct_power_widget(self, parent_widget):
         power_form = QWidget(parent_widget)
         power_form_layout = QFormLayout(parent_widget)
-        # power_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['power']}", power_form)
-        power_le = QLineEdit(f"{self.model.power}", power_form)
+        power_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['power']}", power_form)
+        # power_le = QLineEdit(f"{self.model.power}", power_form)
         power_le.setValidator(QIntValidator())
         power_form_layout.addRow("Power (dBm)", power_le)
-        power_slot = partial(self.model.set_power, int(power_le.text()))
-        power_le.editingFinished.connect(power_slot)
+        # power_slot = partial(self.model.set_power, int(power_le.text()))
+        power_le.editingFinished.connect(lambda: self.model.set_power(int(power_le.text())))
         power_form.setLayout(power_form_layout)
         return power_form
 
