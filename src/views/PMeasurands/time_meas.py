@@ -26,8 +26,9 @@ class TimeView(BaseView[TimeMeas]):
         box = QComboBox(form)
         box.addItems(["YYYY-MM-DD H:M:S", "MM-DD H:M:S", "H:M:S", "unix"])
         form_layout.addRow("Time format", box)
-        slot = partial(self.model.set_time_format, box.currentText())
-        box.activated.connect(slot)
+        # slot = partial(self.model.set_time_format, box.currentText())
+        box.setCurrentText("YYYY-MM-DD H:M:S")
+        box.currentTextChanged.connect(lambda: self.model.set_time_format(box.currentText()))
         form.setLayout(form_layout)
         return form
 

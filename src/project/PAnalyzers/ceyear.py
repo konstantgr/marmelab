@@ -69,15 +69,15 @@ class SParams(PMeasurand):
         self.panalyzer = panalyzer
 
         self.s_size = 2
-        self.channel = 1
-        self.sweep_type = 'LIN'
-        self.freq_start = 100_000
-        self.freq_stop = 8_500_000_000
-        self.freq_num = 201
-        self.bandwidth = 35_000
-        self.aver_fact = 1
-        self.smooth_apert = 2.5
-        self.power = 0
+        self.channel = CEYEAR_DEFAULT_SETTINGS['channel']
+        self.power = CEYEAR_DEFAULT_SETTINGS['power']
+        self.smooth_apert = CEYEAR_DEFAULT_SETTINGS['smooth_apert']
+        self.bandwidth = CEYEAR_DEFAULT_SETTINGS['bandwidth']
+        self.freq_start = CEYEAR_DEFAULT_SETTINGS['freq_start']
+        self.freq_stop = CEYEAR_DEFAULT_SETTINGS['freq_stop']
+        self.freq_num = CEYEAR_DEFAULT_SETTINGS['freq_num']
+        self.aver_fact = CEYEAR_DEFAULT_SETTINGS['aver_fact']
+        self.sweep_type = CEYEAR_DEFAULT_SETTINGS['sweep_type']
 
         self.s_params = self._init_s_params()
         self._data: Union[dict[str: list[complex]], None] = None
