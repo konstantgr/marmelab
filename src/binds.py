@@ -16,6 +16,7 @@ from .views.toy import ToyView
 from . import icons
 
 
+
 AppBuilder.register_factory(
     ModelViewFactory(
         view_types=(FilePathView,),
