@@ -152,6 +152,14 @@ python-versions = "*"
 altgraph = ">=0.17"
 
 [[package]]
+name = "mat4py"
+version = "0.5.0"
+description = "Load and save data in the Matlab (TM) MAT-file format."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "matplotlib"
 version = "3.7.1"
 description = "Python plotting package"
@@ -569,7 +577,7 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.12"
-content-hash = "85deab86fd8d5f0f16f49826b5e70220b2ded33f71acd4dad2e0300e550cd730"
+content-hash = "492ad7c093ed632eef9f80381d2ba5c6c57e934e5e56dce9622f121bf54a727b"
 
 [metadata.files]
 altgraph = [
@@ -800,6 +808,9 @@ kiwisolver = [
 macholib = [
     {file = "macholib-1.16.2-py2.py3-none-any.whl", hash = "sha256:44c40f2cd7d6726af8fa6fe22549178d3a4dfecc35a9cd15ea916d9c83a688e0"},
     {file = "macholib-1.16.2.tar.gz", hash = "sha256:557bbfa1bb255c20e9abafe7ed6cd8046b48d9525db2f9b77d3122a63a2a8bf8"},
+]
+mat4py = [
+    {file = "mat4py-0.5.0-py2.py3-none-any.whl", hash = "sha256:a4832a1f36f068b96bbf9299323dff294ffb2a4d6bab3a16e3ee662bf9d480e8"},
 ]
 matplotlib = [
     {file = "matplotlib-3.7.1-cp310-cp310-macosx_10_12_universal2.whl", hash = "sha256:95cbc13c1fc6844ab8812a525bbc237fa1470863ff3dace7352e910519e194b1"},

@@ -17,8 +17,8 @@ class MainWindow(QMainWindow):
 
         self.tool_panel = ToolPanel(self.main_widget)
         self.addToolBar(self.tool_panel)
-        self.menu_panel = MenuPanel()
-        self.setMenuBar(self.menu_panel)
+        # self.menu_panel = MenuPanel() # меню бар надо тул баром
+        # self.setMenuBar(self.menu_panel)
 
         self.left_panel = LeftPanel(self.main_widget)  # settings selector
         self.center_panel = CentralPanel(self.main_widget)  # settings menu

@@ -16,21 +16,25 @@ class ResultsView(BaseView[ToyResults]):
         group.setLayout(group_layout)
         group_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         h_box = QWidget()
-        hbox_layout = QHBoxLayout(h_box)
-        res_button = QPushButton('Download result')
-        res_button.clicked.connect(self.save_file)
+        hbox_layout = QVBoxLayout(h_box)
+        res_csv_button = QPushButton('Download result to .csv')
+        res_csv_button.clicked.connect(self.save_file_csv)
 
-        hbox_layout.addWidget(res_button)
+        res_matlab_button = QPushButton('Download result to .matlab')
+        res_matlab_button.clicked.connect(self.save_file_matlab)
+
+        hbox_layout.addWidget(res_csv_button)
+        hbox_layout.addWidget(res_matlab_button)
 
         group_layout.addWidget(h_box)
         widget.hide()
         return widget
 
-    def save_file(self):
-        new_path: QFileDialog = self.get_save_file_name()
+    def save_file_csv(self):
+        new_path: QFileDialog = self.get_save_file_name_csv()
         self.model.to_csv(new_path[0])
 
-    def get_save_file_name(self):
+    def get_save_file_name_csv(self):
         file_filter = 'Data File (*.csv );'
         response = QFileDialog.getSaveFileName(
             caption='Save file as...',
@@ -38,6 +42,24 @@ class ResultsView(BaseView[ToyResults]):
             filter=file_filter
         )
         return response
+
+
+    def save_file_matlab(self):
+        new_path: QFileDialog = self.get_save_file_name_matlab()
+        self.model.to_mat(new_path[0])
+
+    def get_save_file_name_matlab(self):
+        file_filter = 'Data File (*.mat );'
+        response = QFileDialog.getSaveFileName(
+            caption='Save file as...',
+            directory=f'.\\{self.model.name}',
+            filter=file_filter
+        )
+        return response
+
+
+
+
 
 
 class ToyScannerControl(ResultsView):

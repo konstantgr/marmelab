@@ -1,9 +1,10 @@
 import numpy as np
+import pandas as pd
 
 from typing import Tuple
 from pathlib import Path
 from ..Project import PResults
-import pandas as pd
+from mat4py import savemat
 
 
 class ToyResults(PResults):
@@ -42,6 +43,10 @@ class ToyResults(PResults):
         # delimiter = ','
         # np.savetxt(filepath, self.results, delimiter=delimiter, header=delimiter.join(self.names), fmt=fmt)
         DATA.to_csv(filepath)
+
+    def to_mat(self, filepath: Path):
+        print(self.results)
+        savemat(filepath, self.results)
 
     @classmethod
     def reproduce(cls, name: str, project) -> 'ToyResults':
