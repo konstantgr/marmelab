@@ -17,7 +17,7 @@ class TimeMeas(PMeasurand):
             name: str
     ):
         super(TimeMeas, self).__init__(name=name)
-        self.t_format = None
+        self.t_format = "YYYY-MM-DD H:M:S"
         self._data: Union[dict[str: str], None] = None
 
     def measure(self) -> np.ndarray:

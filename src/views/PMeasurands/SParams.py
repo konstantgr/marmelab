@@ -89,8 +89,6 @@ class SParamsView(BaseView[SParams]):
         return apply_button
 
     def _construct_sparams_widget(self, parent_widget):
-        def change_sparam(s_param):
-            s_param.enable = not s_param.enable
         group = QGroupBox(parent_widget)
         group_layout = QGridLayout(group)
         check_boxes = []
@@ -124,9 +122,9 @@ class SParamsView(BaseView[SParams]):
         freq_stop_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['freq_stop']}", freq_form)
         freq_points_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['freq_num']}", freq_form)
 
-        freq_start_le.setValidator(QDoubleValidator().setLocale(QtCore.QLocale("en_US")))
-        freq_stop_le.setValidator(QDoubleValidator().setLocale(QtCore.QLocale("en_US")))
-        freq_points_le.setValidator(QDoubleValidator().setLocale(QtCore.QLocale("en_US")))
+        freq_start_le.setValidator(QIntValidator())
+        freq_stop_le.setValidator(QIntValidator())
+        freq_points_le.setValidator(QIntValidator())
 
         freq_form_layout.addRow("Start (Hz)", freq_start_le)
         freq_form_layout.addRow("Stop (Hz)", freq_stop_le)
@@ -136,8 +134,8 @@ class SParamsView(BaseView[SParams]):
         # freq_stop_slot = partial(self.model.set_freq_stop, float(freq_stop_le.text()))
         # freq_points_slot = partial(self.model.set_freq_num, int(freq_points_le.text()))
 
-        freq_start_le.editingFinished.connect(lambda: self.model.set_freq_start(float(freq_start_le.text())))
-        freq_stop_le.editingFinished.connect(lambda: self.model.set_freq_stop(float(freq_stop_le.text())))
+        freq_start_le.editingFinished.connect(lambda: self.model.set_freq_start(int(freq_start_le.text())))
+        freq_stop_le.editingFinished.connect(lambda: self.model.set_freq_stop(int(freq_stop_le.text())))
         freq_points_le.editingFinished.connect(lambda: self.model.set_freq_num(int(freq_points_le.text())))
         freq_form.setLayout(freq_form_layout)
         return freq_form

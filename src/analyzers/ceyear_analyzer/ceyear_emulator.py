@@ -34,17 +34,18 @@ class CeyearAnalyzerEmulator(CeyearAnalyzer):
         self._freq_stop = None
         self._freq_num = None
 
-    def set_settings(self,
-                     channel: int = 1,
-                     sweep_type: str = None,
-                     freq_start: float = None,
-                     freq_stop: float = None,
-                     freq_num: int = None,
-                     bandwidth: int = None,
-                     aver_fact: int = None,
-                     smooth_aper: float = None,
-                     power: int = None
-                     ) -> None:
+    def set_settings(
+            self,
+            channel: int = 1,
+            sweep_type: str = None,
+            freq_start: int = None,
+            freq_stop: int = None,
+            freq_num: int = None,
+            bandwidth: int = None,
+            aver_fact: int = None,
+            smooth_aper: float = None,
+            power: int = None
+            ) -> None:
         self.channel = channel
         if freq_start is not None:
             self._freq_start = freq_start

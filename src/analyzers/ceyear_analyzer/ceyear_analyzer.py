@@ -51,17 +51,18 @@ class CeyearAnalyzer(BaseAnalyzer):
                 response += chunk
             return response.decode()
 
-    def set_settings(self,
-                     channel: int = 1,
-                     sweep_type: str = None,
-                     freq_start: float = None,
-                     freq_stop: float = None,
-                     freq_num: int = None,
-                     bandwidth: int = None,
-                     aver_fact: int = None,
-                     smooth_aper: float = None,
-                     power: int = None
-                     ) -> None:
+    def set_settings(
+            self,
+            channel: int = 1,
+            sweep_type: str = None,
+            freq_start: int = None,
+            freq_stop: int = None,
+            freq_num: int = None,
+            bandwidth: int = None,
+            aver_fact: int = None,
+            smooth_aper: float = None,
+            power: int = None
+            ) -> None:
 
         self.channel = channel
         self._set_sweep_type(sweep_type)
@@ -120,28 +121,28 @@ class CeyearAnalyzer(BaseAnalyzer):
 
     def _set_freqs(
             self,
-            freq_start: float = None,
-            freq_stop: float = None,
+            freq_start: int = None,
+            freq_stop: int = None,
             freq_num: int = None,
     ):
         if freq_start is not None:
-            if isinstance(freq_stop, float):
+            if isinstance(freq_stop, int):
                 if 100_000 <= freq_start <= 8_500_000_000:
                     self._send_cmd(f'SENS{self.channel}:FREQ:STAR {freq_start}Hz')
                     logger.debug(f"Frequency start {freq_start} is selected")
                 else:
-                    raise Exception("Stop frequency must be from 100 KHz to 8.5 MHz")
+                    raise Exception("Start frequency must be from 100 KHz to 8.5 MHz")
             else:
-                raise TypeError("Start frequency should be float")
+                raise TypeError("Start frequency should be int")
         if freq_stop is not None:
-            if isinstance(freq_stop, float):
+            if isinstance(freq_stop, int):
                 if 100_000 <= freq_stop <= 8_500_000_000:
                     self._send_cmd(f'SENS{self.channel}:FREQ:STOP {freq_stop}Hz')
                     logger.debug(f"Frequency stop {freq_stop} is selected")
                 else:
-                    raise Exception("Start frequency must be from 100 KHz to 8.5 MHz")
+                    raise Exception("Stop frequency must be from 100 KHz to 8.5 MHz")
             else:
-                raise TypeError("Stop frequency should be float")
+                raise TypeError("Stop frequency should be int")
         if freq_num is not None:
             if isinstance(freq_num, int):
                 if 1 <= freq_num <= 16_001:
