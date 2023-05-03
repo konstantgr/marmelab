@@ -1,6 +1,7 @@
 import time
 import datetime
 import numpy as np
+import logging
 
 from ..PResults.toy_results import ToyResults
 from ..Project import PExperiment, PPath, PMeasurand, PScanner, ProjectType, PStorage
@@ -9,6 +10,7 @@ from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject, QThreadPool
 from ..Worker import Worker
 from ...builder import FactoryGroups
 
+logger = logging.getLogger(__name__)
 
 class ExperimentSignals(PBaseSignals):
     path_changed: pyqtBoundSignal = pyqtSignal()
@@ -72,16 +74,22 @@ class Experiment(PExperiment):
                 res_dic[meas_name] = results
 
             self.scanner.states.is_in_use.set(True)
-            for i in model_path.get_points():
-                self.scanner.instrument.goto(i)
+            start_time = time.time()
+            points = model_path.get_points()
+            for i, point in enumerate(points):
+                self.scanner.instrument.goto(point)
                 for meas_name in self.current_measurands:
                     temp = res_dic[meas_name]
                     res = list(self.measurands_storage[meas_name].measure())
-                    print('asd', self.measurands_storage[meas_name].measure())
-                    res = [np.full(len(res[0]), i.x), np.full(len(res[0]), i.y), np.full(len(res[0]), i.z), np.full(len(res[0]), i.w)] + res
-                    print(res)
+
+                    res = [np.full(len(res[0]), point.x), np.full(len(res[0]), point.y), np.full(len(res[0]), point.z), np.full(len(res[0]), point.w)] + res
+
                     res = np.array(res, dtype=object)
                     temp.append_data(res.T)
+                loop_time = time.time() - start_time
+                left_time = (loop_time / (i + 1)) * (len(points) - (i + 1))
+                logger.info(f'Time left: {int(left_time // 60)} min {int(left_time % 60)} s')
+
             for meas, res in res_dic.items():
                 res.to_csv(fr"../Results/{res.name}_{datetime.date.today()}.csv")
 

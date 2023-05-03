@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QApplication
 import sys
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # in-file logging
 logs_folder_path = os.path.join(Path(__file__).parents[1], 'logs')

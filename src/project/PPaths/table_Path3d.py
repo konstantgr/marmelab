@@ -12,8 +12,6 @@ import math
 from enum import IntEnum, auto
 import time
 
-# TODO: траснпонировать заголовки
-
 
 class RowNumber(IntEnum):
     start: int = 0
@@ -217,7 +215,7 @@ class TablePathModel(PPath):
         return 'x', 'y', 'z', 'w'
 
     def get_points_ndarray(self) -> np.ndarray:
-        # TODO: реализовать функцию, иначе ниче не работает(
+
         """связать с функцией mesh_maker"""
         return self.get_path()
 
