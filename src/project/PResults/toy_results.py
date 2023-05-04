@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import scipy
 
 from typing import Tuple
 from pathlib import Path
@@ -45,8 +46,12 @@ class ToyResults(PResults):
         DATA.to_csv(filepath)
 
     def to_mat(self, filepath: Path):
-        print(self.results)
-        savemat(filepath, self.results)
+        # print(self.results)
+        names = self.get_data_names()
+        d = {}
+        for i in range(len(names)):
+            d[names[i]] = self.results[:,i].T
+        scipy.io.savemat(filepath, d)
 
     @classmethod
     def reproduce(cls, name: str, project) -> 'ToyResults':

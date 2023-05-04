@@ -29,6 +29,7 @@ matplotlib = "^3.7.1"
 SQLAlchemy = "^2.0.9"
 SQLAlchemy-Utils = "^0.41.0"
 mat4py = "^0.5.0"
+scipy = "^1.10.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.3"
