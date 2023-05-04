@@ -27,7 +27,7 @@ class CeyearPAnalyzer(PAnalyzer):
         super(CeyearPAnalyzer, self).__init__(
             signals=signals,
             instrument=instrument,
-            name='CeyearPanalyzer'
+            name='CEYEAR analyzer'
         )
 
     @staticmethod
