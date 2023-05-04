@@ -18,10 +18,13 @@ fh = RotatingFileHandler(logs_path, maxBytes=1048576, backupCount=10, encoding='
 fh.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s'))
 logger.addHandler(fh)
 
+gl_logger = logging.getLogger('OpenGL.GL.shaders')
+gl_logger.setLevel(logging.ERROR)
+
 
 def except_hook(cls, exception, traceback):
     sys.__excepthook__(cls, exception, traceback)
-    logger.error(exception)
+    logger.error(exception, exc_info=(cls, exception, traceback))
 
 
 sys.excepthook = except_hook
