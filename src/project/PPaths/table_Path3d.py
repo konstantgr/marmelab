@@ -147,6 +147,17 @@ class TableModel(QAbstractTableModel):
                     return QtGui.QColor('#FF0000')
                 else:
                     return None
+            if row == RowNumber.enable_disable_status:
+
+                chek_staus_lst = self._data.enable_disable_status.x, \
+                                     self._data.enable_disable_status.y,\
+                                     self._data.enable_disable_status.z, \
+                                     self._data.enable_disable_status.w
+
+                for i in chek_staus_lst:
+                    if i not in (1, 0):
+                        return QtGui.QColor('#FF0000')
+
 
     def match_positions(self):
         """
