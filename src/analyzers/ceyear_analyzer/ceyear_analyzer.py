@@ -25,7 +25,7 @@ class CeyearAnalyzer(BaseAnalyzer):
             max_bufs: int = 1024,
             signals: AnalyzerSignals = None
     ):
-        self.ip, self.port, self.instrument = ip, port, socket.socket()
+        self.ip, self.port, self.conn = ip, port, socket.socket()
         self.buf_size, self.max_bufs = buf_size, max_bufs
         self.tcp_lock = threading.Lock()
 
@@ -39,17 +39,21 @@ class CeyearAnalyzer(BaseAnalyzer):
         self.channel = 1
 
     def _send_cmd(self, cmd: str):
-        self.instrument.sendall(str.encode(cmd+'\n'))
-        logger.debug(f">>> {cmd}")
-        time.sleep(0.1)
-        if '?' in cmd:
-            response = bytearray()
-            while not response.endswith(b'\n'):
-                chunk = self.instrument.recv(self.buf_size)
-                if not chunk:
-                    break
-                response += chunk
-            return response.decode()
+        try:
+            self.conn.sendall(str.encode(cmd+'\n'))
+            logger.debug(f">>> {cmd}")
+            time.sleep(0.1)
+            if '?' in cmd:
+                response = bytearray()
+                while not response.endswith(b'\n'):
+                    chunk = self.conn.recv(self.buf_size)
+                    if not chunk:
+                        break
+                    response += chunk
+                return response.decode()
+        except socket.error as e:
+            self._set_is_connected(False)
+            raise e
 
     def set_settings(
             self,
@@ -81,7 +85,9 @@ class CeyearAnalyzer(BaseAnalyzer):
         if self._is_connected:
             return
         try:
-            self.instrument.connect((self.ip, self.port))
+            self.conn.close()
+            self.conn = socket.socket()
+            self.conn.connect((self.ip, self.port))
             self._send_cmd("*RST")
             self._set_is_connected(True)
             logger.info('Ceyear is connected and reset')
@@ -93,7 +99,8 @@ class CeyearAnalyzer(BaseAnalyzer):
         if not self._is_connected:
             return
         try:
-            self.instrument.close()
+            self.conn.shutdown(socket.SHUT_RDWR)
+            self.conn.close()
         except Exception as e:
             raise e
         finally:
