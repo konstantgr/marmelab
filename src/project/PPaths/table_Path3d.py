@@ -255,6 +255,9 @@ class TablePathModel(PPath):
         if order is None:
             order = [0, 1, 2, 3]
         axes_ordered = axes.copy()
+        if set(order) != {0, 1, 2, 3}:
+            raise ValueError(f'order collision is prohibited')
+
         for i, j in enumerate(order):
             if j < 0 or j > 3:
                 raise ValueError(f'order must be in range(0, 4) {j} got')
