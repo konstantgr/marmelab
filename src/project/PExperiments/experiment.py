@@ -90,9 +90,6 @@ class Experiment(PExperiment):
                 left_time = (loop_time / (i + 1)) * (len(points) - (i + 1))
                 logger.info(f'Time left: {int(left_time // 60)} min {int(left_time % 60)} s')
 
-            for meas, res in res_dic.items():
-                res.to_csv(fr"../Results/{res.name}_{datetime.date.today()}.csv")
-
         except Exception as e:
             raise e
         finally:
