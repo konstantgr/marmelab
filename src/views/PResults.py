@@ -43,7 +43,6 @@ class ResultsView(BaseView[ToyResults]):
         )
         return response
 
-
     def save_file_matlab(self):
         new_path: QFileDialog = self.get_save_file_name_matlab()
         self.model.to_mat(new_path[0])

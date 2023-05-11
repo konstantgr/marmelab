@@ -5,6 +5,7 @@ import numpy as np
 from src.views.Widgets.SettingsTable import QAbstractTableModel
 from ..Project import PPath, PScanner
 from PyQt6.QtCore import Qt, QObject, QModelIndex
+from PyQt6 import QtGui
 from typing import Any
 from ...scanner import Position
 from dataclasses import dataclass, field
@@ -116,6 +117,7 @@ class TableModel(QAbstractTableModel):
         row = index.row()
         column = index.column()
         axis_name = self.axes_names[column]
+
         if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.EditRole:
             if row == RowNumber.start:
                 start = self._data.start
@@ -137,6 +139,14 @@ class TableModel(QAbstractTableModel):
                 return self._data.order.__getattribute__(axis_name)
             elif row == RowNumber.enable_disable_status:
                 return self._data.enable_disable_status.__getattribute__(axis_name)
+
+        if role == Qt.ItemDataRole.BackgroundRole:
+            if row == RowNumber.order:
+                chek_lst = self._data.order.x, self._data.order.y, self._data.order.z, self._data.order.w
+                if set(chek_lst) != {0, 1, 2, 3}:
+                    return QtGui.QColor('#FF0000')
+                else:
+                    return None
 
     def match_positions(self):
         """
