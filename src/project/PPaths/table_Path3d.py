@@ -1,11 +1,11 @@
 from ..Project import PPath, ProjectType
-from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
+from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject, Qt, QObject, QModelIndex
 from typing import Union
 import numpy as np
 from src.views.Widgets.SettingsTable import QAbstractTableModel
 from ..Project import PPath, PScanner
-from PyQt6.QtCore import Qt, QObject, QModelIndex
 from PyQt6 import QtGui
+from PyQt6.QtWidgets import QMessageBox, QDialogButtonBox
 from typing import Any
 from ...scanner import Position
 from dataclasses import dataclass, field
@@ -149,15 +149,23 @@ class TableModel(QAbstractTableModel):
                     return None
             if row == RowNumber.enable_disable_status:
 
-                chek_staus_lst = self._data.enable_disable_status.x, \
+                chek_status_lst = self._data.enable_disable_status.x, \
                                      self._data.enable_disable_status.y,\
                                      self._data.enable_disable_status.z, \
                                      self._data.enable_disable_status.w
 
-                for i in chek_staus_lst:
+                for i in chek_status_lst:
                     if i not in (1, 0):
                         return QtGui.QColor('#FF0000')
 
+    def dialog_window(self, text: str):
+        mess_box = QMessageBox()
+        mess_box.setWindowTitle('Warning!')
+        mess_box.setText(text)
+        mess_box.setIcon(QMessageBox.Icon.Warning)
+        button = mess_box.exec()
+        if button == QMessageBox.StandardButton.Ok:
+            mess_box.close()
 
     def match_positions(self):
         """
@@ -200,10 +208,17 @@ class TableModel(QAbstractTableModel):
             elif row == RowNumber.order:
                 self._data.order.__setattr__(axis_name, int(value))
             elif row == RowNumber.enable_disable_status:
+                if int(value) not in (1, 0):
+                    self.dialog_window('Wrong axis status')
                 self._data.enable_disable_status.__setattr__(axis_name, int(value))
 
             self.dataChanged.emit(index, index)
             self.signals.data_changed.emit()
+
+            chek_order_lst = self._data.order.x, self._data.order.y, self._data.order.z, self._data.order.w
+            if set(chek_order_lst) != {0, 1, 2, 3}:
+                self.dialog_window('Wrong order')
+
         return True
 
 

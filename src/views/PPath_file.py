@@ -1,9 +1,12 @@
-from PyQt6.QtWidgets import QWidget, QGroupBox, QHBoxLayout, QVBoxLayout, QPushButton, QComboBox, QFileDialog
+from PyQt6.QtWidgets import QWidget, QGroupBox, QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QComboBox, QFileDialog
 from .View import BaseView, QWidgetType
+from .descrtiption import description_path_file
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap
 from ..project.PPaths.file_Path3d import FilePathModel
 import numpy as np
 import os
+
 
 """
  в модель передавать только абсолютный путь, в модели реализовать логику распарсинга
@@ -30,6 +33,12 @@ class FilePathView(BaseView[FilePathModel]):
 
         group_layout.addWidget(h_box)
         widget.hide()
+        description_text = QLabel()
+        description_text.setAlignment(Qt.AlignmentFlag.AlignTop)
+        description_text.setText(description_path_file)
+        pic = QPixmap('file.png')
+        # description_text.setPixmap(pic)
+        group_layout.addWidget(description_text)
         return widget
 
     def open_file(self):

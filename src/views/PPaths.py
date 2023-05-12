@@ -1,7 +1,8 @@
 from ..project.PPaths import TablePathModel
+from .descrtiption import path_description
 from .View import BaseView, QWidgetType
 from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QSizePolicy, QGroupBox, \
-    QComboBox, QPushButton, QWidgetAction
+    QComboBox, QPushButton, QWidgetAction, QTextBrowser, QLabel
 from src.views.Widgets import StateDepPushButton, StateDepCheckBox
 from PyQt6.QtCore import Qt
 from PyQt6 import QtGui
@@ -71,8 +72,15 @@ class TablePathView(BaseView[TablePathModel]):
         table_widget.setFixedHeight(200)
         group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 
+
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addWidget(table_widget)
+
+        description_text = QLabel()
+        description_text.setAlignment(Qt.AlignmentFlag.AlignTop)
+        description_text.setText(path_description)
+
+        layout.addWidget(description_text)
         return widget
 
     def set_split_type(self, split_type: str):
