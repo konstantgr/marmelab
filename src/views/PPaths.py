@@ -1,5 +1,5 @@
 from ..project.PPaths import TablePathModel
-from .descrtiption import path_description
+from .description import path_description
 from .View import BaseView, QWidgetType
 from PyQt6.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QTableView, QVBoxLayout, QSizePolicy, QGroupBox, \
     QComboBox, QPushButton, QWidgetAction, QTextBrowser, QLabel
@@ -71,7 +71,6 @@ class TablePathView(BaseView[TablePathModel]):
         table_widget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         table_widget.setFixedHeight(200)
         group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-
 
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addWidget(table_widget)

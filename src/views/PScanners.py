@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QSplitter
+from PyQt6.QtWidgets import QSplitter, QLabel
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QLineEdit, QGroupBox, QHBoxLayout, QVBoxLayout, QFormLayout
 from .Widgets import SettingsTableWidget, StateDepPushButton
 from ..Variable import Setting
@@ -9,6 +9,7 @@ from .View import BaseView, QWidgetType
 from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtGui import QRegularExpressionValidator
 from .Widgets import FormLikeInput
+from .description import description_scanner
 
 import logging
 logger = logging.getLogger()
@@ -83,6 +84,11 @@ class TRIMControl(BaseView[TRIMPScanner]):
         group_control.layout().addWidget(self.goto_button)
         self.goto_button.clicked.connect(self.goto)
 
+        description_text = QLabel()
+        description_text.setAlignment(Qt.AlignmentFlag.AlignTop)
+        description_text.setText(description_scanner)
+
+        widget.layout().addWidget(description_text)
         return widget
 
     def goto(self):

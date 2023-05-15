@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QGroupBox, QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QComboBox, QFileDialog
 from .View import BaseView, QWidgetType
-from .descrtiption import description_path_file
+from .description import description_path_file
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from ..project.PPaths.file_Path3d import FilePathModel
