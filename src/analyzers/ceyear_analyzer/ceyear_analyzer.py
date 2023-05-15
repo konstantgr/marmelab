@@ -225,9 +225,12 @@ class CeyearAnalyzer(BaseAnalyzer):
             num += 1
             self._send_cmd(f"CALC{self.channel}:PAR:DEF 'Tr{num}',{s_param}")
             self._send_cmd(f"DISPlay:WINDow1:TRACe2:FEED 'Tr{num}'")
-            # print(self._send_cmd(f"CALC{self.channel}:PAR:CAT?"))
-            self._send_cmd(f"DISPlay:WINDow1:TRACe2:Y:SCALe:AUTO")
             self._send_cmd(f"CALC{self.channel}:PAR:SEL 'Tr{num}'")
+            self._send_cmd(f'SENS{self.channel}:SWEep:MODE HOLD')
+
+            self._send_cmd(f'TRIGger:SEQuence:SINGle;*OPC?')
+
+            self._send_cmd(f"DISPlay:WINDow1:TRACe2:Y:SCALe:AUTO")
             trace_data = self._send_cmd(f'CALC{self.channel}:DATA? SDATA')
             trace_tup = tuple(map(str, trace_data.split(',')))
             trace_array = np.array(trace_tup).astype(float)
