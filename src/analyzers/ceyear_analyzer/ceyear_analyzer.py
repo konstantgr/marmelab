@@ -221,21 +221,26 @@ class CeyearAnalyzer(BaseAnalyzer):
         freq_data = self._send_cmd(f'SENS{self.channel}:FREQ:DATA?')
         freq_tup = tuple(map(str, freq_data.split(',')))
         res[f'freq'] = np.array(freq_tup).astype(float)
+
+        self._send_cmd(f"CALC1:PAR:DEL:ALL")
         for num, s_param in enumerate(parameters):
             num += 1
             self._send_cmd(f"CALC{self.channel}:PAR:DEF 'Tr{num}',{s_param}")
-            self._send_cmd(f"DISPlay:WINDow1:TRACe2:FEED 'Tr{num}'")
+            self._send_cmd(f"DISPlay:WINDow1:TRACe{num}:FEED 'Tr{num}'")
+
+        self._send_cmd(f'SENS{self.channel}:SWEep:MODE HOLD')
+        self._send_cmd(f'TRIGger:SEQuence:AVERage ON')
+        self._send_cmd(f'TRIGger:SEQuence:SINGle;*OPC?')
+
+        for num, s_param in enumerate(parameters):
+            num += 1
             self._send_cmd(f"CALC{self.channel}:PAR:SEL 'Tr{num}'")
-            self._send_cmd(f'SENS{self.channel}:SWEep:MODE HOLD')
-
-            self._send_cmd(f'TRIGger:SEQuence:SINGle;*OPC?')
-
-            self._send_cmd(f"DISPlay:WINDow1:TRACe2:Y:SCALe:AUTO")
+            self._send_cmd(f"DISPlay:WINDow1:TRACe{num}:Y:SCALe:AUTO")
             trace_data = self._send_cmd(f'CALC{self.channel}:DATA? SDATA')
             trace_tup = tuple(map(str, trace_data.split(',')))
             trace_array = np.array(trace_tup).astype(float)
             res[f'{s_param}'] = trace_array[:-1:2] + 1j * trace_array[1::2]
-            self._send_cmd(f"CALC{self.channel}:PAR:DEL 'Tr{num}'")
+            # self._send_cmd(f"CALC{self.channel}:PAR:DEL 'Tr{num}'")
 
         self._signals.data.emit(res)
         logger.debug("S-parameters are received")
