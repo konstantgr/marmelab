@@ -50,7 +50,7 @@ class CeyearAnalyzer(BaseAnalyzer):
                     if not chunk:
                         break
                     response += chunk
-                return response.decode()
+                return response.decode().rstrip()
         except socket.error as e:
             self._set_is_connected(False)
             raise e
@@ -114,6 +114,14 @@ class CeyearAnalyzer(BaseAnalyzer):
                 logger.debug(f"Channel {channel} is selected")
             else:
                 raise TypeError("Channel should be string")
+
+    def _get_traces(self):
+        res = self._send_cmd(f"CALCulate{self.channel}:PARameter:CATalog?")
+        it = iter(res.split(','))
+        traces = {}
+        for trace, s_param in zip(it, it):
+            traces[trace] = s_param.lower()
+        return traces
 
     def _set_sweep_type(self, sweep_type: str = None):
         if sweep_type is not None:
@@ -212,6 +220,9 @@ class CeyearAnalyzer(BaseAnalyzer):
             self,
             parameters: List[str],
     ) -> dict[str: List[complex]]:
+        if len(parameters) != len(set(parameters)):
+            raise ValueError("S-parameters must be unique!")
+        parameters = [p.lower() for p in parameters]
 
         res = {}
 
@@ -222,19 +233,41 @@ class CeyearAnalyzer(BaseAnalyzer):
         freq_tup = tuple(map(str, freq_data.split(',')))
         res[f'freq'] = np.array(freq_tup).astype(float)
 
-        self._send_cmd(f"CALC1:PAR:DEL:ALL")
+        existed = {}
+        traces = self._get_traces()
+
+        for trace, s_param in traces.items():
+            if (s_param not in parameters) or (s_param in existed):
+                self._send_cmd(f"CALC{self.channel}:PAR:DEL '{trace}'")
+            else:
+                existed[s_param] = trace
+
+        num = 0
+        for s_param in parameters:
+            if s_param not in existed:
+                while num < 32:
+                    num += 1
+                    if f'Tr{num}' not in traces:
+                        break
+                else:
+                    raise RuntimeError("Max number of traces has been reached")
+
+                self._send_cmd(f"CALC{self.channel}:PAR:DEF 'Tr{num}',{s_param}")
+                existed[s_param] = f'Tr{num}'
+
+        for tr_number in self._send_cmd('DISPlay:WINDow1:CATalog?').split(','):
+            self._send_cmd(f"DISPlay:WINDow1:TRACe{tr_number}:DEL")
+
         for num, s_param in enumerate(parameters):
             num += 1
-            self._send_cmd(f"CALC{self.channel}:PAR:DEF 'Tr{num}',{s_param}")
-            self._send_cmd(f"DISPlay:WINDow1:TRACe{num}:FEED 'Tr{num}'")
+            self._send_cmd(f"DISPlay:WINDow1:TRACe{num}:FEED '{existed[s_param]}'")
 
         self._send_cmd(f'SENS{self.channel}:SWEep:MODE HOLD')
         self._send_cmd(f'TRIGger:SEQuence:AVERage ON')
         self._send_cmd(f'TRIGger:SEQuence:SINGle;*OPC?')
 
-        for num, s_param in enumerate(parameters):
-            num += 1
-            self._send_cmd(f"CALC{self.channel}:PAR:SEL 'Tr{num}'")
+        for s_param in parameters:
+            self._send_cmd(f"CALC{self.channel}:PAR:SEL '{existed[s_param]}'")
             self._send_cmd(f"DISPlay:WINDow1:TRACe{num}:Y:SCALe:AUTO")
             trace_data = self._send_cmd(f'CALC{self.channel}:DATA? SDATA')
             trace_tup = tuple(map(str, trace_data.split(',')))
