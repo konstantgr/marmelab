@@ -3,7 +3,7 @@ from .View import BaseView, QWidgetType
 from ..project.PVisualizers.AnalyzerVisualizer_model import PAnalyzerVisualizerModel
 from ..project.Project import PPlot1D
 import pyqtgraph as pg
-from typing import  Union
+from typing import Union
 from functools import partial
 import numpy as np
 
@@ -62,6 +62,7 @@ class PlotsView(BaseView[PAnalyzerVisualizerModel]):
         return current_plot
 
     def redraw(self, index, item: pg.PlotDataItem):
+        print(index, item)
         if index == self.tab_widget.currentIndex():
             current_plot = self._get_current_plot()
             item.setData(np.abs(current_plot.get_x()), np.abs(current_plot.get_f()))

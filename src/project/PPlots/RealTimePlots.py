@@ -116,6 +116,7 @@ class PRTPlot1D(PPlot1D, PRealTimePlot):
         self.current_measurand_name = measurand_name
         self._clear()
         self._set_x_data_name(x_data_name)
+        print(x_data_name, f_data_name)
         self._set_f_data_name(f_data_name)
         self.signals.changed.emit()
 
