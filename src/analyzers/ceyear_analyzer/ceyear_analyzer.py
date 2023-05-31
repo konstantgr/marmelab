@@ -256,7 +256,8 @@ class CeyearAnalyzer(BaseAnalyzer):
                 existed[s_param] = f'Tr{num}'
 
         for tr_number in self._send_cmd('DISPlay:WINDow1:CATalog?').split(','):
-            self._send_cmd(f"DISPlay:WINDow1:TRACe{tr_number}:DEL")
+            if tr_number:
+                self._send_cmd(f"DISPlay:WINDow1:TRACe{tr_number}:DEL")
 
         for num, s_param in enumerate(parameters):
             num += 1
