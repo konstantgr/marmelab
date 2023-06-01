@@ -3,11 +3,11 @@ from .project.PResults.toy_results import ToyResults
 from .project.PPaths import ToyPath, TablePathModel, FilePathModel
 
 from .project.PExperiments import Experiment
-from .project.PPlots import PRTPlot1D
+from .project.PPlots import PRTPlot1D, ResPPlot3DS
 from .project.Project import PPlot1D, PPlot2D    # TODO: убрать
 
 from .views.PResults import ResultsView
-from .views.PPlots import RTPlot1DView
+from .views.PPlots import RTPlot1DView, ResPPlot3DSView
 from .views.PPaths import TablePathView
 from .views.PPath_file import FilePathView
 from .views.PExperiment import ExperimentView
@@ -72,14 +72,14 @@ AppBuilder.register_factory(
 #     group=FactoryGroups.resplots
 # )
 
-# AppBuilder.register_factory(
-#     ModelViewFactory(
-#         view_types=(ToyView,),
-#         model_type=PPlot2D,
-#         icon=icons.plot2d
-#     ),
-#     group=FactoryGroups.resplots
-# )
+AppBuilder.register_factory(
+    ModelViewFactory(
+        view_types=(ResPPlot3DSView,),
+        model_type=ResPPlot3DS,
+        icon=icons.plot2d
+    ),
+    group=FactoryGroups.resplots
+)
 
 AppBuilder.register_factory(
     ModelViewFactory(

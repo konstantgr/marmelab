@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QWidget, QPushButton, QGroupBox, QVBoxLayout, QTabWidget, QLabel, QSizePolicy, QComboBox
 from .View import BaseView, QWidgetType
 from ..project.PVisualizers.AnalyzerVisualizer_model import PAnalyzerVisualizerModel
-from ..project.Project import PPlot1D
+from ..project.Project import PPlot1D, PRealTimePlot, PPlot2D
 import pyqtgraph as pg
 from typing import Union
 from functools import partial
@@ -47,10 +47,20 @@ class PlotsView(BaseView[PAnalyzerVisualizerModel]):
             if plot.name in self.tabs:
                 continue
             view = pg.PlotWidget()
-            item = pg.PlotDataItem()
+            if issubclass(plot.__class__, PPlot2D):
+                item = pg.PColorMeshItem()
+                x = np.linspace(0, 3, 100)
+                y = np.linspace(0, 3, 100)
+                XX, YY = np.meshgrid(x, y)
+                ZZ = np.sin(XX ** 2)
+                item.setData(ZZ)
+            elif issubclass(plot.__class__, PPlot1D):
+                item = pg.PlotDataItem()
+
             view.addItem(item)
             # plot.update()
-            plot.signals.current_measurand_measured.connect(partial(self.redraw, len(self.tabs), item))
+            if issubclass(plot.__class__, PRealTimePlot):
+                plot.signals.current_measurand_measured.connect(partial(self.redraw, len(self.tabs), item))
             # item.setData(plot.get_x(), plot.get_f())
             self.tab_widget.addTab(view, plot.name)
             self.tabs.append(plot.name)
