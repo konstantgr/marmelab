@@ -100,24 +100,24 @@ class PRTPlot1D(PPlot1D, PRealTimePlot):
         return res
 
     def set_settings(self, measurand_name: str, x_data_name: str, f_data_name: str):
+
         new_measurand = self.measurands_storage.get(measurand_name)
         if new_measurand is None:
             raise Exception(f"Can't find measurand {measurand_name}")
 
-        if self.current_measurand_name == measurand_name:
-            return
+        if not(self.current_measurand_name == measurand_name):
+            if self.measurand is not None:
+                self.measurand.signals.measured.disconnect(self.signals.current_measurand_measured)
+                self.measurand.signals.changed.disconnect(self.signals._current_measurand_changed)
+            new_measurand.signals.measured.connect(self.signals.current_measurand_measured)
+            new_measurand.signals.changed.connect(self.signals._current_measurand_changed)
+            self.current_measurand_name = measurand_name
+            self._clear()
 
-        if self.measurand is not None:
-            self.measurand.signals.measured.disconnect(self.signals.current_measurand_measured)
-            self.measurand.signals.changed.disconnect(self.signals._current_measurand_changed)
-        new_measurand.signals.measured.connect(self.signals.current_measurand_measured)
-        new_measurand.signals.changed.connect(self.signals._current_measurand_changed)
-
-        self.current_measurand_name = measurand_name
-        self._clear()
         self._set_x_data_name(x_data_name)
-        print(x_data_name, f_data_name)
         self._set_f_data_name(f_data_name)
+
+        print(x_data_name, f_data_name)
         self.signals.changed.emit()
 
     def _check_data_name(self, name: str):
