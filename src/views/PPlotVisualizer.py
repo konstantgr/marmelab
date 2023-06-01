@@ -62,7 +62,6 @@ class PlotsView(BaseView[PAnalyzerVisualizerModel]):
         return current_plot
 
     def redraw(self, index, item: pg.PlotDataItem):
-        print(index, item)
         if index == self.tab_widget.currentIndex():
             current_plot = self._get_current_plot()
             item.setData(np.abs(current_plot.get_x()), np.abs(current_plot.get_f()))

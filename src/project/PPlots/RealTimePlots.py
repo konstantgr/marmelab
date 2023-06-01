@@ -117,7 +117,6 @@ class PRTPlot1D(PPlot1D, PRealTimePlot):
         self._set_x_data_name(x_data_name)
         self._set_f_data_name(f_data_name)
 
-        print(x_data_name, f_data_name)
         self.signals.changed.emit()
 
     def _check_data_name(self, name: str):
@@ -125,6 +124,7 @@ class PRTPlot1D(PPlot1D, PRealTimePlot):
             raise Exception(f"Measurand is not selected")
         available_names = self.measurand.get_measure_names()
         if name not in available_names:
+            self.signals.current_measurand_changed.emit()
             raise Exception(f"Wrong measure name {name}, available names: {available_names}")
 
     def _set_x_data_name(self, name: str):
