@@ -43,7 +43,7 @@ class ToyResults(PResults):
         DATA = pd.DataFrame(self.results, columns=self.names)
         # delimiter = ','
         # np.savetxt(filepath, self.results, delimiter=delimiter, header=delimiter.join(self.names), fmt=fmt)
-        DATA.to_csv(filepath)
+        DATA.to_csv(filepath, index=False)
 
     def to_mat(self, filepath: Path):
         # print(self.results)

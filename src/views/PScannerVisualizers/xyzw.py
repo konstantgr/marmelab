@@ -360,7 +360,7 @@ class Widget(gl.GLViewWidget):
             TextItem([5, 5], f'x = {self.scanner_pos.y} [mm]', font_size=12),
             TextItem([5, 5+1*16], f'y = {self.scanner_pos.z} [mm]', font_size=12),
             TextItem([5, 5+2*16], f'z = {self.scanner_pos.x} [mm]', font_size=12),
-            TextItem([5, 5+3*16], f'w = {self.scanner_pos.w} [rad]', font_size=12)
+            TextItem([5, 5+3*16], f'w = {self.scanner_pos.w} [deg]', font_size=12)
         ]
         for text in texts:
             self.addItem(text)
@@ -368,7 +368,7 @@ class Widget(gl.GLViewWidget):
         tr = self.pillar_transformation()
         pts = [
             [tr[0, 3], tr[1, 3], 0],
-            [tr[0, 3]-500*np.cos(self.scanner_pos.w), tr[1, 3]-500*np.sin(self.scanner_pos.w), 0]
+            [tr[0, 3]-500*np.cos(self.scanner_pos.w * np.pi / 180), tr[1, 3]-500*np.sin(self.scanner_pos.w * np.pi / 180), 0]
         ]
         linew = gl.GLLinePlotItem(pos=pts, antialias=True, width=2, color=color2)
         self.addItem(linew)
