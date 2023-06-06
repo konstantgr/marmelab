@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QGroupBox, QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QComboBox, QFileDialog
+from PyQt6.QtWidgets import QWidget, QGroupBox, QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QComboBox, QFileDialog, QSizePolicy
 from .View import BaseView, QWidgetType
 from .description import description_path_file
 from PyQt6.QtCore import Qt
@@ -34,6 +34,7 @@ class FilePathView(BaseView[FilePathModel]):
         group_layout.addWidget(h_box)
         widget.hide()
         description_text = QLabel()
+        description_text.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
         description_text.setAlignment(Qt.AlignmentFlag.AlignTop)
         description_text.setText(description_path_file)
         pic = QPixmap('file.png')

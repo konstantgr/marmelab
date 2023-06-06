@@ -32,8 +32,8 @@ class RTPlot1DView(BaseView[PRTPlot1D]):
         vbox.addWidget(group)
 
         group_layout.addRow(QLabel('Measurable'), self.selector)
-        group_layout.addRow(QLabel('x'), self.selector_x)
-        group_layout.addRow(QLabel('f'), self.selector_f)
+        group_layout.addRow(QLabel('x - axis data'), self.selector_x)
+        group_layout.addRow(QLabel('f(x)'), self.selector_f)
 
         button = QPushButton('Apply')
         group_layout.addRow(button)

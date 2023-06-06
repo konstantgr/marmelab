@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QGroupBox, QVBoxLayout, QTabWi
 from .View import BaseView, QWidgetType
 from ..project.PVisualizers.AnalyzerVisualizer_model import PAnalyzerVisualizerModel
 from ..project.Project import PPlot1D, PRealTimePlot, PPlot2D
+from ..project.PPlots import ResPPlot3DS
 import pyqtgraph as pg
 from typing import Union
 from functools import partial
@@ -49,11 +50,6 @@ class PlotsView(BaseView[PAnalyzerVisualizerModel]):
             view = pg.PlotWidget()
             if issubclass(plot.__class__, PPlot2D):
                 item = pg.PColorMeshItem()
-                x = np.linspace(0, 3, 100)
-                y = np.linspace(0, 3, 100)
-                XX, YY = np.meshgrid(x, y)
-                ZZ = np.sin(XX ** 2)
-                item.setData(ZZ)
             elif issubclass(plot.__class__, PPlot1D):
                 item = pg.PlotDataItem()
 
@@ -61,6 +57,8 @@ class PlotsView(BaseView[PAnalyzerVisualizerModel]):
             # plot.update()
             if issubclass(plot.__class__, PRealTimePlot):
                 plot.signals.current_measurand_measured.connect(partial(self.redraw, len(self.tabs), item))
+            elif issubclass(plot.__class__, ResPPlot3DS):
+                plot.signals.display_changed.connect(partial(self.redraw, len(self.tabs), item))
             # item.setData(plot.get_x(), plot.get_f())
             self.tab_widget.addTab(view, plot.name)
             self.tabs.append(plot.name)
@@ -74,7 +72,23 @@ class PlotsView(BaseView[PAnalyzerVisualizerModel]):
     def redraw(self, index, item: pg.PlotDataItem):
         if index == self.tab_widget.currentIndex():
             current_plot = self._get_current_plot()
-            item.setData(np.abs(current_plot.get_x()), np.abs(current_plot.get_f()))
+            if isinstance(current_plot, PPlot2D):
+                start = 0
+                end = 2 * np.pi
+                points = 300
+                delta = (end - start) / points / 2
+
+                x = np.linspace(start, end, points)
+                x_pg = np.linspace(start - delta, end + delta, points + 1)
+                y = np.linspace(start, end, points)
+                y_pg = np.linspace(start - delta, end + delta, points + 1)
+
+                xx, yy = np.meshgrid(x, y)
+                xx_pg, yy_pg = np.meshgrid(x_pg, y_pg)
+                item.setData(xx_pg, yy_pg, np.sin(xx**2 + yy**2))
+
+            elif isinstance(current_plot, PPlot1D):
+                item.setData(np.abs(current_plot.get_x()), np.abs(current_plot.get_f()))
             # item: pg.PlotDataItem = view.
             # item.setData()
 
