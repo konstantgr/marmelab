@@ -262,6 +262,7 @@ class TablePathModel(PPath):
         res = []
         points = self.get_points_ndarray()
         for point in points:
+            print(point)
             position = Position(
                 **{name: value for name, value in zip(self.get_points_axes(), point)}
             )
@@ -297,6 +298,7 @@ class TablePathModel(PPath):
             rep_num = np.prod(blck_sizes[:i])
             rep_el = np.repeat(axes[i], rep_num)
             tile_num = np.prod(blck_sizes[i + 1:])
+
             if self.trajectory_type == 'Snake':
                 tile_el = np.concatenate((rep_el, np.flip(rep_el)))
             elif self.trajectory_type == 'Lines':
@@ -309,7 +311,6 @@ class TablePathModel(PPath):
         crds_ordered = np.empty(crds.shape, dtype=np.float32)
         for i, j in enumerate(order):
             crds_ordered[i] = crds[j]
-
         return crds_ordered.T
 
     def get_path(self):
