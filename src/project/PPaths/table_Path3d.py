@@ -329,13 +329,19 @@ class TablePathModel(PPath):
 
             if status == 1:
                 points_numbers = self.table_model._data.points.__getattribute__(axis)
+
             elif status == 0:
-                points_numbers = 1
+                if self.scanner.instrument.is_connected:
+                    points_numbers = 1
+                    start = stop = self.scanner.instrument.position().__getattribute__(axis)
+                else:
+                    self.table_model.dialog_window("Scanner is not connected!")
+
             else:
                 raise ValueError(f'0 or 1 acceptable got {status}')
 
-            order.append(self.table_model._data.order.__getattribute__(axis))
             current_data = np.linspace(float(start), float(stop), points_numbers)
+            order.append(self.table_model._data.order.__getattribute__(axis))
             temp.append(current_data)
         return self.mesh_maker(temp, order)
 
