@@ -262,11 +262,18 @@ class TablePathModel(PPath):
         res = []
         points = self.get_points_ndarray()
         for point in points:
-            print(point)
-            position = Position(
-                **{name: value for name, value in zip(self.get_points_axes(), point)}
-            )
+
+            d = {}
+            for name, value in zip(self.get_points_axes(), point):
+                if self.table_model._data.enable_disable_status.__getattribute__(name) == 0:
+                    d[name] = None
+                else:
+                    d[name] = value
+
+            position = Position(**d)
+
             res.append(position)
+
         return res
 
     def set_trajectory_type(self, traj_type: str):
@@ -329,14 +336,8 @@ class TablePathModel(PPath):
 
             if status == 1:
                 points_numbers = self.table_model._data.points.__getattribute__(axis)
-
             elif status == 0:
-                if self.scanner.instrument.is_connected:
-                    points_numbers = 1
-                    start = stop = self.scanner.instrument.position().__getattribute__(axis)
-                else:
-                    self.table_model.dialog_window("Scanner is not connected!")
-
+                points_numbers = 1
             else:
                 raise ValueError(f'0 or 1 acceptable got {status}')
 

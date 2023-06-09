@@ -77,8 +77,8 @@ class Experiment(PExperiment):
             start_time = time.time()
             points = model_path.get_points()
             for i, point in enumerate(points):
+                print(point)
                 self.scanner.instrument.goto(point)
-                print(self.scanner.instrument.position())
                 for meas_name in self.current_measurands:
                     temp = res_dic[meas_name]
                     res = list(self.measurands_storage[meas_name].measure())
