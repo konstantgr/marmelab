@@ -53,7 +53,7 @@ class TRIMPScanner(PScanner):
 
     def _home(self, w):
         self.instrument.home(w)
-        pos = Position(2262.92, 2137.09, 0) if not w else Position(w=0)
+        pos = Position(2262.92, 2137.09, 0) if not w else Position(w=360)
         self.instrument.set_settings(position=pos)
         logger.debug("Scanner at home. Scanner position is:")
         current_position = self.instrument.position()
