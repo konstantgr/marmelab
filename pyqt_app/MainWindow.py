@@ -73,7 +73,7 @@ class MainWindow(QMainWindow):
         hbox.addWidget(main_splitter)
 
         self.setGeometry(300, 300, 450, 400)
-        self.setWindowTitle('MarMELAB v0.0')
+        self.setWindowTitle('MarMELAB v0.0.2')
         self.setWindowIcon(QIcon("assets/logo.png"))
         self.setCentralWidget(self.main_widget)
 
