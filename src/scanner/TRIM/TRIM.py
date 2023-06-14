@@ -643,7 +643,10 @@ class TRIMScanner(Scanner):
 
         time.sleep(1)
         stop_reasons = list(self._end_of_motion_reason())
-        if not (stop_reasons[0] == stop_reasons[1] == stop_reasons[2] == 2):
+        if not (stop_reasons[0] == stop_reasons[1] == stop_reasons[2] == 2) and not w:
+            raise scanner_motion_error(action_description, stop_reasons)
+
+        if not(stop_reasons[3]) == 2 and w:
             raise scanner_motion_error(action_description, stop_reasons)
 
     def home(self, w=False) -> None:
