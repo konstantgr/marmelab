@@ -348,19 +348,19 @@ class TRIMScanner(Scanner):
             cmds += cmds_from_axes(motor_on_par, basecmd='MO', scale=False)
         self._send_cmds(cmds)
 
-        if position_par is not None:
-            self._signals.position[type(position_par)].emit(position_par)
+        # if position_par is not None:
+        #     self._signals.position[type(position_par)].emit(position_par)
         if velocity_par is not None:
-            self._signals.velocity[type(velocity_par)].emit(velocity_par)
+            # self._signals.velocity[type(velocity_par)].emit(velocity_par)
             # Это необходимо, так как в самом сканере некорректно реализована команда ASP -- она возвращает нули
             for axis in fields(velocity_par):
                 axis_velocity = velocity_par.__getattribute__(axis.name)
                 if axis_velocity is not None:
                     self._velocity.__setattr__(axis.name, axis_velocity)
-        if acceleration_par is not None:
-            self._signals.acceleration[type(acceleration_par)].emit(acceleration_par)
-        if deceleration_par is not None:
-            self._signals.deceleration[type(deceleration_par)].emit(deceleration_par)
+        # if acceleration_par is not None:
+        #     self._signals.acceleration[type(acceleration_par)].emit(acceleration_par)
+        # if deceleration_par is not None:
+        #     self._signals.deceleration[type(deceleration_par)].emit(deceleration_par)
         logger.debug("Settings have been applied")
 
     def _send_cmd(self, cmd: str) -> str:
@@ -623,7 +623,7 @@ class TRIMScanner(Scanner):
     def is_connected(self) -> bool:
         return self._is_connected
 
-    def _home(self) -> None:
+    def _home(self, w=False) -> None:
         logger.info(f'Homing...')
         # уменьшение скорости в два раза
         old_velocity = self.velocity()
@@ -633,7 +633,7 @@ class TRIMScanner(Scanner):
         self.set_settings(**JOG_MODE_SETTINGS)
 
         action_description = f'homing'
-        cmds = ['XBG', 'YBG', 'ZBG']
+        cmds = ['XBG', 'YBG', 'ZBG'] if not w else ['WBG']
         self._begin_motion_and_wait(cmds, action_description)
 
         # возвращаем старую скорость
@@ -646,8 +646,8 @@ class TRIMScanner(Scanner):
         if not (stop_reasons[0] == stop_reasons[1] == stop_reasons[2] == 2):
             raise scanner_motion_error(action_description, stop_reasons)
 
-    def home(self) -> None:
-        self._motion_decorator(self._home)
+    def home(self, w=False) -> None:
+        self._motion_decorator(self._home, w)
 
     @property
     def is_moving(self) -> bool:

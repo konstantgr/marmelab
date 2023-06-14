@@ -14,6 +14,7 @@ class TRIMPScanner(PScanner):
     def __init__(self, name: str, instrument: TRIMScanner, signals: PScannerSignals):
         super(TRIMPScanner, self).__init__(name=name, instrument=instrument, signals=signals)
         self._settings = []
+        self.instrument: TRIMScanner
         self.thread_pool = QThreadPool()
         UNITS = {
             'acceleration': Unit(m=1, s=-2),
@@ -50,9 +51,10 @@ class TRIMPScanner(PScanner):
     def axes_number(self) -> int:
         return 4
 
-    def _home(self):
-        self.instrument.home()
-        self.instrument.set_settings(position=Position(2262.92, 2137.09, 0, 0))
+    def _home(self, w):
+        self.instrument.home(w)
+        pos = Position(2262.92, 2137.09, 0) if not w else Position(w=0)
+        self.instrument.set_settings(position=pos)
         logger.debug("Scanner at home. Scanner position is:")
         current_position = self.instrument.position()
         logger.debug(f'x: {current_position.x}')
@@ -60,8 +62,8 @@ class TRIMPScanner(PScanner):
         logger.debug(f'z: {current_position.z}')
         logger.debug(f'w: {current_position.z}')
 
-    def custom_home(self):
-        worker = Worker(self._home)
+    def custom_home(self, w):
+        worker = Worker(self._home, w)
         self.thread_pool.start(worker)
 
     def custom_goto(

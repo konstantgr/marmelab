@@ -26,16 +26,16 @@ import src.binds
 scanner_signals = PScannerSignals()
 scanner = TRIMPScanner(
     name="TRIM scanner",
-    # instrument=TRIMScanner(ip="127.0.0.1", port=9001, signals=scanner_signals),
-    instrument=TRIMScanner(ip="172.16.22.244", port=9000, signals=scanner_signals),
+    instrument=TRIMScanner(ip="127.0.0.1", port=9001, signals=scanner_signals),
+    # instrument=TRIMScanner(ip="172.16.22.244", port=9000, signals=scanner_signals),
     signals=scanner_signals,
 )
-# TRIM_emulator.run(blocking=False, motion_time=0.5, port=9001)  # use it only for emulating
+TRIM_emulator.run(blocking=False, motion_time=0.5, port=9001)  # use it only for emulating
 
 analyzer_signals = PAnalyzerSignals()
 analyzer = CeyearPAnalyzer(
-    # instrument=CeyearAnalyzerEmulator(ip="127.0.0.1", port="9005", signals=analyzer_signals),
-    instrument=CeyearAnalyzer(ip="172.16.22.67", port=1024, signals=analyzer_signals),
+    instrument=CeyearAnalyzerEmulator(ip="127.0.0.1", port="9005", signals=analyzer_signals),
+    # instrument=CeyearAnalyzer(ip="172.16.22.67", port=1024, signals=analyzer_signals),
     signals=analyzer_signals
 )
 

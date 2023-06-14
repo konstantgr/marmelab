@@ -31,9 +31,13 @@ class TRIMControl(BaseView[TRIMPScanner]):
             state=m_state,
             text="Disconnect",
         )
-        self.home_button = StateDepPushButton(
+        self.home_xyz_button = StateDepPushButton(
             state=m_state,
-            text="Home",
+            text="Home (x, y, z) axes",
+        )
+        self.home_w_button = StateDepPushButton(
+            state=m_state,
+            text="Home (w) axis",
         )
         self.abort_button = StateDepPushButton(
             state=states.is_connected,
@@ -61,13 +65,15 @@ class TRIMControl(BaseView[TRIMPScanner]):
 
         self.connect_button.clicked.connect(self.model.instrument.connect)
         self.disconnect_button.clicked.connect(self.model.instrument.disconnect)
-        self.home_button.clicked.connect(self._home)
+        self.home_xyz_button.clicked.connect(self._xyz_home)
+        self.home_w_button.clicked.connect(self._w_home)
         self.abort_button.clicked.connect(self.model.instrument.abort)
 
         self.abort_button.setProperty('color', 'red')
         group_layout.addWidget(self.connect_button)
         group_layout.addWidget(self.disconnect_button)
-        group_layout.addWidget(self.home_button)
+        group_layout.addWidget(self.home_xyz_button)
+        group_layout.addWidget(self.home_w_button)
         group_layout.addWidget(self.abort_button)
 
         group_control = QGroupBox(widget)
@@ -98,8 +104,11 @@ class TRIMControl(BaseView[TRIMPScanner]):
         w = self.coord_input_model.get_parsed_value('w')
         self.model.custom_goto(x, y, z, w)
 
-    def _home(self):
-        self.model.custom_home()
+    def _xyz_home(self):
+        self.model.custom_home(w=False)
+
+    def _w_home(self):
+        self.model.custom_home(w=True)
 
     def display_name(self) -> str:
         return "Control"
