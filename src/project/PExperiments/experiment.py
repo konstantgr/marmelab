@@ -81,8 +81,8 @@ class Experiment(PExperiment):
                 for meas_name in self.current_measurands:
                     temp = res_dic[meas_name]
                     res = list(self.measurands_storage[meas_name].measure())
-
-                    res = [np.full(len(res[0]), point.x), np.full(len(res[0]), point.y), np.full(len(res[0]), point.z), np.full(len(res[0]), point.w)] + res
+                    pos = self.project.scanner.instrument.position()
+                    res = [np.full(len(res[0]), pos.x), np.full(len(res[0]), pos.y), np.full(len(res[0]), pos.z), np.full(len(res[0]), pos.w)] + res
 
                     res = np.array(res, dtype=object)
                     temp.append_data(res.T)
@@ -99,7 +99,6 @@ class Experiment(PExperiment):
         factories = self.app_builder.factories.get(FactoryGroups.results)
         print(self.project.results.data)
         factories[0].create(project=self.project)
-
 
     @classmethod
     def reproduce(cls, name: str, project: ProjectType) -> 'PBaseTypes':
