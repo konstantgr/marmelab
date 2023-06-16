@@ -9,7 +9,8 @@ data_files = [
     ('.\\src\\views\\description\\*.html', '.\\src\\views\\description'),
     ('.\\src\\icons\\*.svg', '.\\src\\icons'),
     ('.\\src\\views\\PScannerVisualizers\\assets\\*.stl', '.\\src\\views\\PScannerVisualizers\\assets\\'),
-    ('.\\src\\project\\PObjects\\assets\\*.stl', '.\\src\\project\\PObjects\\assets\\')
+    ('.\\src\\project\\PObjects\\assets\\*.stl', '.\\src\\project\\PObjects\\assets\\') 
+
 ]
 
 a = Analysis(
