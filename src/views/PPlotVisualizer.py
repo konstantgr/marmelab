@@ -4,7 +4,6 @@ from .Widgets import StateDepPushButton
 from ..project.PVisualizers.AnalyzerVisualizer_model import PAnalyzerVisualizerModel
 from ..project.Project import PPlot1D, PRealTimePlot, PPlot2D
 from ..project.PPlots import ResPPlot3DS
-from ...pyqt_app import project
 import pyqtgraph as pg
 from typing import Union
 from functools import partial
@@ -18,9 +17,9 @@ class PlotsView(BaseView[PAnalyzerVisualizerModel]):
     def __init__(self, *args, **kwargs):
         super(PlotsView, self).__init__(*args, **kwargs)
         self.graphics = []
-        state = project.scanner.states
-        m_state = ~state.is_moving & ~state.is_in_use
-
+        state_anal = self.model.analyzer.states
+        state_scan = self.model.scanner.states
+        m_state = ~state_scan.is_in_use & ~state_anal.is_in_use
         self.main_widget = QGroupBox()
 
         self.tab_widget = QTabWidget()
@@ -28,12 +27,10 @@ class PlotsView(BaseView[PAnalyzerVisualizerModel]):
         self.main_widget.setLayout(QVBoxLayout())
         self.main_widget.layout().addWidget(self.tab_widget)
 
-        button = QPushButton('Peek')
-
         button = StateDepPushButton(
             state=m_state,
             text="Peek",
-            parent=self
+            parent=self.main_widget
         )
         button.clicked.connect(self.peek)
         self.main_widget.layout().addWidget(button)

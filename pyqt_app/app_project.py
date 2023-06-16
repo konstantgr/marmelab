@@ -55,7 +55,8 @@ scanner_visualizer = xyzwScannerVisualizer(
 analyzer_visualizer = PAnalyzerVisualizerModel(
     name="Plots visualizer",
     plots=plots,
-    # scanner=scanner,
+    scanner=scanner,
+    analyzer=analyzer
     # objects=objects,
     # paths=paths,
 )

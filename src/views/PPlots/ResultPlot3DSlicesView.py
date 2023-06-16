@@ -39,11 +39,11 @@ class ResPPlot3DSView(BaseView[ResPPlot3DS]):
         return widget
 
     def update_results(self, *args):
-        print('dsadsad')
+
         results = self.model.get_results()
         self.results = results
         self.selector.clear()
-        names = ['fgfg'] + list(self.results.keys())
+        names = ['DOESN`T WORK'] + list(self.results.keys())
         self.selector.addItems(names)
         self.update_data_names()
 
