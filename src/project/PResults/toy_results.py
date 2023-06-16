@@ -39,8 +39,9 @@ class ToyResults(PResults):
         self.results = np.append(self.results, data, axis=0)
 
     def to_csv(self, filepath: Path):
+
         fmt = '%c'
-        DATA = pd.DataFrame(self.results, columns=self.names)
+        DATA = pd.DataFrame(self.to_real(), columns=self.names)
         # delimiter = ','
         # np.savetxt(filepath, self.results, delimiter=delimiter, header=delimiter.join(self.names), fmt=fmt)
         DATA.to_csv(filepath, index=False)
@@ -49,8 +50,13 @@ class ToyResults(PResults):
         names = self.get_data_names()
         d = {}
         for i in range(len(names)):
-            d[names[i]] = self.results[:,i].T
+            d[names[i]] = self.to_real()[:,i].T
         sci.savemat(filepath, d)
+
+    def to_real(self):
+        self.results[:, 4] = [i.real for i in self.results[:, 4]]
+        self.results[:, 4].astype(float, copy=False)
+        return self.results
 
     @classmethod
     def reproduce(cls, name: str, project) -> 'ToyResults':

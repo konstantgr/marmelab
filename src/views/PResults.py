@@ -57,10 +57,6 @@ class ResultsView(BaseView[ToyResults]):
         return response
 
 
-
-
-
-
 class ToyScannerControl(ResultsView):
     def display_name(self) -> str:
         return 'Control'
