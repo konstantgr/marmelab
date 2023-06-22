@@ -61,12 +61,11 @@ class ToolPanel(QToolBar):
             parent=self
         )
         self.upd_button_action.triggered.connect(project.scanner.instrument.position)
-        self.abort_button.triggered.connect(project.scanner.instrument.abort)
+        self.abort_button.triggered.connect(self._abort)
         scanner_group_widget.addQAction(self.upd_button_action)
         scanner_group_widget.addQAction(self.abort_button)
 
         self.addSeparator()
-
         for group, factories in builder.factories.items():
             group_widget = ToolGroup(group.value)
             group_toolbar = GroupToolBar()
@@ -85,3 +84,11 @@ class ToolPanel(QToolBar):
             if i > 0:
                 self.addWidget(group_widget)
                 self.addSeparator()
+
+    def _abort(self):
+        project.scanner.instrument.abort()
+        for experiment in project.experiments.data:
+            if experiment.is_running:
+                experiment.is_aborted = True
+                break
+

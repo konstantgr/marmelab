@@ -12,6 +12,7 @@ from ...builder import FactoryGroups
 
 logger = logging.getLogger(__name__)
 
+
 class ExperimentSignals(PBaseSignals):
     path_changed: pyqtBoundSignal = pyqtSignal()
     measurands_changed: pyqtBoundSignal = pyqtSignal()
@@ -33,6 +34,7 @@ class Experiment(PExperiment):
 
         super(Experiment, self).__init__(name=name)
         self.thread_pool = QThreadPool()
+        self.is_running = False
         self.paths_storage = paths
         self.measurands_storage = measurands
         self.scanner = scanner
@@ -44,6 +46,7 @@ class Experiment(PExperiment):
         self.signals.create_res.connect(self.res_create)
         self.project = project
         self.current_date = datetime.date.today()
+        self.is_aborted = False
 
     @property
     def paths(self):
@@ -58,10 +61,12 @@ class Experiment(PExperiment):
         self.thread_pool.start(worker)
 
     def run(self):
+        self.is_running = True
+        self.is_aborted = False
         res = None
         model_path = self.paths_storage.get(self.current_path)
         try:
-            res_dic ={}
+            res_dic = {}
 
             for meas_name in self.current_measurands:
                 self.signals.create_res.emit()
@@ -77,6 +82,8 @@ class Experiment(PExperiment):
             start_time = time.time()
             points = model_path.get_points()
             for i, point in enumerate(points):
+                if self.is_aborted:
+                    raise RuntimeError('Experiment aborted')
                 self.scanner.instrument.goto(point)
                 for meas_name in self.current_measurands:
                     temp = res_dic[meas_name]
@@ -93,6 +100,7 @@ class Experiment(PExperiment):
         except Exception as e:
             raise e
         finally:
+            self.is_running = False
             self.scanner.states.is_in_use.set(False)
 
     def res_create(self):

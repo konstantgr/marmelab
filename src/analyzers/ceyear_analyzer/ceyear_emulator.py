@@ -1,3 +1,4 @@
+import time
 from typing import List, Union
 from src.analyzers.base_analyzer import BaseAnalyzer, AnalyzerSignals, AnalyzerConnectionError
 from src.utils import EmptySignal
@@ -89,6 +90,7 @@ class CeyearAnalyzerEmulator(CeyearAnalyzer):
 
         self._signals.data.emit(res)
         logger.debug("S-parameters are received")
+        time.sleep(5)
         return res
 
     def is_connected(self) -> bool:
