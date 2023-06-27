@@ -511,7 +511,16 @@ class TRIMScanner(Scanner):
         action_description = f'the motion to {position}'
         self._begin_motion_and_wait(cmds, action_description)
 
-        stop_reasons = list(self._end_of_motion_reason())
+        while True:
+            stop_reasons = list(self._end_of_motion_reason())
+            any_in_motion = position.x is not None and stop_reasons[0] == 0
+            any_in_motion |= position.y is not None and stop_reasons[1] == 0
+            any_in_motion |= position.z is not None and stop_reasons[2] == 0
+            any_in_motion |= position.w is not None and stop_reasons[3] == 0
+            if not any_in_motion:
+                break
+            time.sleep(0.1)
+
         if position.x is not None and stop_reasons[0] != 1:
             raise scanner_motion_error(action_description, stop_reasons)
         if position.y is not None and stop_reasons[1] != 1:
