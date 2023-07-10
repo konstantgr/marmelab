@@ -1,82 +1,163 @@
+from src.project.PExperiments import Experiment
 from src.scanner.TRIM import TRIMScanner
 from src.project import Project, PScannerSignals, PAnalyzerSignals, PStorage
-from src.analyzator.rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulator
-from src.project.PScanners import TRIMPScanner
-from src.project.PAnalyzers import RohdeSchwarzPAnalyzer
-from src.project.PVisualizers import PScannerVisualizer3D, PAnalyzerVisualizerRS
-from src.project.PMeasurables import MeasurableOfMeasurands
-from PyQt6.QtWidgets import QTextEdit
-from src.project.PObjects import Object3d
-from src.project.PPaths import Path3d
-import numpy as np
-from src.project.PStorages import ObjectsStorage3d, PathsStorage3d, ExperimentsStorage
+from src.analyzers.rohde_schwarz import RohdeSchwarzAnalyzer, RohdeSchwarzEmulator
+from src.analyzers.ceyear_analyzer.ceyear_emulator import CeyearAnalyzerEmulator
+from src.analyzers.ceyear_analyzer.ceyear_analyzer import CeyearAnalyzer
+from src.project.PScanners import ToyScanner, TRIMPScanner
+from src.project.PAnalyzers import ToyAnalyser, ToySparam
+from src.project.PPaths import ToyPath
+from src.project.PAnalyzers.ceyear import CeyearPAnalyzer, SParams
+from src.project.PPaths import ToyPath, TablePathModel
+from src.project.PMeasurands.time_measurand import TimeMeas
 from src.scanner.TRIM import TRIM_emulator
-from src.project.Project import PScannerStates
+from src.builder import AppBuilder, FactoryGroups
+from src.ModelView import ModelViewFactory, ModelViewVisualizerFactory
+from src import icons
+from src.project.PVisualizers import xyzwScannerVisualizer, PAnalyzerVisualizerModel
+from src.views.PResults import ResultsView, ToyScannerSettings, ToyScannerControl
+from src.views.PScannerVisualizers.xyzw import xyzwSettings, xyzwWidget
+from src.views.PScanners import TRIMControl, TRIMSettings
+from src.views.PAnalyzers import SocketAnalyzerControl
+from src.views.PMeasurands import SParamsView, TimeView
+from src.views.PPlotVisualizer import PlotsView
+import src.binds
 
 scanner_signals = PScannerSignals()
 scanner = TRIMPScanner(
-    instrument=TRIMScanner(ip="127.0.0.1", port=9005, signals=scanner_signals),
+    name="TRIM scanner",
+    # instrument=TRIMScanner(ip="127.0.0.1", port=9000, signals=scanner_signals),
+    instrument=TRIMScanner(ip="172.16.22.244", port=9000, signals=scanner_signals),
     signals=scanner_signals,
 )
-TRIM_emulator.run(blocking=False, motion_time=2, port=9005)  # use it only for emulating
+# TRIM_emulator.run(blocking=False, motion_time=0.5, port=9000)  # use it only for emulating
 
 analyzer_signals = PAnalyzerSignals()
-analyzer = RohdeSchwarzPAnalyzer(
-    # instrument=RohdeSchwarzAnalyzer(ip="192.168.5.168", port="9000"),
-    instrument=RohdeSchwarzEmulator(ip="192.168.5.168", port="9000", signals=analyzer_signals),
+analyzer = CeyearPAnalyzer(
+    # instrument=CeyearAnalyzerEmulator(ip="127.0.0.1", port="9005", signals=analyzer_signals),
+    instrument=CeyearAnalyzer(ip="172.16.22.67", port=1024, signals=analyzer_signals),
     signals=analyzer_signals
 )
 
-objects = ObjectsStorage3d()
-paths = PathsStorage3d()
-measurables = PStorage()
-experiments = ExperimentsStorage()
+objects = PStorage()
+paths = PStorage()
+experiments = PStorage()
+plots = PStorage()
+measurands = PStorage()
 
-objects.append(
-    Object3d(
-        name='Object 1'
-    )
+scanner_visualizer = xyzwScannerVisualizer(
+    name="Scanner visualizer",
+    scanner=scanner,
+    objects=objects,
+    paths=paths,
+)
+
+analyzer_visualizer = PAnalyzerVisualizerModel(
+    name="Plots visualizer",
+    plots=plots,
+    scanner=scanner,
+    analyzer=analyzer
+    # objects=objects,
+    # paths=paths,
 )
 
 paths.append(
-    Path3d(
-        name='Path 1',
-        points=np.array([[1000*i, 0, 0] for i in range(5)])
+    TablePathModel(
+        name=f'path1',
+        scanner=scanner
     )
 )
 
-measurables.append(
-    MeasurableOfMeasurands(
-        measurands=analyzer.get_measurands(),
-        name='Meas 1',
+measurands.append(
+    SParams(
+        name='meas1',
+        panalyzer=analyzer
     )
 )
-measurables.append(
-    MeasurableOfMeasurands(
-        measurands=analyzer.get_measurands(),
-        name='Meas 2',
-    )
-)
-
-scanner_visualizer = PScannerVisualizer3D(
-    instrument=scanner,
-    paths=paths,
-    objects=objects,
-)
-
-analyzer_visualizer = PAnalyzerVisualizerRS(
-    measurables=measurables,
-    instrument_states=analyzer.states,
-)
-
 
 project = Project(
     scanner=scanner,
     analyzer=analyzer,
-    scanner_visualizer=scanner_visualizer,
-    analyzer_visualizer=analyzer_visualizer,
     objects=objects,
     paths=paths,
     experiments=experiments,
-    measurables=measurables
+    measurands=measurands,
+    plots=plots,
+    results=PStorage(),
+    scanner_visualizer=scanner_visualizer,
+    app_builder=AppBuilder
 )
+experiments.append(
+    Experiment(
+        scanner=scanner,
+        name='exp1',
+        paths=paths,
+        measurands=measurands,
+        app_builder=AppBuilder,
+        project=project
+    )
+)
+
+AppBuilder.register_factory(
+    ModelViewFactory(
+        view_types=(TRIMControl, TRIMSettings,),
+        model=scanner,
+        icon=icons.scanner_icon,
+        removable=False,
+        reproducible=False
+    ),
+    group=FactoryGroups.scanners,
+)
+
+AppBuilder.register_factory(
+    factory=ModelViewFactory(
+        view_types=(SocketAnalyzerControl,),
+        model=analyzer,
+        icon=icons.analyzer_icon,
+        removable=False,
+        reproducible=False
+    ),
+    group=FactoryGroups.analyzers,
+)
+
+AppBuilder.register_scanner_visualizer_factory(
+    factory=ModelViewVisualizerFactory(
+        view_types=(xyzwSettings,),
+        model=scanner_visualizer,
+        icon=icons.visualiser,
+        visualizer_widget_type=xyzwWidget,
+    )
+)
+
+AppBuilder.register_plots_visualizer_factory(
+    factory=ModelViewVisualizerFactory(
+        view_types=(),
+        model=analyzer_visualizer,
+        icon=icons.base_icon,
+        visualizer_widget_type=PlotsView,
+    )
+)
+
+AppBuilder.register_factory(
+    factory=ModelViewFactory(
+        view_types=(SParamsView,),
+        model_type=SParams,
+        icon=icons.s_params,
+    ),
+    group=FactoryGroups.measurands,
+)
+
+AppBuilder.register_factory(
+    factory=ModelViewFactory(
+        view_types=(TimeView,),
+        model_type=TimeMeas,
+        icon=icons.time,
+    ),
+    group=FactoryGroups.measurands,
+)
+
+builder_ = AppBuilder(project=project)
+builder_.restore_model_views()
+builder_.load_instruments()
+builder_.load_visualizers()
+builder = builder_

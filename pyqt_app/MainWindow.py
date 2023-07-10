@@ -1,9 +1,10 @@
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QMainWindow, QSplitter, QTextEdit, QPushButton
 from PyQt6.QtCore import Qt
-from Panels import LogPanel, RightPanel, LeftPanel, CentralPanel
+from PyQt6.QtGui import QIcon
+from Panels import LogPanel, RightPanel, LeftPanel, CentralPanel, MenuPanel
 from Panels.BarPanel import BarPanel
 from Panels.ToolPanel import ToolPanel
-from pyqt_app import project
+from pyqt_app import project, builder
 
 
 class MainWindow(QMainWindow):
@@ -12,9 +13,12 @@ class MainWindow(QMainWindow):
         self.main_widget = QWidget()
         hbox = QHBoxLayout(self.main_widget)  # layout of Main window
         self.main_widget.setLayout(hbox)
+        # self.main_widget.setStyleSheet("background-color: red")
 
         self.tool_panel = ToolPanel(self.main_widget)
         self.addToolBar(self.tool_panel)
+        # self.menu_panel = MenuPanel() # меню бар надо тул баром
+        # self.setMenuBar(self.menu_panel)
 
         self.left_panel = LeftPanel(self.main_widget)  # settings selector
         self.center_panel = CentralPanel(self.main_widget)  # settings menu
@@ -31,8 +35,8 @@ class MainWindow(QMainWindow):
         project.analyzer.signals.is_connected.emit(False)
 
         self.right_panel = RightPanel(
-            scanner_visualizer=project.scanner_visualizer,
-            analyzer_visualizer=project.analyzer_visualizer,
+            scanner_visualizer=builder.scanner_visualizer,
+            plots_visualizer=builder.plots_visualizer,
             parent=self.main_widget
         )  # graphics
 
@@ -62,14 +66,15 @@ class MainWindow(QMainWindow):
         main_splitter.insertWidget(1, self.right_panel)
 
         main_splitter.setStretchFactor(0, 1)
-        main_splitter.setStretchFactor(1, 1)
+        main_splitter.setStretchFactor(1, 2)
         main_splitter.setCollapsible(0, False)
         main_splitter.setCollapsible(1, False)
 
         hbox.addWidget(main_splitter)
 
         self.setGeometry(300, 300, 450, 400)
-        self.setWindowTitle('Scanner control')
+        self.setWindowTitle('MarMELAB v0.0.4')
+        self.setWindowIcon(QIcon("assets/logo.png"))
         self.setCentralWidget(self.main_widget)
 
 

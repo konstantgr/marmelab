@@ -1,19 +1,14 @@
-# from ..scanner import Scanner, ScannerSignals
-# from ..analyzator import AnalyzerSignals, BaseAnalyzer
-# from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
+import numpy as np
 
-from anechoic_utils.scanner import Scanner, ScannerSignals
-from anechoic_utils.analyzator import AnalyzerSignals, BaseAnalyzer
-from anechoic_utils.scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
-
+from ..scanner import Scanner, ScannerSignals
+from ..analyzers import AnalyzerSignals, BaseAnalyzer
+from ..scanner import BaseAxes, Position, Velocity, Acceleration, Deceleration
 from PyQt6.QtCore import pyqtBoundSignal, pyqtSignal, QObject
 from PyQt6.QtWidgets import QWidget
-from PyQt6.QtGui import QIcon
-from dataclasses import dataclass, field
-from abc import abstractmethod, ABC
-from typing import Union, Callable, Generic, TypeVar, Any
-from .icons import path_icon, object_icon, base_icon
-from pyqtgraph import PlotWidget, GraphicsLayoutWidget
+from dataclasses import dataclass
+from abc import abstractmethod, ABC, ABCMeta
+from typing import Union, Generic, TypeVar, Tuple, Type
+from ..Variable import Setting
 
 
 def _meta_resolve(cls):
@@ -23,65 +18,102 @@ def _meta_resolve(cls):
     return _MetaResolver
 
 
-@dataclass
-class PWidget:
-    """
-    Класс виджетов управления
-    """
-    name: str  # название виджета, например Settings, Control
-    widget: QWidget
-    icon: QIcon = None
+class PNamed:
+    """Класс с названиями"""
+    base_name = 'noname'
+    type_name = 'No name'
+
+    def __init__(
+            self,
+            name: str,
+    ):
+        self.name = name
 
 
 class PBaseSignals(QObject):
+    """Сигналы PBase"""
+    # TODO: remove changed ?
     changed: pyqtBoundSignal = pyqtSignal()
+    name_changed: pyqtBoundSignal = pyqtSignal()
+    display_changed: pyqtBoundSignal = pyqtSignal()
+    data_changed: pyqtBoundSignal = pyqtSignal()
 
 
-@dataclass
-class PBase:
+SignalsTypes = TypeVar('SignalsTypes', bound=PBaseSignals)
+ProjectType = TypeVar('ProjectType', bound='Project')
+
+
+class PBase(PNamed, Generic[SignalsTypes], metaclass=ABCMeta):
     """
     Базовый класс всех объектов в проекте
     """
-    name: str
-    widget: QWidget
-    icon: QIcon = base_icon
-    signals: PBaseSignals = field(default_factory=PBaseSignals)
+    signals_type: Type[SignalsTypes] = PBaseSignals
+    signals: SignalsTypes
+
+    def __init__(
+            self,
+            name: str,
+    ):
+        super(PBase, self).__init__(name=name)
+        self.signals = self.signals_type()
+
+    # def __init_subclass__(cls, **kwargs):
+    #     # cls.signals_type = PBaseSignals
+    #     print(cls.signals_type)
+
+    @classmethod
+    @abstractmethod
+    def reproduce(cls, name: str, project: ProjectType) -> 'PBaseTypes':
+        """Создает экземпляр класса"""
 
 
-@dataclass
-class PObject(PBase):
+class PObject(PBase, metaclass=ABCMeta):
     """
     Класс объекта исследования
     """
-    icon: QIcon = object_icon
+    base_name = 'obj'
+    type_name = 'Object'
 
 
-@dataclass
-class PPath(PBase):
+class PPath(PBase, metaclass=ABCMeta):
     """
     Класс пути перемещения сканера
     """
-    icon: QIcon = path_icon
+    base_name = 'path'
+    type_name = 'Path'
 
+    @abstractmethod
+    def get_points_axes(self) -> Tuple[str, ...]:
+        """
+        Возвращает оси координат в том порядке, в котором они возвращаются из get_points_ndarray
 
-@dataclass
-class PMeasurable(PBase):
-    """
-    Класс измеряемой величины
-    """
+        """
 
+    def get_points(self) -> list[Position]:
+        """
+        Возвращает массив точек, в которых необходимо провести измерения.
+        """
+        res = []
+        points = self.get_points_ndarray()
+        for point in points:
+            position = Position(
+                **{name: value for name, value in zip(self.get_points_axes(), point)}
+            )
+            res.append(position)
+        return res
 
-@dataclass
-class PExperiment(PBase):
-    """
-    Класс эксперимента
-    """
+    @abstractmethod
+    def get_points_ndarray(self) -> np.ndarray:
+        """
+        Возвращает массив точек, в которых необходимо провести измерения.
+        Размерность массива (n x m), где m - число координат, а n число измеряемых точек
+        """
 
 
 class PState(QObject):
     """
     Класс состояния.
-    PState хранит только bool.
+    PState по своей сути является bool.
     У PState существует сигнал changed_signal, в который делается emit
     при изменении значения состояния на противоположное.
 
@@ -93,6 +125,12 @@ class PState(QObject):
     changed_signal: pyqtBoundSignal = pyqtSignal()
 
     def __init__(self, value: bool, signal: pyqtBoundSignal = None):
+        """
+
+        :param value: начальное значение
+        :param signal: сигнал pyqtSignal[bool], от которого зависит значение состояния.
+        Если в сигнал было заэмичено новое значение, то состояние будет обновлено.
+        """
         super(PState, self).__init__()
         self._value = value
         if signal is not None:
@@ -104,7 +142,6 @@ class PState(QObject):
         """
         if self._value != state:
             self._value = state
-            # print(state)
             self.changed_signal.emit()
 
     def __bool__(self) -> bool:
@@ -156,12 +193,6 @@ class PScannerSignals(QObject, ScannerSignals, metaclass=_meta_resolve(ScannerSi
     deceleration: pyqtBoundSignal = pyqtSignal([BaseAxes], [Deceleration])
     is_connected: pyqtBoundSignal = pyqtSignal(bool)
     is_moving: pyqtBoundSignal = pyqtSignal(bool)
-    set_settings: pyqtBoundSignal = pyqtSignal(dict)
-    stop: pyqtBoundSignal = pyqtSignal()
-    abort: pyqtBoundSignal = pyqtSignal()
-    connect: pyqtBoundSignal = pyqtSignal()
-    disconnect: pyqtBoundSignal = pyqtSignal()
-    home: pyqtBoundSignal = pyqtSignal()
 
 
 @dataclass
@@ -174,15 +205,23 @@ class PScannerStates:
     is_in_use: PState  # используется ли в эксперименте прямо сейчас
 
 
-class PScanner(ABC):
+ScannerType = TypeVar('ScannerType', bound=Scanner)
+
+
+class PScanner(PNamed, metaclass=ABCMeta):
     """
-    Класс сканера, объединяющего состояния и сигналы
+    Класс сканера, объединяющего сам сканер, его состояния и сигналы
     """
+    base_name = 'sc'
+    type_name = 'Scanner'
+
     def __init__(
             self,
-            instrument: Scanner,
+            name: str,
+            instrument: ScannerType,
             signals: PScannerSignals,
     ):
+        super(PScanner, self).__init__(name=name)
         self.signals = signals
         self.instrument = instrument
         self.states = PScannerStates(
@@ -191,102 +230,92 @@ class PScanner(ABC):
             is_in_use=PState(False),
         )
 
-        # соединяем сигналы для управления с функциями сканера
-        self.signals.stop.connect(self.instrument.stop)
-        self.signals.abort.connect(self.instrument.abort)
-        self.signals.connect.connect(self.instrument.connect)
-        self.signals.disconnect.connect(self.instrument.disconnect)
-        self.signals.home.connect(self.instrument.home)
-        self.signals.set_settings.connect(self._set_settings)
+    @property
+    @abstractmethod
+    def dims_number(self) -> int:
+        """
 
-    def _set_settings(self, d: dict):
-        self.instrument.set_settings(**d)
+        :return: Возвращает размерность рабочего пространства
+        """
 
     @property
     @abstractmethod
-    def control_widgets(self) -> list[PWidget]:
+    def axes_number(self) -> int:
         """
-        Виджеты, управляющие сканером
+
+        :return: Возвращает количество осей
         """
-        pass
+
+    @abstractmethod
+    def get_settings(self) -> list[Setting]:
+        """
+        Возвращает настройки, которые можно изменить
+        :return:
+        """
 
 
-class PScannerVisualizer(ABC):
+class PScannerVisualizer(PNamed, metaclass=ABCMeta):
     """
     Класс визуализатора сканера
     """
-    def __init__(
-            self,
-            instrument: PScanner
-    ):
-        self.instrument = instrument
-
-    @property
-    @abstractmethod
-    def widget(self) -> QWidget:
-        """
-        Виджет, отвечающий за визуализацию
-        """
-        pass
-
-    @property
-    @abstractmethod
-    def control_widgets(self) -> list[PWidget]:
-        """
-        Виджеты, управляющие визуализацией
-        """
-        pass
 
 
-class PMeasurand(ABC):
+class PMeasurandSignals(PBaseSignals):
+    """Сигналы межеранда"""
+    measured: pyqtBoundSignal = pyqtSignal()
+
+
+class PMeasurand(PBase, metaclass=ABCMeta):
     """
     Физическая величина, которая может быть измерена анализатором
     """
+    base_name = 'meas'
+    type_name = 'Measurand'
+    signals_type = PMeasurandSignals
+    signals: PMeasurandSignals
+
     def __init__(
             self,
             name: str,
     ):
-        """
-
-        :param name: название, например S-parameters, Signal amplitude
-        """
-        self.name = name
-
-    @property
-    @abstractmethod
-    def widget(self) -> QWidget:
-        """
-        Виджет измеряемой величины
-        """
+        super(PMeasurand, self).__init__(name=name)
 
     @abstractmethod
-    def measure(self) -> Any:
+    def measure(self) -> np.ndarray:
         """
-        Провести измерение величины и перерисовать график, если такой есть
+        Провести измерение величины и сохранить значения
         """
 
     @abstractmethod
     def pre_measure(self) -> None:
         """
-        Настроить сканер перед измерением данной величины
+        Настроить анализатор перед измерением данной величины
         """
 
-    @property
     @abstractmethod
-    def plot_widget(self) -> Union[PlotWidget, GraphicsLayoutWidget, None]:
+    def get_measure_names(self) -> Tuple[str]:
         """
-        PlotWidget этой величины
+        Возвращает кортеж названий измеренных величин, например (“freq”, “S11”)
         """
+
+    @abstractmethod
+    def get_data(self) -> Union[None, np.ndarray]:
+        """
+        Вернуть предыдущие значение. None, если измерений еще не было
+        """
+
+
+PMeasurandType = TypeVar('PMeasurandType', bound=PMeasurand)
 
 
 class PAnalyzerSignals(QObject, AnalyzerSignals, metaclass=_meta_resolve(AnalyzerSignals)):
     """
     Сигналы анализатора
     """
-    data: pyqtBoundSignal = pyqtSignal(dict)
     connect: pyqtBoundSignal = pyqtSignal()
     disconnect: pyqtBoundSignal = pyqtSignal()
     set_settings: pyqtBoundSignal = pyqtSignal(dict)
+    data: pyqtBoundSignal = pyqtSignal(dict)
     is_connected: pyqtBoundSignal = pyqtSignal(bool)
 
 
@@ -299,40 +328,172 @@ class PAnalyzerStates:
     is_in_use: PState  # используется в эксперименте прямо сейчас
 
 
-class PAnalyzer(ABC):
+AnalyzerType = TypeVar('AnalyzerType', bound=BaseAnalyzer)
+
+
+class PAnalyzer(PNamed, metaclass=ABCMeta):
     """
-    Класс анализатора, объединяющий сигналы и статусы анализатора
+    Класс анализатора, объединяющий сигналы и статусы анализатора.
     """
+    base_name = 'an'
+    type_name = 'Analyzer'
+
     def __init__(
             self,
+            name: str,
             signals: PAnalyzerSignals,
-            instrument: BaseAnalyzer,
+            instrument: AnalyzerType,
     ):
+        super(PAnalyzer, self).__init__(name=name)
         self.signals = signals
         self.instrument = instrument
         self.states = PAnalyzerStates(
             is_connected=PState(False, self.signals.is_connected),
             is_in_use=PState(False),
         )
+        self.current_measurand: Union[PMeasurand, None] = None  # измерение, к которому подготовлен анализатор
 
         self.signals.connect.connect(self.instrument.connect)
         self.signals.disconnect.connect(self.instrument.disconnect)
-        self.signals.set_settings.connect(self._set_settings)
+        self.signals.set_settings.connect(self.set_settings)
 
-    def _set_settings(self, d: dict):
-        self.instrument.set_settings(**d)
+    def set_settings(
+            self,
+            measurand: Union[PMeasurand, None] = None,
+            **settings
+    ):
+        self.instrument.set_settings(**settings)
+        self.set_current_measurand(measurand)
+
+    def set_current_measurand(self, measurand: PMeasurand):
+        """Объявить measurand, к которому подготовлен анализатор"""
+        self.current_measurand = measurand
+
+    @staticmethod
+    @abstractmethod
+    def get_measurands(self) -> list[Type[PMeasurand]]:
+        """
+        Вернуть лист величин, которые можно измерить
+        """
+
+
+class PResults(PBase):
+    """
+    Класс результатов
+    """
+    base_name = 'res'
+    type_name = 'Results'
+
+    @abstractmethod
+    def get_data(self) -> np.ndarray:
+        """
+        Возвращает все сохраненные данные
+        """
+
+    @abstractmethod
+    def get_data_names(self) -> Tuple[str, ...]:
+        """
+        Возвращает названия колонок данных
+        """
+
+    @abstractmethod
+    def append_data(self, data: np.ndarray):
+        """
+        Добавить новую строку в результаты
+        """
+
+
+class PExperiment(PBase):
+    """
+    Класс эксперимента
+    """
+    base_name = 'exp'
+    type_name = 'Experiment'
+
+    @abstractmethod
+    def run(self):
+        """
+        Запуск эксперимента
+        """
+
+
+class PRealTimePlot(metaclass=ABCMeta):
+    """График, который обновляется по времени"""
+
+    # @property
+    # @abstractmethod
+    # def auto_update(self) -> bool:
+    #     """Обновлять ли график автоматически"""
+    #
+    # @property
+    # @abstractmethod
+    # def auto_update_time_delay(self) -> float:
+    #     """Задержка между запросами на обновление"""
 
     @property
     @abstractmethod
-    def control_widgets(self) -> list[PWidget]:
+    def measurand(self) -> PMeasurand:
+        """Measurand для которого строится график"""
+
+
+class PResultsPlot(metaclass=ABCMeta):
+    """График, который обновляется, когда в PResults появились новые данные"""
+    # @property
+    # @abstractmethod
+    # def auto_update(self) -> bool:
+    #     """Обновлять ли график автоматически"""
+
+    @property
+    @abstractmethod
+    def results(self) -> PResults:
+        """Results для которого строится график"""
+
+
+class PPlot1D(PBase):
+    """Класс графиков f(x)"""
+    base_name = 'plt'
+    type_name = 'Plot f(x)'
+
+    @abstractmethod
+    def update(self):
+        """Обновить data"""
+
+    @abstractmethod
+    def get_x(self) -> np.ndarray:
         """
-        Виджеты, управляющие анализатором
+        :return: возвращает х
         """
 
     @abstractmethod
-    def get_measurands(self) -> list[PMeasurand]:
+    def get_f(self) -> np.ndarray:
         """
-        Вернуть лист величин, которые можно измерить
+        :return: возвращает значение функции f(х)
+        """
+
+
+class PPlot2D(PPlot1D, metaclass=ABCMeta):
+    """
+    Класс графиков f(x, y)
+    """
+    type_name = 'Plot f(x, y)'
+
+    @abstractmethod
+    def get_y(self) -> np.ndarray:
+        """
+        :return: возвращает у
+        """
+
+
+class PPlot3D(PPlot2D, metaclass=ABCMeta):
+    """
+    Класс графиков f(x, y, z)
+    """
+    type_name = 'Plot f(x, y, z)'
+
+    @abstractmethod
+    def get_z(self) -> np.ndarray:
+        """
+        :return: возвращает z
         """
 
 
@@ -341,69 +502,88 @@ class PStorageSignals(QObject):
     Сигналы хранилища
     """
     changed: pyqtBoundSignal = pyqtSignal()  # эмит при .add() и .delete()
-    element_changed: pyqtBoundSignal = pyqtSignal()  # эмит при сигнале PBase.sigmals.changed от любого элемента
-    add: pyqtBoundSignal = pyqtSignal(PBase)
-    delete: pyqtBoundSignal = pyqtSignal(PBase)
 
 
-PBaseTypes = TypeVar('PBaseTypes', PBase, PExperiment, PMeasurable, PObject, PPath)
+PBaseTypes = TypeVar('PBaseTypes', PBase, PExperiment, PResults, PMeasurand, PObject, PPath, PPlot1D, PPlot2D, PPlot3D)
+PPlotTypes = TypeVar('PPlotTypes', PPlot1D, PPlot2D, PPlot3D)
 
 
-@dataclass
 class PStorage(Generic[PBaseTypes]):
     """
     Базовое хранилище объектов проекта
     """
-    signals: PStorageSignals = field(default_factory=PStorageSignals)
-    data: list[PBaseTypes] = field(default_factory=list)
-
-    def __post_init__(self):
-        self.signals.add.connect(self.append)
-        self.signals.delete.connect(self.delete)
+    def __init__(
+            self,
+            last_index: int = 0,
+    ):
+        self.signals = PStorageSignals()
+        self.data: list[PBaseTypes] = []
+        self.last_index = last_index  # каждый append увеличивает last_index на 1
 
     def append(self, x: PBaseTypes):
         """
         Добавить элемент в хранилище
         """
         self.data.append(x)
-        x.signals.changed.connect(self._element_changed_emit)
+        self.last_index += 1
         self.signals.changed.emit()
 
     def delete(self, x: PBaseTypes):
         """
         Удалить элемент из хранилища
         """
-        x.signals.changed.disconnect()
+        # TODO: добавить автоматический поиск всех сигналов в классе.
+        if x.signals.receivers(x.signals.changed):
+            x.signals.changed.disconnect()
         self.data.remove(x)
         self.signals.changed.emit()
 
-    def _element_changed_emit(self):
-        self.signals.element_changed.emit()
+    def get(self, name: str) -> Union[None, PBaseTypes]:
+        if not isinstance(name, str):
+            raise TypeError(f"str expected, {type(name)} found")
+        for x in self.data:
+            if x.name == name:
+                return x
+        return None
+
+    def __contains__(self, name: str) -> bool:
+        try:
+            if self.get(name) is None:
+                return False
+            return True
+        except Exception as e:
+            raise e
+
+    def __getitem__(self, name: str):
+        item = self.get(name)
+        if self.get(name) is None:
+            raise KeyError
+        return item
+
+    def keys(self) -> list[str]:
+        """
+        Возвращает имена хранящихся экземпляров
+
+        :return: list
+        """
+        return [i.name for i in self.data]
 
 
-class PAnalyzerVisualizer(ABC):
+class PAnalyzerVisualizer(PNamed, metaclass=ABCMeta):
     """
     Класс визуализатора анализатора
     """
     def __init__(
             self,
-            measurables: PStorage[PMeasurable],
+            name: str,
+            plots: PStorage[PPlotTypes],
     ):
-        self.measurables = measurables
+        super(PAnalyzerVisualizer, self).__init__(name=name)
+        self.plots = plots
 
-    @property
-    @abstractmethod
-    def widget(self) -> QWidget:
-        """
-        Виджет визуализации
-        """
 
-    @property
-    @abstractmethod
-    def control_widgets(self) -> list[PWidget]:
-        """
-        Виджеты, управляющие визуализацией
-        """
+PScannerTypes = TypeVar('PScannerTypes', bound=PScanner)
+PAnalyzerTypes = TypeVar('PAnalyzerTypes', bound=PAnalyzer)
 
 
 class Project:
@@ -412,51 +592,49 @@ class Project:
     """
     def __init__(
             self,
-            scanner: PScanner,
-            analyzer: PAnalyzer,
-            scanner_visualizer: PScannerVisualizer,
-            analyzer_visualizer: PAnalyzerVisualizer,
+            scanner: PScannerTypes,
+            analyzer: PAnalyzerTypes,
             objects: PStorage[PObject],
             paths: PStorage[PPath],
-            measurables: PStorage[PMeasurable],
+            measurands: PStorage[PMeasurand],
             experiments: PStorage[PExperiment],
+            results: PStorage[PResults],
+            plots: PStorage[PPlotTypes],
+            scanner_visualizer: PScannerVisualizer,
+            app_builder
     ):
         self.scanner = scanner
         self.analyzer = analyzer
-        self.scanner_visualizer = scanner_visualizer
-        self.analyzer_visualizer = analyzer_visualizer
-
+        self.app_builder = app_builder
         self.objects = objects
         self.paths = paths
-        self.measurables = measurables
+        self.measurands = measurands
         self.experiments = experiments
+        self.results = results
 
-    def tree(self) -> dict[str: list[PWidget]]:
-        """
-        Дерево проекта
-        """
-        tree = dict()
+        self.plots = plots
 
-        scanner_widgets = []
-        for widget in self.scanner.control_widgets:
-            scanner_widgets.append(widget)
-        tree['Scanner'] = scanner_widgets
+        self.scanner_visualizer = scanner_visualizer
 
-        analyzer_widgets = []
-        for widget in self.analyzer.control_widgets:
-            analyzer_widgets.append(widget)
-        tree['Analyzer'] = analyzer_widgets
+    def get_storage_by_class(self, cls: Type) -> PStorage:
+        """Return storage for class"""
+        if issubclass(cls, PObject):
+            return self.objects
+        elif issubclass(cls, PPath):
+            return self.paths
+        elif issubclass(cls, PMeasurand):
+            return self.measurands
+        elif issubclass(cls, PExperiment):
+            return self.experiments
+        elif issubclass(cls, PResults):
+            return self.results
+        elif issubclass(cls, (PPlot1D, PPlot2D, PPlot3D)):
+            return self.plots
+        else:
+            raise TypeError(f"Can't find storage for {cls} class")
 
-        tree['Scanner graphics'] = self.scanner_visualizer.control_widgets
-        tree['Analyzer graphics'] = self.analyzer_visualizer.control_widgets
-
-        tree['Objects'] = [PWidget(name=w.name, widget=w.widget, icon=w.icon) for w in self.objects.data]
-        tree['Paths'] = [PWidget(name=w.name, widget=w.widget, icon=w.icon) for w in self.paths.data]
-        tree['Measurables'] = [PWidget(name=w.name, widget=w.widget, icon=w.icon) for w in self.measurables.data]
-        tree['Experiments'] = [PWidget(name=w.name, widget=w.widget, icon=w.icon) for w in self.experiments.data]
-
-        return tree
-
-
+    def get_storages(self) -> Tuple[PStorage, ...]:
+        return self.objects, self.paths, self.measurands,\
+               self.experiments, self.results, self.plots
 
 

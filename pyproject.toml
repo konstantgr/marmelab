@@ -25,7 +25,12 @@ pandas = "^1.5.2"
 openpyxl = "^3.0.10"
 rsinstrument = "^1.53.0"
 pywin32 = "^305"
-anechoic-utils = {git = "https://github.com/konstantgr/anechoic_utils.git"}
+matplotlib = "^3.7.1"
+SQLAlchemy = "^2.0.9"
+SQLAlchemy-Utils = "^0.41.0"
+mat4py = "^0.5.0"
+scipy = "^1.10.1"
+pyinstaller = "^5.11.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.3"

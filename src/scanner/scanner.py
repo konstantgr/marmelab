@@ -6,6 +6,7 @@ from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from numbers import Number
 from ..utils import EmptySignal
+from enum import Enum
 
 
 class ScannerConnectionError(Exception):
@@ -38,18 +39,30 @@ class ScannerMotionError(Exception):
         )
 
 
+class AxesTypes(Enum):
+    """Возможные наборы осей сканера"""
+    x = 'x'
+    xy = 'xy'
+    xyw = 'xyw'
+    xyz = 'xyz'
+    xyzw = 'xyzw'
+    rw = 'rw'
+    rzw = 'rzw'
+
+
 @dataclass
 class BaseAxes:
     """
     Все координаты сканера в мм
     """
-    x: float = None
-    y: float = None
-    z: float = None
-    w: float = None
-    # e: float = None
-    # f: float = None
-    # g: float = None
+    x: float or None = None
+    y: float or None = None
+    z: float or None = None
+    w: float or None = None
+    # r: float or None = None
+    # e: float or None = None
+    # f: float or None = None
+    # g: float or None = None
 
     def __add__(self, other):
         if not isinstance(other, BaseAxes):
