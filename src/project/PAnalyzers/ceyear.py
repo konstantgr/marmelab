@@ -152,11 +152,11 @@ class SParams(PMeasurand):
         self.sweep_type = sweep_type
         self._clear()
 
-    def set_freq_start(self, freq_start: int = None):
+    def set_freq_start(self, freq_start: float = None):
         self.freq_start = freq_start
         self._clear()
 
-    def set_freq_stop(self, freq_stop: int = None):
+    def set_freq_stop(self, freq_stop: float = None):
         self.freq_stop = freq_stop
         self._clear()
 

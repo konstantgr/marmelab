@@ -122,8 +122,8 @@ class SParamsView(BaseView[SParams]):
         freq_stop_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['freq_stop']}", freq_form)
         freq_points_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['freq_num']}", freq_form)
 
-        freq_start_le.setValidator(QIntValidator())
-        freq_stop_le.setValidator(QIntValidator())
+        freq_start_le.setValidator(QDoubleValidator(100_000., 8_500_000_000., 0))
+        freq_stop_le.setValidator(QDoubleValidator(100_000., 8_500_000_000., 0))
         freq_points_le.setValidator(QIntValidator())
 
         freq_form_layout.addRow("Start (Hz)", freq_start_le)
@@ -134,8 +134,8 @@ class SParamsView(BaseView[SParams]):
         # freq_stop_slot = partial(self.model.set_freq_stop, float(freq_stop_le.text()))
         # freq_points_slot = partial(self.model.set_freq_num, int(freq_points_le.text()))
 
-        freq_start_le.editingFinished.connect(lambda: self.model.set_freq_start(int(freq_start_le.text())))
-        freq_stop_le.editingFinished.connect(lambda: self.model.set_freq_stop(int(freq_stop_le.text())))
+        freq_start_le.editingFinished.connect(lambda: self.model.set_freq_start(float(freq_start_le.text())))
+        freq_stop_le.editingFinished.connect(lambda: self.model.set_freq_stop(float(freq_stop_le.text())))
         freq_points_le.editingFinished.connect(lambda: self.model.set_freq_num(int(freq_points_le.text())))
         freq_form.setLayout(freq_form_layout)
         return freq_form
