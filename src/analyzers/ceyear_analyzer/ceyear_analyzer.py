@@ -159,7 +159,7 @@ class CeyearAnalyzer(BaseAnalyzer):
                 else:
                     raise Exception("Stop frequency must be from 100 KHz to 8.5 MHz")
             else:
-                raise TypeError("Stop frequency should be int")
+                raise TypeError(f"Stop frequency should be float got {type(freq_stop)} instead")
         if freq_num is not None:
             if isinstance(freq_num, int):
                 if 1 <= freq_num <= 16_001:
