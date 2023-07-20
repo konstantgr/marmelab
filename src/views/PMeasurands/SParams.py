@@ -117,25 +117,25 @@ class SParamsView(BaseView[SParams]):
     def _construct_frequency_widget(self, parent_widget):
         freq_form = QWidget(parent_widget)
         freq_form_layout = QFormLayout(parent_widget)
-
-        freq_start_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['freq_start']}", freq_form)
-        freq_stop_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['freq_stop']}", freq_form)
+        MHz = 1000000
+        freq_start_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['freq_start'] / MHz }", freq_form)
+        freq_stop_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['freq_stop'] / MHz }", freq_form)
         freq_points_le = QLineEdit(f"{CEYEAR_DEFAULT_SETTINGS['freq_num']}", freq_form)
 
-        freq_start_le.setValidator(QDoubleValidator(100_000., 8_500_000_000., 0))
-        freq_stop_le.setValidator(QDoubleValidator(100_000., 8_500_000_000., 0))
+        freq_start_le.setValidator(QDoubleValidator(0.1, 8_500., 0))
+        freq_stop_le.setValidator(QDoubleValidator(0.1, 8_500., 0))
         freq_points_le.setValidator(QIntValidator())
 
-        freq_form_layout.addRow("Start (Hz)", freq_start_le)
-        freq_form_layout.addRow("Stop (Hz)", freq_stop_le)
+        freq_form_layout.addRow("Start (MHz)", freq_start_le)
+        freq_form_layout.addRow("Stop (MHz)", freq_stop_le)
         freq_form_layout.addRow("N points", freq_points_le)
 
         # freq_start_slot = partial(self.model.set_freq_start, float(freq_start_le.text()))
         # freq_stop_slot = partial(self.model.set_freq_stop, float(freq_stop_le.text()))
         # freq_points_slot = partial(self.model.set_freq_num, int(freq_points_le.text()))
 
-        freq_start_le.editingFinished.connect(lambda: self.model.set_freq_start(float(freq_start_le.text())))
-        freq_stop_le.editingFinished.connect(lambda: self.model.set_freq_stop(float(freq_stop_le.text())))
+        freq_start_le.editingFinished.connect(lambda: self.model.set_freq_start(float(freq_start_le.text()) * MHz))
+        freq_stop_le.editingFinished.connect(lambda: self.model.set_freq_stop(float(freq_stop_le.text()) * MHz))
         freq_points_le.editingFinished.connect(lambda: self.model.set_freq_num(int(freq_points_le.text())))
         freq_form.setLayout(freq_form_layout)
         return freq_form
